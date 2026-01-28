@@ -1,0 +1,2 @@
+# Ignorar archivos de entorno locales con secretos
+.env.local
