@@ -1,0 +1,29 @@
+{
+  "name": "@tfg/feature",
+  "version": "1.0.0",
+  "keywords": ["symfony-ux"],
+  "symfony": {
+    "controllers": {
+      "main": {
+        "main": "dist/controller.js",
+        "fetch": "eager",
+        "enabled": true
+      }
+    },
+    "importmap": {
+      "@hotwired/stimulus": "^3.0.0"
+    }
+  },
+  "peerDependencies": {
+    "@hotwired/stimulus": "^3.0.0"
+  },
+  "scripts": {
+    "build": "babel src --extensions .js -d dist"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.20.12",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/preset-env": "^7.20.2"
+  }
+}
