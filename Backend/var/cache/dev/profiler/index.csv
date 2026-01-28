@@ -49,3 +49,6 @@ d44243,172.18.0.1,GET,http://localhost:8001/mesa/test-mesa-07,1769606024,32b79d,
 6cfe2c,172.18.0.1,GET,http://localhost:8001/mesa/test-mesa-7,1769606046,,404,request
 8acc99,172.18.0.1,GET,http://localhost:8001/mesa/test-mesa-7,1769606089,,200,request
 3f1322,172.18.0.1,GET,http://localhost:8001/mesa/test-mesa-7,1769606103,,200,request
+c27c1b,172.18.0.1,GET,http://localhost:8001/,1769606363,,200,request
+e92d03,172.18.0.1,GET,http://localhost:8001/pages/menu,1769606370,240929,404,request
+240929,172.18.0.1,GET,http://localhost:8001/pages/menu,1769606370,,404,request
