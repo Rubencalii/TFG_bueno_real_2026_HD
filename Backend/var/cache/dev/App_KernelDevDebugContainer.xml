@@ -408,6 +408,18 @@
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
       <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
     </service>
+    <service id="App\Entity\DetallePedido" class="App\Entity\DetallePedido" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
+    <service id="App\Entity\Mesa" class="App\Entity\Mesa" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
+    <service id="App\Entity\Pedido" class="App\Entity\Pedido" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
     <service id="App\Entity\Producto" class="App\Entity\Producto" autowire="true" autoconfigure="true">
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
       <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
@@ -7682,6 +7694,12 @@
     <service id=".abstract.instanceof.App\Entity\Categoria" class="App\Entity\Categoria" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Demo.0.App\Entity\Demo" class="App\Entity\Demo" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\Demo" class="App\Entity\Demo" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\DetallePedido.0.App\Entity\DetallePedido" class="App\Entity\DetallePedido" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\DetallePedido" class="App\Entity\DetallePedido" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Mesa.0.App\Entity\Mesa" class="App\Entity\Mesa" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Mesa" class="App\Entity\Mesa" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Pedido.0.App\Entity\Pedido" class="App\Entity\Pedido" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Pedido" class="App\Entity\Pedido" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Producto.0.App\Entity\Producto" class="App\Entity\Producto" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\Producto" class="App\Entity\Producto" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\User.0.App\Entity\User" class="App\Entity\User" autowire="true" abstract="true"/>
