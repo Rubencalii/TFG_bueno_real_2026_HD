@@ -2,6 +2,8 @@
     "devDependencies": {
         "@babel/core": "^7.17.0",
         "@babel/preset-env": "^7.16.0",
+        "@babel/preset-react": "^7.28.5",
+        "@symfony/stimulus-bridge": "^4.0.1",
         "@symfony/webpack-encore": "^5.1.0",
         "core-js": "^3.38.0",
         "regenerator-runtime": "^0.13.9",
@@ -15,5 +17,11 @@
         "dev": "encore dev",
         "watch": "encore dev --watch",
         "build": "encore production --progress"
+    },
+    "dependencies": {
+        "@hotwired/stimulus": "^3.2.2",
+        "@symfony/ux-react": "^2.32.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
     }
 }

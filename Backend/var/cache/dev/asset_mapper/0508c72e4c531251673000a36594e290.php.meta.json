@@ -1,0 +1,1 @@
+{"resources":[{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/types/lib/definitions/misc.js"},{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/types/lib/definitions/misc.js.map"}]}

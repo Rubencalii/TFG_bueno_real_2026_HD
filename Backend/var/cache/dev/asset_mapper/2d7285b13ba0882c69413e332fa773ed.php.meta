@@ -1,0 +1,1 @@
+a:2:{i:0;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:60:"/app/assets/node_modules/@babel/core/lib/gensync-utils/fs.js";}i:1;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:64:"/app/assets/node_modules/@babel/core/lib/gensync-utils/fs.js.map";}}

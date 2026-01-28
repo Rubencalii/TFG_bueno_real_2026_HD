@@ -1,0 +1,1 @@
+{"resources":[{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@jridgewell/trace-mapping/dist/trace-mapping.umd.js"},{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@jridgewell/trace-mapping/dist/trace-mapping.umd.js.map"}]}

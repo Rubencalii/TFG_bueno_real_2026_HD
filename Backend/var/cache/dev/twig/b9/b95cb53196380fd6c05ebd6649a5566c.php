@@ -99,6 +99,14 @@ class __TwigTemplate_374fc1a58d473a54a43e7da831f129a3 extends Template
         // line 6
         yield "    <h1>Bienvenido al esqueleto del TFG</h1>
     <p>Esta es la página de inicio básica. Puedes empezar a construir tu proyecto desde aquí.</p>
+    
+    <h2>Prueba de React Component:</h2>
+    <div ";
+        // line 10
+        yield $this->extensions['Symfony\UX\React\Twig\ReactComponentExtension']->renderReactComponent("Hello", ["fullName" => "Comanda Digital"]);
+        yield ">
+        Cargando React...
+    </div>
 ";
         
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f->leave($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof);
@@ -130,7 +138,7 @@ class __TwigTemplate_374fc1a58d473a54a43e7da831f129a3 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  100 => 6,  87 => 5,  64 => 3,  41 => 1,);
+        return array (  106 => 10,  100 => 6,  87 => 5,  64 => 3,  41 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -142,6 +150,11 @@ class __TwigTemplate_374fc1a58d473a54a43e7da831f129a3 extends Template
 {% block body %}
     <h1>Bienvenido al esqueleto del TFG</h1>
     <p>Esta es la página de inicio básica. Puedes empezar a construir tu proyecto desde aquí.</p>
+    
+    <h2>Prueba de React Component:</h2>
+    <div {{ react_component('Hello', { fullName: 'Comanda Digital' }) }}>
+        Cargando React...
+    </div>
 {% endblock %}
 ", "home/index.html.twig", "/app/templates/home/index.html.twig");
     }

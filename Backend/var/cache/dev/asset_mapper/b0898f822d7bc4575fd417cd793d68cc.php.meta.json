@@ -1,0 +1,1 @@
+{"resources":[{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/traverse/lib/index.js"},{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/traverse/lib/index.js.map"}]}

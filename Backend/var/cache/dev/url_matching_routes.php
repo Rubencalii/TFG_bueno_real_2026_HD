@@ -18,6 +18,7 @@ return [
         '/admin' => [[['_route' => 'admin_panel', '_controller' => 'App\\Controller\\AdminController::index'], null, null, null, true, false, null]],
         '/barra' => [[['_route' => 'barra_panel', '_controller' => 'App\\Controller\\BarraController::index'], null, null, null, true, false, null]],
         '/cocina' => [[['_route' => 'cocina_panel', '_controller' => 'App\\Controller\\CocinaController::index'], null, null, null, true, false, null]],
+        '/' => [[['_route' => 'home', '_controller' => 'App\\Controller\\HomeController::index'], null, null, null, false, false, null]],
         '/login' => [[['_route' => 'login', '_controller' => 'App\\Controller\\SecurityController::login'], null, null, null, false, false, null]],
         '/logout' => [[['_route' => 'logout', '_controller' => 'App\\Controller\\SecurityController::logout'], null, null, null, false, false, null]],
     ],

@@ -35,7 +35,6 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
             'title' => [$this, 'block_title'],
             'stylesheets' => [$this, 'block_stylesheets'],
             'javascripts' => [$this, 'block_javascripts'],
-            'importmap' => [$this, 'block_importmap'],
             'body' => [$this, 'block_body'],
         ];
     }
@@ -67,14 +66,14 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         ";
         // line 11
         yield from $this->unwrap()->yieldBlock('javascripts', $context, $blocks);
-        // line 15
+        // line 14
         yield "    </head>
     <body>
         <header>
             <nav>
                 <ul>
                     <li><a href=\"";
-        // line 20
+        // line 19
         yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("home");
         yield "\">Inicio</a></li>
                     <!-- Añade aquí más enlaces según crezcas -->
@@ -83,13 +82,13 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         </header>
         <main>
             ";
-        // line 26
+        // line 25
         yield from $this->unwrap()->yieldBlock('body', $context, $blocks);
-        // line 27
+        // line 26
         yield "        </main>
         <footer>
             <small>&copy; ";
-        // line 29
+        // line 28
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate("now", "Y"), "html", null, true);
         yield " TFG - Esqueleto Symfony</small>
         </footer>
@@ -172,11 +171,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield "            ";
         yield $this->extensions['Symfony\WebpackEncoreBundle\Twig\EntryFilesTwigExtension']->renderWebpackScriptTags("app");
         yield "
-            ";
-        // line 13
-        yield from $this->unwrap()->yieldBlock('importmap', $context, $blocks);
-        // line 14
-        yield "        ";
+        ";
         
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f->leave($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof);
 
@@ -186,30 +181,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield from [];
     }
 
-    // line 13
-    /**
-     * @return iterable<null|scalar|\Stringable>
-     */
-    public function block_importmap(array $context, array $blocks = []): iterable
-    {
-        $macros = $this->macros;
-        $__internal_5a27a8ba21ca79b61932376b2fa922d2 = $this->extensions["Symfony\\Bundle\\WebProfilerBundle\\Twig\\WebProfilerExtension"];
-        $__internal_5a27a8ba21ca79b61932376b2fa922d2->enter($__internal_5a27a8ba21ca79b61932376b2fa922d2_prof = new \Twig\Profiler\Profile($this->getTemplateName(), "block", "importmap"));
-
-        $__internal_6f47bbe9983af81f1e7450e9a3e3768f = $this->extensions["Symfony\\Bridge\\Twig\\Extension\\ProfilerExtension"];
-        $__internal_6f47bbe9983af81f1e7450e9a3e3768f->enter($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof = new \Twig\Profiler\Profile($this->getTemplateName(), "block", "importmap"));
-
-        yield $this->env->getRuntime('Symfony\Bridge\Twig\Extension\ImportMapRuntime')->importmap("app");
-        
-        $__internal_6f47bbe9983af81f1e7450e9a3e3768f->leave($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof);
-
-        
-        $__internal_5a27a8ba21ca79b61932376b2fa922d2->leave($__internal_5a27a8ba21ca79b61932376b2fa922d2_prof);
-
-        yield from [];
-    }
-
-    // line 26
+    // line 25
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -252,7 +224,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  213 => 26,  190 => 13,  179 => 14,  177 => 13,  172 => 12,  159 => 11,  145 => 8,  132 => 7,  109 => 5,  93 => 29,  89 => 27,  87 => 26,  78 => 20,  71 => 15,  69 => 11,  66 => 10,  64 => 7,  59 => 5,  53 => 1,);
+        return array (  185 => 25,  171 => 12,  158 => 11,  144 => 8,  131 => 7,  108 => 5,  92 => 28,  88 => 26,  86 => 25,  77 => 19,  70 => 14,  68 => 11,  65 => 10,  63 => 7,  58 => 5,  52 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -269,7 +241,6 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
 
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
     <body>

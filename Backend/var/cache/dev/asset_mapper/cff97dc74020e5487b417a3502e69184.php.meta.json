@@ -1,0 +1,1 @@
+{"resources":[{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/plugin-transform-async-generator-functions/lib/for-await.js"},{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/plugin-transform-async-generator-functions/lib/for-await.js.map"}]}

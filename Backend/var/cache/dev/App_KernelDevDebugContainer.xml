@@ -392,6 +392,14 @@
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\CocinaController"/>
       </call>
     </service>
+    <service id="App\Controller\HomeController" class="App\Controller\HomeController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="routing.controller"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.TJNRSaV.App\Controller\HomeController"/>
+      </call>
+    </service>
     <service id="App\Controller\MesaController" class="App\Controller\MesaController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="routing.controller"/>
@@ -3684,6 +3692,7 @@
         <argument>App\Controller\AdminController</argument>
         <argument>App\Controller\BarraController</argument>
         <argument>App\Controller\CocinaController</argument>
+        <argument>App\Controller\HomeController</argument>
         <argument>App\Controller\MesaController</argument>
         <argument>App\Controller\SecurityController</argument>
       </argument>
@@ -7829,6 +7838,10 @@
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\CocinaController" class="App\Controller\CocinaController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\CocinaController.0.App\Controller\CocinaController" class="App\Controller\CocinaController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\CocinaController" class="App\Controller\CocinaController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" abstract="true"/>
+    <service id=".instanceof.App\Controller\HomeController.0.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\MesaController.0.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" abstract="true"/>
@@ -9024,6 +9037,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.TJNRSaV" method="withContext"/>
     </service>
+    <service id=".service_locator.TJNRSaV.App\Controller\HomeController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\HomeController"/>
+      <argument>App\Controller\HomeController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.TJNRSaV" method="withContext"/>
+    </service>
     <service id=".service_locator.TJNRSaV.App\Controller\MesaController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\MesaController"/>
       <argument>App\Controller\MesaController</argument>
@@ -9245,6 +9264,7 @@
           <argument>App\Controller\AdminController</argument>
           <argument>App\Controller\BarraController</argument>
           <argument>App\Controller\CocinaController</argument>
+          <argument>App\Controller\HomeController</argument>
           <argument>App\Controller\MesaController</argument>
           <argument>App\Controller\SecurityController</argument>
           <argument>Doctrine\Bundle\DoctrineBundle\Controller\ProfilerController</argument>
