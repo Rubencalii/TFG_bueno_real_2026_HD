@@ -6,13 +6,28 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+
 final class SecurityController extends AbstractController
 {
-    #[Route('/security', name: 'app_security')]
-    public function index(): Response
+    #[Route('/login', name: 'login')]
+    public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
     {
-        return $this->render('security/index.html.twig', [
-            'controller_name' => 'SecurityController',
+        // Obtener error de login si existe
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+        return $this->render('security/login.html.twig', [
+            'last_username' => $lastUsername,
+            'error' => $error,
         ]);
+    }
+
+    #[Route('/logout', name: 'logout')]
+    public function logout(): void
+    {
+        // Symfony gestiona el logout automáticamente
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 }

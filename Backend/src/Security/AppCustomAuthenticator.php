@@ -11,24 +11,42 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 class AppCustomAuthenticator extends AbstractAuthenticator
 {
+
     public function supports(Request $request): ?bool
     {
-        // TODO: Implement supports() method.
+        // Solo soporta el login por formulario POST en /login
+        return $request->attributes->get('_route') === 'login' && $request->isMethod('POST');
     }
+
 
     public function authenticate(Request $request): Passport
     {
-        // TODO: Implement authenticate() method.
+        $email = $request->request->get('email', '');
+        $password = $request->request->get('password', '');
+        $csrfToken = $request->request->get('_csrf_token');
+
+        return new Passport(
+            new \Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge($email),
+            new \Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials($password),
+            [
+                new \Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge('authenticate', $csrfToken),
+            ]
+        );
     }
+
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        // TODO: Implement onAuthenticationSuccess() method.
+        // Redirige al panel principal tras login
+        return new \Symfony\Component\HttpFoundation\RedirectResponse('/panel');
     }
+
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        // TODO: Implement onAuthenticationFailure() method.
+        // Redirige al login con mensaje de error
+        $request->getSession()->set('_security.last_error', $exception->getMessageKey());
+        return new \Symfony\Component\HttpFoundation\RedirectResponse('/login');
     }
 
     //    public function start(Request $request, ?AuthenticationException $authException = null): Response
