@@ -1,2 +1,9 @@
 # Ignorar archivos de entorno locales con secretos
 .env.local
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###

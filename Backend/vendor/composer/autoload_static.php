@@ -42,8 +42,10 @@ class ComposerStaticInit7246353e5bb23c8719402c051dcd5671
         ),
         'S' =>
         array (
+            'Symfony\\WebpackEncoreBundle\\' => 28,
             'Symfony\\UX\\Turbo\\' => 17,
             'Symfony\\UX\\StimulusBundle\\' => 26,
+            'Symfony\\UX\\React\\' => 17,
             'Symfony\\Runtime\\Symfony\\Component\\' => 34,
             'Symfony\\Polyfill\\Php85\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
@@ -181,6 +183,10 @@ class ComposerStaticInit7246353e5bb23c8719402c051dcd5671
         array (
             0 => __DIR__ . '/..' . '/twig/twig/src',
         ),
+        'Symfony\\WebpackEncoreBundle\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/webpack-encore-bundle/src',
+        ),
         'Symfony\\UX\\Turbo\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/ux-turbo/src',
@@ -188,6 +194,10 @@ class ComposerStaticInit7246353e5bb23c8719402c051dcd5671
         'Symfony\\UX\\StimulusBundle\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/stimulus-bundle/src',
+        ),
+        'Symfony\\UX\\React\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/ux-react/src',
         ),
         'Symfony\\Runtime\\Symfony\\Component\\' =>
         array (

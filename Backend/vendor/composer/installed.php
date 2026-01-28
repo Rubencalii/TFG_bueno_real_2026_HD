@@ -1205,6 +1205,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'symfony/ux-react' => array(
+            'pretty_version' => 'v2.32.0',
+            'version' => '2.32.0.0',
+            'reference' => 'e9b28032f593d3b2ff37044e194fb15ef9a2abfa',
+            'type' => 'symfony-bundle',
+            'install_path' => __DIR__ . '/../symfony/ux-react',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'symfony/ux-turbo' => array(
             'pretty_version' => 'v2.32.0',
             'version' => '2.32.0.0',
@@ -1258,6 +1267,15 @@
             'install_path' => __DIR__ . '/../symfony/web-profiler-bundle',
             'aliases' => array(),
             'dev_requirement' => true,
+        ),
+        'symfony/webpack-encore-bundle' => array(
+            'pretty_version' => 'v2.4.0',
+            'version' => '2.4.0.0',
+            'reference' => '5b932e0feddd81aaf0ecd7d5fcd2e450e5a7817e',
+            'type' => 'symfony-bundle',
+            'install_path' => __DIR__ . '/../symfony/webpack-encore-bundle',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'symfony/yaml' => array(
             'pretty_version' => 'v8.0.1',
