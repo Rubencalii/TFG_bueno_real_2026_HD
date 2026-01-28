@@ -42,7 +42,8 @@ return [
                         .')'
                     .')'
                 .')'
-                .'|/pedido/mesa/([^/]++)(*:223)'
+                .'|/mesa/([^/]++)(*:216)'
+                .'|/pedido/mesa/([^/]++)(*:245)'
             .')/?$}sDu',
     ],
     [ // $dynamicRoutes
@@ -54,7 +55,8 @@ return [
         168 => [[['_route' => '_profiler_exception', '_controller' => 'web_profiler.controller.exception_panel::body'], ['token'], null, null, false, false, null]],
         181 => [[['_route' => '_profiler_exception_css', '_controller' => 'web_profiler.controller.exception_panel::stylesheet'], ['token'], null, null, false, false, null]],
         191 => [[['_route' => '_profiler', '_controller' => 'web_profiler.controller.profiler::panelAction'], ['token'], null, null, false, true, null]],
-        223 => [
+        216 => [[['_route' => 'menu_mesa', '_controller' => 'App\\Controller\\MesaController::menuMesa'], ['token'], null, null, false, true, null]],
+        245 => [
             [['_route' => 'pedido_mesa', '_controller' => 'App\\Controller\\MesaController::pedidoMesa'], ['identificador'], null, null, false, true, null],
             [null, null, null, null, false, false, 0],
         ],

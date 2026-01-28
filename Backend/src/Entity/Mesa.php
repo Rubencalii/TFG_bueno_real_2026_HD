@@ -6,7 +6,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
-#[ORM\Entity]
+use App\Repository\MesaRepository;
+
+#[ORM\Entity(repositoryClass: MesaRepository::class)]
 class Mesa
 {
     #[ORM\Id]
