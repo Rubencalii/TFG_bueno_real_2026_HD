@@ -359,7 +359,23 @@
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\HomeController"/>
       </call>
     </service>
+    <service id="App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
+    <service id="App\Entity\Bebida" class="App\Entity\Bebida" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
+    <service id="App\Entity\Categoria" class="App\Entity\Categoria" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
     <service id="App\Entity\Demo" class="App\Entity\Demo" autowire="true" autoconfigure="true">
+      <tag name="container.excluded" source="because it's a Doctrine entity"/>
+      <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
+    </service>
+    <service id="App\Entity\Producto" class="App\Entity\Producto" autowire="true" autoconfigure="true">
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
       <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
     </service>
@@ -7583,8 +7599,16 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\HomeController" class="App\Controller\HomeController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Alergeno.0.App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Bebida.0.App\Entity\Bebida" class="App\Entity\Bebida" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Bebida" class="App\Entity\Bebida" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Categoria.0.App\Entity\Categoria" class="App\Entity\Categoria" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Categoria" class="App\Entity\Categoria" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Demo.0.App\Entity\Demo" class="App\Entity\Demo" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\Demo" class="App\Entity\Demo" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Entity\Producto.0.App\Entity\Producto" class="App\Entity\Producto" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Entity\Producto" class="App\Entity\Producto" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".service_locator.ryAvHi4" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
