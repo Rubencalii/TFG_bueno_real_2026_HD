@@ -13,19 +13,6 @@
         {% endblock %}
     </head>
     <body>
-        <header>
-            <nav>
-                <ul>
-                    <li><a href="{{ path('home') }}">Inicio</a></li>
-                    <!-- Añade aquí más enlaces según crezcas -->
-                </ul>
-            </nav>
-        </header>
-        <main>
-            {% block body %}{% endblock %}
-        </main>
-        <footer>
-            <small>&copy; {{ "now"|date("Y") }} TFG - Esqueleto Symfony</small>
-        </footer>
+        {% block body %}{% endblock %}
     </body>
 </html>

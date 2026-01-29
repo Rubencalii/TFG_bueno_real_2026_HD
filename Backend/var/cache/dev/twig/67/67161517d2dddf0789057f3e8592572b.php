@@ -69,30 +69,11 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         // line 14
         yield "    </head>
     <body>
-        <header>
-            <nav>
-                <ul>
-                    <li><a href=\"";
-        // line 19
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("home");
-        yield "\">Inicio</a></li>
-                    <!-- Añade aquí más enlaces según crezcas -->
-                </ul>
-            </nav>
-        </header>
-        <main>
-            ";
-        // line 25
+        ";
+        // line 16
         yield from $this->unwrap()->yieldBlock('body', $context, $blocks);
-        // line 26
-        yield "        </main>
-        <footer>
-            <small>&copy; ";
-        // line 28
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate("now", "Y"), "html", null, true);
-        yield " TFG - Esqueleto Symfony</small>
-        </footer>
-    </body>
+        // line 17
+        yield "    </body>
 </html>
 ";
         
@@ -181,7 +162,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield from [];
     }
 
-    // line 25
+    // line 16
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -214,17 +195,9 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
     /**
      * @codeCoverageIgnore
      */
-    public function isTraitable(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
     public function getDebugInfo(): array
     {
-        return array (  185 => 25,  171 => 12,  158 => 11,  144 => 8,  131 => 7,  108 => 5,  92 => 28,  88 => 26,  86 => 25,  77 => 19,  70 => 14,  68 => 11,  65 => 10,  63 => 7,  58 => 5,  52 => 1,);
+        return array (  166 => 16,  152 => 12,  139 => 11,  125 => 8,  112 => 7,  89 => 5,  76 => 17,  74 => 16,  70 => 14,  68 => 11,  65 => 10,  63 => 7,  58 => 5,  52 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -244,20 +217,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         {% endblock %}
     </head>
     <body>
-        <header>
-            <nav>
-                <ul>
-                    <li><a href=\"{{ path('home') }}\">Inicio</a></li>
-                    <!-- Añade aquí más enlaces según crezcas -->
-                </ul>
-            </nav>
-        </header>
-        <main>
-            {% block body %}{% endblock %}
-        </main>
-        <footer>
-            <small>&copy; {{ \"now\"|date(\"Y\") }} TFG - Esqueleto Symfony</small>
-        </footer>
+        {% block body %}{% endblock %}
     </body>
 </html>
 ", "base.html.twig", "/app/templates/base.html.twig");
