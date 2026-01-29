@@ -1,1 +1,0 @@
-a:2:{i:0;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:77:"/app/assets/node_modules/@babel/plugin-transform-modules-commonjs/lib/lazy.js";}i:1;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:81:"/app/assets/node_modules/@babel/plugin-transform-modules-commonjs/lib/lazy.js.map";}}

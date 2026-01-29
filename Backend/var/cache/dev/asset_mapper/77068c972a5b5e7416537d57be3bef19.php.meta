@@ -1,1 +1,0 @@
-a:2:{i:0;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:38:"/app/assets/vendor/react-dom/client.js";}i:1;O:55:"Symfony\Component\Config\Resource\FileExistenceResource":2:{s:8:"resource";s:47:"/app/assets/vendor/react-dom/react-dom.index.js";s:6:"exists";b:1;}}

@@ -103,13 +103,13 @@ class Pedido
      */
     public function calcularTotal(): string
     {
-        $total = '0.00';
+        $total = 0.0;
         foreach ($this->detalles as $detalle) {
-            $subtotal = bcmul($detalle->getPrecioUnitario(), (string) $detalle->getCantidad(), 2);
-            $total = bcadd($total, $subtotal, 2);
+            $subtotal = (float) $detalle->getPrecioUnitario() * $detalle->getCantidad();
+            $total += $subtotal;
         }
-        $this->totalCalculado = $total;
-        return $total;
+        $this->totalCalculado = number_format($total, 2, '.', '');
+        return $this->totalCalculado;
     }
 
     /**

@@ -1,1 +1,0 @@
-{"resources":[{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/plugin-transform-modules-commonjs/lib/dynamic-import.js"},{"@type":"Symfony\\Component\\Config\\Resource\\FileResource","resource":"/app/assets/node_modules/@babel/plugin-transform-modules-commonjs/lib/dynamic-import.js.map"}]}
