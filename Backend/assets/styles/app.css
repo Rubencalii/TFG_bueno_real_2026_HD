@@ -2,7 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
+/* Google Fonts - Space Grotesk */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* Custom styles for Comanda Digital */
+
+/* Material Symbols Icons */
 .material-symbols-outlined {
     font-variation-settings:
         "FILL" 0,
@@ -11,6 +16,7 @@
         "opsz" 24;
 }
 
+/* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -20,16 +26,73 @@
     scrollbar-width: none;
 }
 
+/* Neon glow effect for primary buttons */
 .neon-glow {
-    box-shadow: 0 4px 14px 0 rgba(0, 245, 212, 0.39);
+    box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
 }
 
+/* Orange glow effect for secondary buttons */
 .orange-glow {
-    box-shadow: 0 4px 14px 0 rgba(255, 159, 28, 0.39);
+    box-shadow: 0 4px 14px 0 rgba(249, 115, 22, 0.39);
 }
 
+/* Card shadow */
 .card-shadow {
     box-shadow:
         0 10px 25px -5px rgba(0, 0, 0, 0.05),
         0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* Semáforo colors for kitchen */
+.semaforo-verde {
+    border-left-color: #10B981;
+    background-color: #ECFDF5;
+}
+
+.semaforo-amarillo {
+    border-left-color: #F59E0B;
+    background-color: #FFFBEB;
+}
+
+.semaforo-rojo {
+    border-left-color: #EF4444;
+    background-color: #FEF2F2;
+    animation: pulse 2s infinite;
+}
+
+/* Alert badge for allergies */
+.alert-critica {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Base body styles */
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: #F9FAFB;
+    color: #1F2937;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Remove default nav styles for menu */
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Button minimum touch size (accessibility) */
+button, a {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Focus styles for accessibility */
+button:focus, a:focus, input:focus {
+    outline: 2px solid #2563EB;
+    outline-offset: 2px;
 }

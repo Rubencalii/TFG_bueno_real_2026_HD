@@ -2,7 +2,7 @@ import { Application, Controller } from '@hotwired/stimulus';
 import { registerReactControllerComponents } from '@symfony/ux-react';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/app.css';
+import './styles/tailwind-compiled.css';
 
 // Start Stimulus application
 const app = Application.start();
