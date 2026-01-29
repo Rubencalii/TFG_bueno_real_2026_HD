@@ -1,6 +1,17 @@
 import React from 'react';
 
-export default function MenuHeader({ mesa, activeView, onViewChange }) {
+export default function MenuHeader({ mesa, activeView, onViewChange, onToast }) {
+    const handleMesaAction = async (action, message) => {
+        try {
+            const response = await fetch(`/api/mesa/${mesa.tokenQr}/` + action, { method: 'POST' });
+            if (response.ok) {
+                onToast(message);
+            }
+        } catch (error) {
+            console.error('Error action:', error);
+        }
+    };
+
     return (
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
             <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
@@ -19,9 +30,9 @@ export default function MenuHeader({ mesa, activeView, onViewChange }) {
                     </div>
                     
                     {/* Nav */}
-                    <nav className="flex items-center gap-4 sm:gap-8">
+                    <nav className="flex items-center gap-3 sm:gap-6">
                         <button 
-                            className={`text-sm font-bold tracking-wider uppercase pb-1 transition-all ${
+                            className={`text-[10px] sm:text-xs font-black tracking-wider uppercase pb-1 transition-all ${
                                 activeView === 'menu' 
                                 ? 'text-text-main border-b-2 border-primary' 
                                 : 'text-text-muted hover:text-primary'
@@ -31,7 +42,7 @@ export default function MenuHeader({ mesa, activeView, onViewChange }) {
                             Menú
                         </button>
                         <button 
-                            className={`text-sm font-bold tracking-wider uppercase pb-1 transition-all ${
+                            className={`text-[10px] sm:text-xs font-black tracking-wider uppercase pb-1 transition-all ${
                                 activeView === 'orders' 
                                 ? 'text-text-main border-b-2 border-primary' 
                                 : 'text-text-muted hover:text-primary'
@@ -40,6 +51,26 @@ export default function MenuHeader({ mesa, activeView, onViewChange }) {
                         >
                             Mis Pedidos
                         </button>
+                        
+                        {/* Acciones de mesa */}
+                        <div className="flex items-center gap-2 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-gray-100">
+                            <button 
+                                onClick={() => handleMesaAction('llamar', 'Camarero avisado')}
+                                className="size-8 sm:size-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center hover:bg-amber-100 transition-colors group relative"
+                                title="Llamar camarero"
+                            >
+                                <span className="material-symbols-outlined text-xl">hail</span>
+                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Llamar camarero</span>
+                            </button>
+                            <button 
+                                onClick={() => handleMesaAction('pagar', 'Cuenta solicitada')}
+                                className="size-8 sm:size-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-100 transition-colors group relative"
+                                title="Pedir cuenta"
+                            >
+                                <span className="material-symbols-outlined text-xl">payments</span>
+                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Pedir cuenta</span>
+                            </button>
+                        </div>
                     </nav>
                 </div>
 

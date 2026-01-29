@@ -389,6 +389,8 @@
       <tag name="controller.service_arguments"/>
       <tag name="routing.controller"/>
       <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\PedidoRepository"/>
+      <argument type="service" id="App\Repository\MesaRepository"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\BarraController"/>
       </call>

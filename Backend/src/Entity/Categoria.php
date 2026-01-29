@@ -24,6 +24,9 @@ class Categoria
     #[ORM\Column(type: 'boolean')]
     private bool $activa = true;
 
+    #[ORM\Column(type: 'string', length: 20)]
+    private string $tipo = 'cocina'; // 'cocina' o 'barra'
+
     #[ORM\OneToMany(mappedBy: 'categoria', targetEntity: Producto::class)]
     private Collection $productos;
 
@@ -67,6 +70,17 @@ class Categoria
     public function setActiva(bool $activa): self
     {
         $this->activa = $activa;
+        return $this;
+    }
+
+    public function getTipo(): string
+    {
+        return $this->tipo;
+    }
+
+    public function setTipo(string $tipo): self
+    {
+        $this->tipo = $tipo;
         return $this;
     }
 

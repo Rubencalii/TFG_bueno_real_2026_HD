@@ -23,6 +23,14 @@ class CocinaController extends AbstractController
 
         // Serializar para React
         $pedidos = array_map(function(Pedido $pedido) {
+            // Filtrar solo detalles de cocina
+            $detallesCocina = array_values(array_filter($pedido->getDetalles()->toArray(), function($d) {
+                return $d->getProducto()->getCategoria()->getTipo() === 'cocina';
+            }));
+
+            // Si el pedido tiene cosas de barra pero no de cocina (caso raro si la query ya filtra),
+            // podría llegar vacío de detalles. La query findParaCocina asegura que AL MENOS uno hay.
+            
             return [
                 'id' => $pedido->getId(),
                 'mesa' => $pedido->getMesa()->getNumero(),
@@ -38,7 +46,7 @@ class CocinaController extends AbstractController
                         'cantidad' => $detalle->getCantidad(),
                         'notas' => $detalle->getNotas(),
                     ];
-                }, $pedido->getDetalles()->toArray())
+                }, $detallesCocina)
             ];
         }, $pedidosEntities);
 

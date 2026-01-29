@@ -25,6 +25,12 @@ class Mesa
     #[ORM\Column(type: 'boolean')]
     private bool $activa = true;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $llamaCamarero = false;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $pideCuenta = false;
+
     #[ORM\OneToMany(mappedBy: 'mesa', targetEntity: Pedido::class)]
     private Collection $pedidos;
 
@@ -69,6 +75,28 @@ class Mesa
     public function setActiva(bool $activa): self
     {
         $this->activa = $activa;
+        return $this;
+    }
+
+    public function isLlamaCamarero(): bool
+    {
+        return $this->llamaCamarero;
+    }
+
+    public function setLlamaCamarero(bool $llamaCamarero): self
+    {
+        $this->llamaCamarero = $llamaCamarero;
+        return $this;
+    }
+
+    public function isPideCuenta(): bool
+    {
+        return $this->pideCuenta;
+    }
+
+    public function setPideCuenta(bool $pideCuenta): self
+    {
+        $this->pideCuenta = $pideCuenta;
         return $this;
     }
 

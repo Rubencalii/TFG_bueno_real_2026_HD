@@ -148,6 +148,10 @@ class PedidoController extends AbstractController
         $pedidos = $this->pedidoRepository->findParaCocina();
         
         $data = array_map(function(Pedido $pedido) {
+            $detallesCocina = array_values(array_filter($pedido->getDetalles()->toArray(), function(DetallePedido $d) {
+                return $d->getProducto()->getCategoria()->getTipo() === 'cocina';
+            }));
+
             return [
                 'id' => $pedido->getId(),
                 'mesa' => $pedido->getMesa()->getNumero(),
@@ -163,7 +167,42 @@ class PedidoController extends AbstractController
                         'cantidad' => $detalle->getCantidad(),
                         'notas' => $detalle->getNotas(),
                     ];
-                }, $pedido->getDetalles()->toArray())
+                }, $detallesCocina)
+            ];
+        }, $pedidos);
+
+        return $this->json($data);
+    }
+
+    /**
+     * Obtener pedidos para la barra
+     */
+    #[Route('/barra/pedidos', name: 'api_barra_pedidos', methods: ['GET'])]
+    public function getPedidosBarra(): JsonResponse
+    {
+        $pedidos = $this->pedidoRepository->findParaBarra();
+        
+        $data = array_map(function(Pedido $pedido) {
+            $detallesBarra = array_values(array_filter($pedido->getDetalles()->toArray(), function(DetallePedido $d) {
+                return $d->getProducto()->getCategoria()->getTipo() === 'barra';
+            }));
+
+            return [
+                'id' => $pedido->getId(),
+                'mesa' => $pedido->getMesa()->getNumero(),
+                'estado' => $pedido->getEstado(),
+                'createdAt' => $pedido->getCreatedAt()->format('H:i'),
+                'minutosEspera' => $pedido->getMinutosEspera(),
+                'colorSemaforo' => $pedido->getColorSemaforo(),
+                'total' => $pedido->getTotalCalculado(),
+                'detalles' => array_map(function(DetallePedido $detalle) {
+                    return [
+                        'id' => $detalle->getId(),
+                        'producto' => $detalle->getProducto()->getNombre(),
+                        'cantidad' => $detalle->getCantidad(),
+                        'notas' => $detalle->getNotas(),
+                    ];
+                }, $detallesBarra)
             ];
         }, $pedidos);
 
@@ -203,5 +242,83 @@ class PedidoController extends AbstractController
         }, $pedidos);
 
         return $this->json($data);
+    }
+
+    /**
+     * Llamar al camarero
+     */
+    #[Route('/mesa/{token}/llamar', name: 'api_mesa_llamar', methods: ['POST'])]
+    public function llamarCamarero(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        $mesa->setLlamaCamarero(true);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true]);
+    }
+
+    /**
+     * Pedir la cuenta
+     */
+    #[Route('/mesa/{token}/pagar', name: 'api_mesa_pagar', methods: ['POST'])]
+    public function pedirCuenta(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        $mesa->setPideCuenta(true);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true]);
+    }
+
+    /**
+     * Obtener notificaciones para barra
+     */
+    #[Route('/barra/notificaciones', name: 'api_barra_notificaciones', methods: ['GET'])]
+    public function getNotificaciones(): JsonResponse
+    {
+        $mesas = $this->mesaRepository->findBy(['activa' => true]);
+        $notificaciones = [];
+
+        foreach ($mesas as $mesa) {
+            if ($mesa->isLlamaCamarero() || $mesa->isPideCuenta()) {
+                $notificaciones[] = [
+                    'mesaId' => $mesa->getId(),
+                    'numero' => $mesa->getNumero(),
+                    'llamaCamarero' => $mesa->isLlamaCamarero(),
+                    'pideCuenta' => $mesa->isPideCuenta(),
+                    'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
+                ];
+            }
+        }
+
+        return $this->json($notificaciones);
+    }
+
+    /**
+     * Cerrar mesa (desde barra)
+     */
+    #[Route('/barra/mesa/{id}/cerrar', name: 'api_barra_mesa_cerrar', methods: ['POST'])]
+    public function cerrarMesa(int $id): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        // Resetear avisos
+        $mesa->setLlamaCamarero(false);
+        $mesa->setPideCuenta(false);
+
+        // Marcar todos los pedidos como entregados para limpiar la sesión
+        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
+        foreach ($pedidos as $pedido) {
+            $pedido->setEstado(Pedido::ESTADO_ENTREGADO);
+        }
+
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true]);
     }
 }

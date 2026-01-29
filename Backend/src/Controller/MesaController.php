@@ -62,7 +62,7 @@ class MesaController extends AbstractController
             'mesa' => [
                 'id' => $mesa->getId(),
                 'numero' => $mesa->getNumero(),
-                'token' => $mesa->getTokenQr(),
+                'tokenQr' => $mesa->getTokenQr(),
             ],
             'categorias' => $categorias,
             'productos' => $productos,

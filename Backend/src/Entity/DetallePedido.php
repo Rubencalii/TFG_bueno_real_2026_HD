@@ -98,6 +98,7 @@ class DetallePedido
      */
     public function getSubtotal(): string
     {
-        return bcmul($this->precioUnitario, (string) $this->cantidad, 2);
+        $subtotal = (float) $this->precioUnitario * $this->cantidad;
+        return number_format($subtotal, 2, '.', '');
     }
 }

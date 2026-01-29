@@ -21,6 +21,8 @@ return [
         '/' => [[['_route' => 'home', '_controller' => 'App\\Controller\\HomeController::index'], null, null, null, false, false, null]],
         '/api/pedido' => [[['_route' => 'api_crear_pedido', '_controller' => 'App\\Controller\\PedidoController::crearPedido'], null, ['POST' => 0], null, false, false, null]],
         '/api/cocina/pedidos' => [[['_route' => 'api_cocina_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosCocina'], null, ['GET' => 0], null, false, false, null]],
+        '/api/barra/pedidos' => [[['_route' => 'api_barra_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosBarra'], null, ['GET' => 0], null, false, false, null]],
+        '/api/barra/notificaciones' => [[['_route' => 'api_barra_notificaciones', '_controller' => 'App\\Controller\\PedidoController::getNotificaciones'], null, ['GET' => 0], null, false, false, null]],
         '/login' => [[['_route' => 'login', '_controller' => 'App\\Controller\\SecurityController::login'], null, null, null, false, false, null]],
         '/logout' => [[['_route' => 'logout', '_controller' => 'App\\Controller\\SecurityController::logout'], null, null, null, false, false, null]],
     ],
@@ -48,7 +50,14 @@ return [
                 .'|/pedido/mesa/([^/]++)(*:245)'
                 .'|/api/(?'
                     .'|pedido/([^/]++)/estado(*:283)'
-                    .'|mesa/([^/]++)/pedidos(*:312)'
+                    .'|mesa/([^/]++)/(?'
+                        .'|p(?'
+                            .'|edidos(*:318)'
+                            .'|agar(*:330)'
+                        .')'
+                        .'|llamar(*:345)'
+                    .')'
+                    .'|barra/mesa/([^/]++)/cerrar(*:380)'
                 .')'
             .')/?$}sDu',
     ],
@@ -64,8 +73,11 @@ return [
         216 => [[['_route' => 'menu_mesa', '_controller' => 'App\\Controller\\MesaController::menuMesa'], ['token'], null, null, false, true, null]],
         245 => [[['_route' => 'pedido_mesa', '_controller' => 'App\\Controller\\MesaController::pedidoMesa'], ['identificador'], null, null, false, true, null]],
         283 => [[['_route' => 'api_cambiar_estado_pedido', '_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], ['id'], ['PATCH' => 0], null, false, false, null]],
-        312 => [
-            [['_route' => 'api_mesa_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosMesa'], ['token'], ['GET' => 0], null, false, false, null],
+        318 => [[['_route' => 'api_mesa_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosMesa'], ['token'], ['GET' => 0], null, false, false, null]],
+        330 => [[['_route' => 'api_mesa_pagar', '_controller' => 'App\\Controller\\PedidoController::pedirCuenta'], ['token'], ['POST' => 0], null, false, false, null]],
+        345 => [[['_route' => 'api_mesa_llamar', '_controller' => 'App\\Controller\\PedidoController::llamarCamarero'], ['token'], ['POST' => 0], null, false, false, null]],
+        380 => [
+            [['_route' => 'api_barra_mesa_cerrar', '_controller' => 'App\\Controller\\PedidoController::cerrarMesa'], ['id'], ['POST' => 0], null, false, false, null],
             [null, null, null, null, false, false, 0],
         ],
     ],

@@ -25,8 +25,34 @@ class PedidoRepository extends ServiceEntityRepository
     public function findParaCocina(): array
     {
         return $this->createQueryBuilder('p')
+            ->innerJoin('p.detalles', 'd')
+            ->innerJoin('d.producto', 'prod')
+            ->innerJoin('prod.categoria', 'cat')
             ->andWhere('p.estado IN (:estados)')
+            ->andWhere('cat.tipo = :tipo')
             ->setParameter('estados', [Pedido::ESTADO_PENDIENTE, Pedido::ESTADO_EN_PREPARACION])
+            ->setParameter('tipo', 'cocina')
+            ->distinct()
+            ->orderBy('p.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Devuelve pedidos pendientes y en preparación (para barra)
+     * @return Pedido[]
+     */
+    public function findParaBarra(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.detalles', 'd')
+            ->innerJoin('d.producto', 'prod')
+            ->innerJoin('prod.categoria', 'cat')
+            ->andWhere('p.estado IN (:estados)')
+            ->andWhere('cat.tipo = :tipo')
+            ->setParameter('estados', [Pedido::ESTADO_PENDIENTE, Pedido::ESTADO_EN_PREPARACION])
+            ->setParameter('tipo', 'barra')
+            ->distinct()
             ->orderBy('p.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
@@ -72,8 +98,10 @@ class PedidoRepository extends ServiceEntityRepository
         
         foreach ($pedidos as $pedido) {
             $pedido->calcularTotal();
-            $total = bcadd($total, $pedido->getTotalCalculado(), 2);
+            $total = (float)$total + (float)$pedido->getTotalCalculado();
         }
+        
+        return number_format($total, 2, '.', '');
         
         return $total;
     }
