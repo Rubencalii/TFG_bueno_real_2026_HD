@@ -46,7 +46,10 @@ return [
                 .')'
                 .'|/mesa/([^/]++)(*:216)'
                 .'|/pedido/mesa/([^/]++)(*:245)'
-                .'|/api/pedido/([^/]++)/estado(*:280)'
+                .'|/api/(?'
+                    .'|pedido/([^/]++)/estado(*:283)'
+                    .'|mesa/([^/]++)/pedidos(*:312)'
+                .')'
             .')/?$}sDu',
     ],
     [ // $dynamicRoutes
@@ -60,8 +63,9 @@ return [
         191 => [[['_route' => '_profiler', '_controller' => 'web_profiler.controller.profiler::panelAction'], ['token'], null, null, false, true, null]],
         216 => [[['_route' => 'menu_mesa', '_controller' => 'App\\Controller\\MesaController::menuMesa'], ['token'], null, null, false, true, null]],
         245 => [[['_route' => 'pedido_mesa', '_controller' => 'App\\Controller\\MesaController::pedidoMesa'], ['identificador'], null, null, false, true, null]],
-        280 => [
-            [['_route' => 'api_cambiar_estado_pedido', '_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], ['id'], ['PATCH' => 0], null, false, false, null],
+        283 => [[['_route' => 'api_cambiar_estado_pedido', '_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], ['id'], ['PATCH' => 0], null, false, false, null]],
+        312 => [
+            [['_route' => 'api_mesa_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosMesa'], ['token'], ['GET' => 0], null, false, false, null],
             [null, null, null, null, false, false, 0],
         ],
     ],

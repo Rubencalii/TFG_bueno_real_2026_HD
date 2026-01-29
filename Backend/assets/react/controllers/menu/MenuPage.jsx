@@ -4,6 +4,7 @@ import SearchBar from './SearchBar';
 import CategoryNav from './CategoryNav';
 import ProductGrid from './ProductGrid';
 import CartFloat from './CartFloat';
+import MyOrdersSection from './MyOrdersSection';
 
 export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const [cart, setCart] = useState([]);
@@ -11,6 +12,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const [activeFilters, setActiveFilters] = useState([]);
     const [activeCategory, setActiveCategory] = useState(categorias?.[0] || null);
     const [toast, setToast] = useState(null);
+    const [activeView, setActiveView] = useState('menu'); // 'menu' or 'orders'
 
     const showToast = (message) => {
         setToast(message);
@@ -87,10 +89,16 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
 
     return (
         <div className="bg-background-light text-text-main font-display min-h-screen selection:bg-primary selection:text-white">
-            <MenuHeader mesa={mesa} />
+            <MenuHeader 
+                mesa={mesa} 
+                activeView={activeView} 
+                onViewChange={setActiveView} 
+            />
             
             <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-40">
-                {/* Title Section */}
+                {activeView === 'menu' ? (
+                    <>
+                        {/* Title Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
                     <div className="space-y-2">
                         <h1 className="text-text-main text-4xl sm:text-6xl font-black leading-tight tracking-tighter">
@@ -124,13 +132,17 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                 />
 
                 {/* Products Grid */}
-                <ProductGrid 
-                    productos={filteredProductos}
-                    activeCategory={activeCategory}
-                    onAddToCart={addToCart}
-                    onRemoveFromCart={removeFromCart}
-                    cartItems={cart}
-                />
+                    <ProductGrid 
+                        productos={filteredProductos}
+                        activeCategory={activeCategory}
+                        onAddToCart={addToCart}
+                        onRemoveFromCart={removeFromCart}
+                        cartItems={cart}
+                    />
+                </>
+                ) : (
+                    <MyOrdersSection mesa={mesa} />
+                )}
             </main>
 
             {/* Notification Toast */}
@@ -150,6 +162,11 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                 count={cartCount}
                 onRemove={removeFromCart}
                 mesa={mesa}
+                onOrderSuccess={() => {
+                    setCart([]);
+                    setActiveView('orders');
+                    showToast('¡Pedido enviado!');
+                }}
             />
         </div>
     );

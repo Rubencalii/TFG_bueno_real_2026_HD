@@ -169,4 +169,39 @@ class PedidoController extends AbstractController
 
         return $this->json($data);
     }
+
+    /**
+     * Obtener pedidos activos de una mesa (para el cliente)
+     */
+    #[Route('/mesa/{token}/pedidos', name: 'api_mesa_pedidos', methods: ['GET'])]
+    public function getPedidosMesa(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], Response::HTTP_NOT_FOUND);
+        }
+
+        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
+        
+        $data = array_map(function(Pedido $pedido) {
+            return [
+                'id' => $pedido->getId(),
+                'estado' => $pedido->getEstado(),
+                'createdAt' => $pedido->getCreatedAt()->format('H:i'),
+                'minutosEspera' => $pedido->getMinutosEspera(),
+                'total' => $pedido->getTotalCalculado(),
+                'detalles' => array_map(function(DetallePedido $detalle) {
+                    return [
+                        'id' => $detalle->getId(),
+                        'producto' => $detalle->getProducto()->getNombre(),
+                        'cantidad' => $detalle->getCantidad(),
+                        'notas' => $detalle->getNotas(),
+                    ];
+                }, $pedido->getDetalles()->toArray())
+            ];
+        }, $pedidos);
+
+        return $this->json($data);
+    }
 }

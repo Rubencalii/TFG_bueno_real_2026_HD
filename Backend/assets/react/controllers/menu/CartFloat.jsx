@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function CartFloat({ items, total, count, onRemove, mesa }) {
+export default function CartFloat({ items, total, count, onRemove, mesa, onOrderSuccess }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,9 +23,8 @@ export default function CartFloat({ items, total, count, onRemove, mesa }) {
             });
             
             if (response.ok) {
-                // Show success and refresh
-                alert('¡Pedido enviado correctamente!');
-                window.location.reload();
+                setIsOpen(false);
+                if (onOrderSuccess) onOrderSuccess();
             } else {
                 alert('Error al enviar el pedido');
             }

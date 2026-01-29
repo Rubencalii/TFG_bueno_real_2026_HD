@@ -27,6 +27,7 @@ return [
     'api_crear_pedido' => [[], ['_controller' => 'App\\Controller\\PedidoController::crearPedido'], [], [['text', '/api/pedido']], [], [], []],
     'api_cambiar_estado_pedido' => [['id'], ['_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], [], [['text', '/estado'], ['variable', '/', '[^/]++', 'id', true], ['text', '/api/pedido']], [], [], []],
     'api_cocina_pedidos' => [[], ['_controller' => 'App\\Controller\\PedidoController::getPedidosCocina'], [], [['text', '/api/cocina/pedidos']], [], [], []],
+    'api_mesa_pedidos' => [['token'], ['_controller' => 'App\\Controller\\PedidoController::getPedidosMesa'], [], [['text', '/pedidos'], ['variable', '/', '[^/]++', 'token', true], ['text', '/api/mesa']], [], [], []],
     'login' => [[], ['_controller' => 'App\\Controller\\SecurityController::login'], [], [['text', '/login']], [], [], []],
     'logout' => [[], ['_controller' => 'App\\Controller\\SecurityController::logout'], [], [['text', '/logout']], [], [], []],
     'App\Controller\AdminController::index' => [[], ['_controller' => 'App\\Controller\\AdminController::index'], [], [['text', '/admin/']], [], [], []],
@@ -38,6 +39,7 @@ return [
     'App\Controller\PedidoController::crearPedido' => [[], ['_controller' => 'App\\Controller\\PedidoController::crearPedido'], [], [['text', '/api/pedido']], [], [], []],
     'App\Controller\PedidoController::cambiarEstado' => [['id'], ['_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], [], [['text', '/estado'], ['variable', '/', '[^/]++', 'id', true], ['text', '/api/pedido']], [], [], []],
     'App\Controller\PedidoController::getPedidosCocina' => [[], ['_controller' => 'App\\Controller\\PedidoController::getPedidosCocina'], [], [['text', '/api/cocina/pedidos']], [], [], []],
+    'App\Controller\PedidoController::getPedidosMesa' => [['token'], ['_controller' => 'App\\Controller\\PedidoController::getPedidosMesa'], [], [['text', '/pedidos'], ['variable', '/', '[^/]++', 'token', true], ['text', '/api/mesa']], [], [], []],
     'App\Controller\SecurityController::login' => [[], ['_controller' => 'App\\Controller\\SecurityController::login'], [], [['text', '/login']], [], [], []],
     'App\Controller\SecurityController::logout' => [[], ['_controller' => 'App\\Controller\\SecurityController::logout'], [], [['text', '/logout']], [], [], []],
 ];
