@@ -27,6 +27,7 @@
       <parameter key="MakerBundle">Symfony\Bundle\MakerBundle\MakerBundle</parameter>
       <parameter key="WebpackEncoreBundle">Symfony\WebpackEncoreBundle\WebpackEncoreBundle</parameter>
       <parameter key="ReactBundle">Symfony\UX\React\ReactBundle</parameter>
+      <parameter key="DoctrineFixturesBundle">Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle</parameter>
     </parameter>
     <parameter key="kernel.bundles_metadata" type="collection">
       <parameter key="FrameworkBundle" type="collection">
@@ -85,6 +86,10 @@
         <parameter key="path">/app/vendor/symfony/ux-react</parameter>
         <parameter key="namespace">Symfony\UX\React</parameter>
       </parameter>
+      <parameter key="DoctrineFixturesBundle" type="collection">
+        <parameter key="path">/app/vendor/doctrine/doctrine-fixtures-bundle</parameter>
+        <parameter key="namespace">Doctrine\Bundle\FixturesBundle</parameter>
+      </parameter>
     </parameter>
     <parameter key="kernel.charset">UTF-8</parameter>
     <parameter key="kernel.container_class">App_KernelDevDebugContainer</parameter>
@@ -138,6 +143,10 @@
       </parameter>
       <parameter key="Symfony\UX\React\ReactBundle" type="collection">
         <parameter key="all">true</parameter>
+      </parameter>
+      <parameter key="Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle" type="collection">
+        <parameter key="dev">true</parameter>
+        <parameter key="test">true</parameter>
       </parameter>
     </parameter>
     <parameter key="event_dispatcher.event_aliases" type="collection">
@@ -388,6 +397,7 @@
       <tag name="controller.service_arguments"/>
       <tag name="routing.controller"/>
       <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\PedidoRepository"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\CocinaController"/>
       </call>
@@ -404,8 +414,23 @@
       <tag name="controller.service_arguments"/>
       <tag name="routing.controller"/>
       <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\MesaRepository"/>
+      <argument type="service" id="App\Repository\CategoriaRepository"/>
+      <argument type="service" id="App\Repository\ProductoRepository"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\MesaController"/>
+      </call>
+    </service>
+    <service id="App\Controller\PedidoController" class="App\Controller\PedidoController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="routing.controller"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\MesaRepository"/>
+      <argument type="service" id="App\Repository\ProductoRepository"/>
+      <argument type="service" id="App\Repository\PedidoRepository"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.TJNRSaV.App\Controller\PedidoController"/>
       </call>
     </service>
     <service id="App\Controller\SecurityController" class="App\Controller\SecurityController" public="true" autowire="true" autoconfigure="true">
@@ -415,6 +440,9 @@
       <call method="setContainer">
         <argument type="service" id=".service_locator.TJNRSaV.App\Controller\SecurityController"/>
       </call>
+    </service>
+    <service id="App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true">
+      <tag name="doctrine.fixture.orm"/>
     </service>
     <service id="App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" autoconfigure="true">
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
@@ -452,7 +480,19 @@
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
       <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
     </service>
+    <service id="App\Repository\CategoriaRepository" class="App\Repository\CategoriaRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Repository\MesaRepository" class="App\Repository\MesaRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\PedidoRepository" class="App\Repository\PedidoRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\ProductoRepository" class="App\Repository\ProductoRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -489,7 +529,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver" priority="-50">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.L84sHWF"/>
+      <argument type="service" id=".service_locator.mBM_5PR"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver" priority="-100">controller.argument_value_resolver</tag>
@@ -2588,6 +2628,7 @@
           <argument>/app/vendor/symfony/maker-bundle/translations</argument>
           <argument>/app/vendor/symfony/webpack-encore-bundle/src/translations</argument>
           <argument>/app/vendor/symfony/ux-react/translations</argument>
+          <argument>/app/vendor/doctrine/doctrine-fixtures-bundle/translations</argument>
         </argument>
         <argument key="cache_vary" type="collection">
           <argument key="scanned_directories" type="collection">
@@ -2609,6 +2650,7 @@
             <argument>vendor/symfony/maker-bundle/translations</argument>
             <argument>vendor/symfony/webpack-encore-bundle/src/translations</argument>
             <argument>vendor/symfony/ux-react/translations</argument>
+            <argument>vendor/doctrine/doctrine-fixtures-bundle/translations</argument>
           </argument>
         </argument>
       </argument>
@@ -3619,7 +3661,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.L84sHWF"/>
+      <argument type="service" id=".service_locator.mBM_5PR"/>
     </service>
     <service id="debug.log_processor" class="Symfony\Bridge\Monolog\Processor\DebugProcessor">
       <tag name="kernel.reset" method="reset"/>
@@ -3698,6 +3740,7 @@
         <argument>App\Controller\CocinaController</argument>
         <argument>App\Controller\HomeController</argument>
         <argument>App\Controller\MesaController</argument>
+        <argument>App\Controller\PedidoController</argument>
         <argument>App\Controller\SecurityController</argument>
       </argument>
     </service>
@@ -5590,7 +5633,7 @@
     <service id="doctrine.orm.configuration" class="Doctrine\ORM\Configuration" abstract="true"/>
     <service id="doctrine.orm.entity_manager.abstract" class="Doctrine\ORM\EntityManager" lazy="true" abstract="true"/>
     <service id="doctrine.orm.container_repository_factory" class="Doctrine\Bundle\DoctrineBundle\Repository\ContainerRepositoryFactory">
-      <argument type="service" id=".service_locator.s.erQ5c"/>
+      <argument type="service" id=".service_locator.LDRpbF."/>
     </service>
     <service id="doctrine.orm.manager_configurator.abstract" class="Doctrine\Bundle\DoctrineBundle\ManagerConfigurator" abstract="true">
       <argument type="collection"/>
@@ -7830,6 +7873,31 @@
       <tag name="asset_mapper.compiler"/>
       <argument>true</argument>
     </service>
+    <service id="doctrine.fixtures_load_command" class="Doctrine\Bundle\FixturesBundle\Command\LoadDataFixturesDoctrineCommand">
+      <tag name="console.command" command="doctrine:fixtures:load"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="doctrine.fixtures.loader"/>
+      <argument type="service" id="doctrine"/>
+      <argument type="collection">
+        <argument key="default" type="service" id="doctrine.fixtures.purger.orm_purger_factory"/>
+      </argument>
+      <call method="setName">
+        <argument>doctrine:fixtures:load</argument>
+      </call>
+    </service>
+    <service id="doctrine.fixtures.loader" class="Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader">
+      <call method="addFixtures">
+        <argument type="collection">
+          <argument type="collection">
+            <argument key="fixture" type="service" id="App\DataFixtures\AppFixtures"/>
+            <argument key="groups" type="collection"/>
+          </argument>
+        </argument>
+      </call>
+    </service>
+    <service id="doctrine.fixtures.purger.orm_purger_factory" class="Doctrine\Bundle\FixturesBundle\Purger\ORMPurgerFactory">
+      <tag name="doctrine.fixtures.purger_factory" alias="default"/>
+    </service>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AdminController" class="App\Controller\AdminController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AdminController" class="App\Controller\AdminController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\AdminController.0.App\Controller\AdminController" class="App\Controller\AdminController" autowire="true" abstract="true"/>
@@ -7850,10 +7918,16 @@
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\MesaController.0.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\MesaController" class="App\Controller\MesaController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\PedidoController" class="App\Controller\PedidoController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\PedidoController" class="App\Controller\PedidoController" autowire="true" abstract="true"/>
+    <service id=".instanceof.App\Controller\PedidoController.0.App\Controller\PedidoController" class="App\Controller\PedidoController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\PedidoController" class="App\Controller\PedidoController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\SecurityController" class="App\Controller\SecurityController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\SecurityController" class="App\Controller\SecurityController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\SecurityController.0.App\Controller\SecurityController" class="App\Controller\SecurityController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\SecurityController" class="App\Controller\SecurityController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\FixturesBundle\ORMFixtureInterface.0.App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Alergeno.0.App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\Alergeno" class="App\Entity\Alergeno" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Bebida.0.App\Entity\Bebida" class="App\Entity\Bebida" autowire="true" abstract="true"/>
@@ -7872,8 +7946,14 @@
     <service id=".abstract.instanceof.App\Entity\Producto" class="App\Entity\Producto" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\User.0.App\Entity\User" class="App\Entity\User" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\User" class="App\Entity\User" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\CategoriaRepository" class="App\Repository\CategoriaRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\CategoriaRepository" class="App\Repository\CategoriaRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\MesaRepository" class="App\Repository\MesaRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\MesaRepository" class="App\Repository\MesaRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\PedidoRepository" class="App\Repository\PedidoRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\PedidoRepository" class="App\Repository\PedidoRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ProductoRepository" class="App\Repository\ProductoRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\ProductoRepository" class="App\Repository\ProductoRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".service_locator.ryAvHi4" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -8394,18 +8474,6 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.1vYpZ1B" method="withContext"/>
     </service>
-    <service id=".service_locator.pJdVZQY" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="mesaRepository" type="service_closure" id="App\Repository\MesaRepository"/>
-      </argument>
-    </service>
-    <service id=".service_locator.pJdVZQY.App\Controller\MesaController::menuMesa()" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator_context" id="App\Controller\MesaController::menuMesa()"/>
-      <argument>App\Controller\MesaController::menuMesa()</argument>
-      <argument type="service" id="service_container"/>
-      <factory service=".service_locator.pJdVZQY" method="withContext"/>
-    </service>
     <service id=".service_locator.0MQaTBY" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -8418,18 +8486,16 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.0MQaTBY" method="withContext"/>
     </service>
-    <service id=".service_locator.L84sHWF" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.mBM_5PR" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="App\Kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="kernel::loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
         <argument key="App\Kernel::loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
-        <argument key="App\Controller\MesaController::menuMesa" type="service_closure" id=".service_locator.pJdVZQY.App\Controller\MesaController::menuMesa()"/>
         <argument key="App\Controller\SecurityController::login" type="service_closure" id=".service_locator.0MQaTBY.App\Controller\SecurityController::login()"/>
         <argument key="kernel:registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="kernel:loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
-        <argument key="App\Controller\MesaController:menuMesa" type="service_closure" id=".service_locator.pJdVZQY.App\Controller\MesaController::menuMesa()"/>
         <argument key="App\Controller\SecurityController:login" type="service_closure" id=".service_locator.0MQaTBY.App\Controller\SecurityController::login()"/>
       </argument>
     </service>
@@ -8767,10 +8833,13 @@
         <argument key="turbo.doctrine.event_listener" type="service_closure" id="turbo.doctrine.event_listener"/>
       </argument>
     </service>
-    <service id=".service_locator.s.erQ5c" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.LDRpbF." class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
+        <argument key="App\Repository\CategoriaRepository" type="service_closure" id="App\Repository\CategoriaRepository"/>
         <argument key="App\Repository\MesaRepository" type="service_closure" id="App\Repository\MesaRepository"/>
+        <argument key="App\Repository\PedidoRepository" type="service_closure" id="App\Repository\PedidoRepository"/>
+        <argument key="App\Repository\ProductoRepository" type="service_closure" id="App\Repository\ProductoRepository"/>
         <argument key="App\Repository\UserRepository" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
@@ -9070,6 +9139,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.TJNRSaV" method="withContext"/>
     </service>
+    <service id=".service_locator.TJNRSaV.App\Controller\PedidoController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\PedidoController"/>
+      <argument>App\Controller\PedidoController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.TJNRSaV" method="withContext"/>
+    </service>
     <service id=".service_locator.TJNRSaV.App\Controller\SecurityController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\SecurityController"/>
       <argument>App\Controller\SecurityController</argument>
@@ -9287,6 +9362,7 @@
           <argument>App\Controller\CocinaController</argument>
           <argument>App\Controller\HomeController</argument>
           <argument>App\Controller\MesaController</argument>
+          <argument>App\Controller\PedidoController</argument>
           <argument>App\Controller\SecurityController</argument>
           <argument>Doctrine\Bundle\DoctrineBundle\Controller\ProfilerController</argument>
         </argument>
@@ -10234,7 +10310,7 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.qtNDmJa"/>
+      <argument type="service" id=".service_locator.y.Xa4f4"/>
       <argument type="collection">
         <argument key="about">console.command.about</argument>
         <argument key="assets:install">console.command.assets_install</argument>
@@ -10328,6 +10404,7 @@
         <argument key="debug:firewall">security.command.debug_firewall</argument>
         <argument key="security:hash-password">security.command.user_password_hash</argument>
         <argument key="debug:security:role-hierarchy">security.command.role_hierarchy_dump</argument>
+        <argument key="doctrine:fixtures:load">doctrine.fixtures_load_command</argument>
         <argument key="make:auth">maker.auto_command.make_auth</argument>
         <argument key="make:command">maker.auto_command.make_command</argument>
         <argument key="make:twig-component">maker.auto_command.make_twig_component</argument>
@@ -10360,7 +10437,7 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.qtNDmJa" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.y.Xa4f4" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="console.command.about" type="service_closure" id=".console.command.about.lazy"/>
@@ -10455,6 +10532,7 @@
         <argument key="security.command.debug_firewall" type="service_closure" id=".security.command.debug_firewall.lazy"/>
         <argument key="security.command.user_password_hash" type="service_closure" id=".security.command.user_password_hash.lazy"/>
         <argument key="security.command.role_hierarchy_dump" type="service_closure" id=".security.command.role_hierarchy_dump.lazy"/>
+        <argument key="doctrine.fixtures_load_command" type="service_closure" id="doctrine.fixtures_load_command"/>
         <argument key="maker.auto_command.make_auth" type="service_closure" id=".maker.auto_command.make_auth.lazy"/>
         <argument key="maker.auto_command.make_command" type="service_closure" id=".maker.auto_command.make_command.lazy"/>
         <argument key="maker.auto_command.make_twig_component" type="service_closure" id=".maker.auto_command.make_twig_component.lazy"/>
@@ -10755,9 +10833,10 @@
     <service id="Psr\Log\LoggerInterface" alias="monolog.logger"/>
     <service id="Symfony\WebpackEncoreBundle\Asset\EntrypointLookupCollectionInterface" alias="webpack_encore.entrypoint_lookup_collection"/>
     <service id="Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface" alias="webpack_encore.entrypoint_lookup[_default]"/>
+    <service id="doctrine.fixtures.provider" alias="doctrine.fixtures.loader"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.ryAvHi4" public="true"/>
     <service id="twig.loader.filesystem" alias="twig.loader.native_filesystem"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.L84sHWF"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.mBM_5PR"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.W55Po6X"/>
     <service id="twig.loader" alias="twig.loader.native_filesystem"/>
     <service id=".Psr\Log\LoggerInterface $request.logger" alias="monolog.logger.request"/>
@@ -10815,7 +10894,6 @@
     <service id=".signing.messenger.default_serializer.inner" alias="messenger.transport.native_php_serializer"/>
     <service id="doctrine.orm.default_metadata_driver" alias=".doctrine.orm.default_metadata_driver"/>
     <service id=".service_locator.c0wzfI4" alias=".service_locator.1vYpZ1B"/>
-    <service id=".service_locator.JHr3KDS" alias=".service_locator.pJdVZQY"/>
     <service id=".service_locator.uBwBrvQ" alias=".service_locator.0MQaTBY"/>
     <service id=".service_locator.D6tJ4Px" alias=".service_locator.TJNRSaV"/>
     <service id=".service_locator.0ngK9uf" alias=".service_locator.MXLal1R"/>

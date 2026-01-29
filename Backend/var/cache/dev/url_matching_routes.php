@@ -19,6 +19,8 @@ return [
         '/barra' => [[['_route' => 'barra_panel', '_controller' => 'App\\Controller\\BarraController::index'], null, null, null, true, false, null]],
         '/cocina' => [[['_route' => 'cocina_panel', '_controller' => 'App\\Controller\\CocinaController::index'], null, null, null, true, false, null]],
         '/' => [[['_route' => 'home', '_controller' => 'App\\Controller\\HomeController::index'], null, null, null, false, false, null]],
+        '/api/pedido' => [[['_route' => 'api_crear_pedido', '_controller' => 'App\\Controller\\PedidoController::crearPedido'], null, ['POST' => 0], null, false, false, null]],
+        '/api/cocina/pedidos' => [[['_route' => 'api_cocina_pedidos', '_controller' => 'App\\Controller\\PedidoController::getPedidosCocina'], null, ['GET' => 0], null, false, false, null]],
         '/login' => [[['_route' => 'login', '_controller' => 'App\\Controller\\SecurityController::login'], null, null, null, false, false, null]],
         '/logout' => [[['_route' => 'logout', '_controller' => 'App\\Controller\\SecurityController::logout'], null, null, null, false, false, null]],
     ],
@@ -44,6 +46,7 @@ return [
                 .')'
                 .'|/mesa/([^/]++)(*:216)'
                 .'|/pedido/mesa/([^/]++)(*:245)'
+                .'|/api/pedido/([^/]++)/estado(*:280)'
             .')/?$}sDu',
     ],
     [ // $dynamicRoutes
@@ -56,8 +59,9 @@ return [
         181 => [[['_route' => '_profiler_exception_css', '_controller' => 'web_profiler.controller.exception_panel::stylesheet'], ['token'], null, null, false, false, null]],
         191 => [[['_route' => '_profiler', '_controller' => 'web_profiler.controller.profiler::panelAction'], ['token'], null, null, false, true, null]],
         216 => [[['_route' => 'menu_mesa', '_controller' => 'App\\Controller\\MesaController::menuMesa'], ['token'], null, null, false, true, null]],
-        245 => [
-            [['_route' => 'pedido_mesa', '_controller' => 'App\\Controller\\MesaController::pedidoMesa'], ['identificador'], null, null, false, true, null],
+        245 => [[['_route' => 'pedido_mesa', '_controller' => 'App\\Controller\\MesaController::pedidoMesa'], ['identificador'], null, null, false, true, null]],
+        280 => [
+            [['_route' => 'api_cambiar_estado_pedido', '_controller' => 'App\\Controller\\PedidoController::cambiarEstado'], ['id'], ['PATCH' => 0], null, false, false, null],
             [null, null, null, null, false, false, 0],
         ],
     ],

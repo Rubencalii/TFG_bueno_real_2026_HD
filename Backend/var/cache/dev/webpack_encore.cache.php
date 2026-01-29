@@ -13,7 +13,7 @@ return [[
         'app' => [
             'js' => [
                 '/build/runtime.js',
-                '/build/vendors-assets_node_modules_hotwired_stimulus_dist_stimulus_js-node_modules_react_jsx-runtime-bc8148.js',
+                '/build/vendors-assets_node_modules_hotwired_stimulus_dist_stimulus_js-node_modules_react-dom_client_-ad9cf1.js',
                 '/build/app.js',
             ],
             'css' => [

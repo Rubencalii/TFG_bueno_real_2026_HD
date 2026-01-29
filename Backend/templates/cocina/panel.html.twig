@@ -1,6 +1,22 @@
 {% extends 'base.html.twig' %}
-{% block title %}Panel Cocina{% endblock %}
+
+{% block title %}Panel Cocina - Comanda Digital{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+{% endblock %}
+
 {% block body %}
-<h1>Panel de Cocina</h1>
-<p>Bienvenido, cocina.</p>
+<div id="cocina-app" {{ react_component('cocina/CocinaPage', {
+    pedidos: pedidos
+}) }}>
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p class="text-gray-500">Cargando panel de cocina...</p>
+        </div>
+    </div>
+</div>
 {% endblock %}
