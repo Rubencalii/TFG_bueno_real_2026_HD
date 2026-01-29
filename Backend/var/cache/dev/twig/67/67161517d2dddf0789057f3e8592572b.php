@@ -57,22 +57,23 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         // line 5
         yield from $this->unwrap()->yieldBlock('title', $context, $blocks);
         yield "</title>
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
         <link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>\">
         ";
-        // line 7
+        // line 8
         yield from $this->unwrap()->yieldBlock('stylesheets', $context, $blocks);
-        // line 10
+        // line 11
         yield "
         ";
-        // line 11
+        // line 12
         yield from $this->unwrap()->yieldBlock('javascripts', $context, $blocks);
-        // line 14
+        // line 15
         yield "    </head>
     <body>
         ";
-        // line 16
-        yield from $this->unwrap()->yieldBlock('body', $context, $blocks);
         // line 17
+        yield from $this->unwrap()->yieldBlock('body', $context, $blocks);
+        // line 18
         yield "    </body>
 </html>
 ";
@@ -108,7 +109,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield from [];
     }
 
-    // line 7
+    // line 8
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -121,7 +122,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f = $this->extensions["Symfony\\Bridge\\Twig\\Extension\\ProfilerExtension"];
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f->enter($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof = new \Twig\Profiler\Profile($this->getTemplateName(), "block", "stylesheets"));
 
-        // line 8
+        // line 9
         yield "            ";
         yield $this->extensions['Symfony\WebpackEncoreBundle\Twig\EntryFilesTwigExtension']->renderWebpackLinkTags("app");
         yield "
@@ -135,7 +136,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield from [];
     }
 
-    // line 11
+    // line 12
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -148,7 +149,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f = $this->extensions["Symfony\\Bridge\\Twig\\Extension\\ProfilerExtension"];
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f->enter($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof = new \Twig\Profiler\Profile($this->getTemplateName(), "block", "javascripts"));
 
-        // line 12
+        // line 13
         yield "            ";
         yield $this->extensions['Symfony\WebpackEncoreBundle\Twig\EntryFilesTwigExtension']->renderWebpackScriptTags("app");
         yield "
@@ -162,7 +163,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
         yield from [];
     }
 
-    // line 16
+    // line 17
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -197,7 +198,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  166 => 16,  152 => 12,  139 => 11,  125 => 8,  112 => 7,  89 => 5,  76 => 17,  74 => 16,  70 => 14,  68 => 11,  65 => 10,  63 => 7,  58 => 5,  52 => 1,);
+        return array (  167 => 17,  153 => 13,  140 => 12,  126 => 9,  113 => 8,  90 => 5,  77 => 18,  75 => 17,  71 => 15,  69 => 12,  66 => 11,  64 => 8,  58 => 5,  52 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -207,6 +208,7 @@ class __TwigTemplate_5006e613c0a2f1131f8b49af7b762988 extends Template
     <head>
         <meta charset=\"UTF-8\">
         <title>{% block title %}Welcome!{% endblock %}</title>
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
         <link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>\">
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}

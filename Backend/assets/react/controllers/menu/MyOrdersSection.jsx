@@ -6,7 +6,7 @@ export default function MyOrdersSection({ mesa }) {
 
     const fetchPedidos = async () => {
         try {
-            const response = await fetch(`/api/mesa/${mesa.token}/pedidos`);
+            const response = await fetch(`/api/mesa/${mesa.tokenQr}/pedidos`);
             if (response.ok) {
                 const data = await response.json();
                 setPedidos(data);
@@ -22,7 +22,7 @@ export default function MyOrdersSection({ mesa }) {
         fetchPedidos();
         const interval = setInterval(fetchPedidos, 10000); // Refresh every 10s
         return () => clearInterval(interval);
-    }, [mesa.token]);
+    }, [mesa.tokenQr]);
 
     const getStatusInfo = (estado) => {
         switch (estado) {
