@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function ProductCard({ producto, onAddToCart }) {
+export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity }) {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [notes, setNotes] = useState('');
 
@@ -71,23 +71,42 @@ export default function ProductCard({ producto, onAddToCart }) {
                             ))}
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
                             {/* Notes button */}
                             <button 
                                 onClick={() => setShowNotesModal(true)}
-                                className="size-10 sm:size-12 bg-gray-100 text-text-muted rounded-xl sm:rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-colors"
+                                className="size-10 sm:size-12 bg-gray-50 text-text-muted rounded-xl sm:rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors border border-gray-100"
                                 title="Añadir con nota"
                             >
                                 <span className="material-symbols-outlined text-lg sm:text-xl">edit_note</span>
                             </button>
                             
-                            {/* Quick add button */}
-                            <button 
-                                onClick={handleQuickAdd}
-                                className="size-10 sm:size-12 bg-primary text-white rounded-xl sm:rounded-2xl flex items-center justify-center neon-glow hover:scale-110 transition-transform active:scale-95"
-                            >
-                                <span className="material-symbols-outlined font-black">add</span>
-                            </button>
+                            <div className="flex items-center bg-gray-50 rounded-xl sm:rounded-2xl p-1 border border-gray-100">
+                                {quantity > 0 && (
+                                    <>
+                                        <button 
+                                            onClick={() => onRemoveFromCart(producto.id)}
+                                            className="size-8 sm:size-10 flex items-center justify-center text-text-muted hover:text-secondary transition-colors"
+                                        >
+                                            <span className="text-xl font-bold">−</span>
+                                        </button>
+                                        <span className="w-6 sm:w-8 text-center font-black text-sm sm:text-base text-text-main">
+                                            {quantity}
+                                        </span>
+                                    </>
+                                )}
+                                
+                                <button 
+                                    onClick={handleQuickAdd}
+                                    className={`size-8 sm:size-10 flex items-center justify-center rounded-lg sm:rounded-xl transition-all ${
+                                        quantity > 0 
+                                            ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' 
+                                            : 'text-primary hover:bg-primary/5'
+                                    }`}
+                                >
+                                    <span className="text-xl font-bold">+</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

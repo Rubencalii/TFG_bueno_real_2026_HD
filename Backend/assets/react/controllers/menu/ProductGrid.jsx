@@ -1,7 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid({ productos, activeCategory, onAddToCart }) {
+export default function ProductGrid({ productos, activeCategory, onAddToCart, onRemoveFromCart, cartItems }) {
     if (!productos || productos.length === 0) {
         return (
             <div className="text-center py-12">
@@ -11,6 +11,11 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart }) 
             </div>
         );
     }
+
+    const getItemQuantity = (productoId) => {
+        return cartItems?.filter(item => item.id === productoId)
+            .reduce((sum, item) => sum + item.cantidad, 0) || 0;
+    };
 
     return (
         <section className="mb-16">
@@ -33,6 +38,8 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart }) 
                         key={producto.id}
                         producto={producto}
                         onAddToCart={onAddToCart}
+                        onRemoveFromCart={onRemoveFromCart}
+                        quantity={getItemQuantity(producto.id)}
                     />
                 ))}
             </div>

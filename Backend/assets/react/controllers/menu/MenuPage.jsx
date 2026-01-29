@@ -10,6 +10,12 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState([]);
     const [activeCategory, setActiveCategory] = useState(categorias?.[0] || null);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message) => {
+        setToast(message);
+        setTimeout(() => setToast(null), 3000);
+    };
 
     // Filter products based on search and allergens
     const filteredProductos = useMemo(() => {
@@ -45,6 +51,13 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
             }
             return [...prev, { ...producto, cantidad: 1, notas }];
         });
+        showToast(`${producto.nombre} añadido`);
+    };
+
+    const getItemQuantity = (productoId) => {
+        return cart
+            .filter(item => item.id === productoId)
+            .reduce((sum, item) => sum + item.cantidad, 0);
     };
 
     const removeFromCart = (productoId, notas = '') => {
@@ -115,8 +128,20 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                     productos={filteredProductos}
                     activeCategory={activeCategory}
                     onAddToCart={addToCart}
+                    onRemoveFromCart={removeFromCart}
+                    cartItems={cart}
                 />
             </main>
+
+            {/* Notification Toast */}
+            {toast && (
+                <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-bounce-in">
+                    <div className="bg-text-main text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-3 border border-white/10">
+                        <span className="material-symbols-outlined text-primary">check_circle</span>
+                        {toast}
+                    </div>
+                </div>
+            )}
 
             {/* Floating Cart */}
             <CartFloat 
