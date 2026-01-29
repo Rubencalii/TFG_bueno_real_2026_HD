@@ -59,7 +59,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                     </p>
 
                     {/* Allergens and Add Button */}
-                    <div className="flex items-center justify-between mt-auto gap-2">
+                    <div className="flex items-center justify-between gap-2 pt-4 border-t border-gray-50">
                         <div className="flex gap-1 sm:gap-2 flex-wrap">
                             {producto.alergenos?.map(alergeno => (
                                 <span 
@@ -72,40 +72,51 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                         </div>
                         
                         <div className="flex items-center gap-2">
-                            {/* Notes button */}
+                            {/* Notes button - secondary but visible */}
                             <button 
                                 onClick={() => setShowNotesModal(true)}
-                                className="size-10 sm:size-12 bg-gray-50 text-text-muted rounded-xl sm:rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors border border-gray-100"
+                                className="size-11 sm:size-12 bg-gray-50 text-text-muted rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors border border-gray-200"
                                 title="Añadir con nota"
                             >
-                                <span className="material-symbols-outlined text-lg sm:text-xl">edit_note</span>
+                                <span className="material-symbols-outlined text-xl">edit_note</span>
                             </button>
                             
-                            <div className="flex items-center bg-gray-50 rounded-xl sm:rounded-2xl p-1 border border-gray-100">
-                                {quantity > 0 && (
-                                    <>
+                            <div className="flex-1">
+                                {quantity === 0 ? (
+                                    /* Primary ADD button - high visibility */
+                                    <button 
+                                        onClick={handleQuickAdd}
+                                        className="w-full h-11 sm:h-12 bg-primary text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:scale-[1.02] transition-all active:scale-95"
+                                    >
+                                        <span className="text-xl">+</span>
+                                    </button>
+                                ) : (
+                                    /* Quantity Selector - when item is already in cart */
+                                    <div className="flex items-center justify-between bg-white rounded-2xl p-1 border-2 border-primary shadow-sm h-11 sm:h-12 overflow-hidden">
                                         <button 
                                             onClick={() => onRemoveFromCart(producto.id)}
-                                            className="size-8 sm:size-10 flex items-center justify-center text-text-muted hover:text-secondary transition-colors"
+                                            className="size-8 sm:size-10 flex items-center justify-center text-primary hover:bg-primary/5 rounded-xl transition-colors"
                                         >
-                                            <span className="text-xl font-bold">−</span>
+                                            <span className="text-2xl font-bold">−</span>
                                         </button>
-                                        <span className="w-6 sm:w-8 text-center font-black text-sm sm:text-base text-text-main">
-                                            {quantity}
-                                        </span>
-                                    </>
+                                        
+                                        <div className="flex flex-col items-center justify-center leading-none">
+                                            <span className="text-text-main font-black text-sm sm:text-base">
+                                                {quantity}
+                                            </span>
+                                            <span className="text-[8px] font-bold text-primary uppercase tracking-tighter">
+                                                en carrito
+                                            </span>
+                                        </div>
+                                        
+                                        <button 
+                                            onClick={handleQuickAdd}
+                                            className="size-8 sm:size-10 flex items-center justify-center bg-primary text-white rounded-xl shadow-md shadow-primary/20 hover:scale-110 transition-transform active:scale-95"
+                                        >
+                                            <span className="text-2xl font-bold">+</span>
+                                        </button>
+                                    </div>
                                 )}
-                                
-                                <button 
-                                    onClick={handleQuickAdd}
-                                    className={`size-8 sm:size-10 flex items-center justify-center rounded-lg sm:rounded-xl transition-all ${
-                                        quantity > 0 
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' 
-                                            : 'text-primary hover:bg-primary/5'
-                                    }`}
-                                >
-                                    <span className="text-xl font-bold">+</span>
-                                </button>
                             </div>
                         </div>
                     </div>

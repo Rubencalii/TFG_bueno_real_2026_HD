@@ -13,7 +13,7 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
     }
 
     const getItemQuantity = (productoId) => {
-        return cartItems?.filter(item => item.id === productoId)
+        return cartItems?.filter(item => item.id == productoId)
             .reduce((sum, item) => sum + item.cantidad, 0) || 0;
     };
 
