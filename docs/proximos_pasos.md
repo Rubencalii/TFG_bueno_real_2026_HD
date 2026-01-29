@@ -1,96 +1,63 @@
 # 🚀 Siguientes Pasos - Comanda Digital
 
-¡Gran progreso! Hemos completado la **Fase 1** (Base de datos core), **Fase 2** (Configuración React con Symfony UX) y la implementación visual de la **Fase 3** (Menú digital).
+¡Gran progreso! Hemos completado la integración de seguimiento de pedidos en tiempo real y limpiado la interfaz base.
 
 ---
 
-## 📐 Arquitectura Actual
+## ✅ Completado Hoy
 
-Usamos **Symfony UX React** para integrar React directamente en Twig:
-
-| Flujo               | Tecnología                            | Motivo                                  |
-| ------------------- | ------------------------------------- | --------------------------------------- |
-| **Cargar datos**    | Props via `react_component()` en Twig | Sin API, más rápido                     |
-| **Guardar pedidos** | Controller Symfony (JSON)             | React necesita enviar datos al servidor |
-
-> **Nota:** No usamos API Platform porque UX React pasa datos directamente de PHP a React sin necesidad de endpoints JSON para la carga inicial.
-
----
-
-## 1. Datos Reales (Backend) 🛠️
-
-Actualmente el menú usa datos "mock" (falsos) en `MesaController`.
-
-- [ ] **Crear entidad `Categoria`**: `nombre`, `orden`, `activa`.
-- [ ] **Crear entidad `Producto`**: `nombre`, `descripcion`, `precio`, `imagen`, `alergenos` (array), `categoria_id`.
-- [ ] **Migrar BBDD**: `php bin/console make:migration` y `migrate`.
-- [ ] **Cargar datos**: Crear unos fixtures o insertar productos reales en la base de datos.
-- [ ] **Actualizar Controller**: Modificar `MesaController::menuMesa` para que haga `findAll()` de categorías y productos.
+- [x] **Arquitectura Híbrida**: Clarificación del uso de Symfony UX (carga inicial) junto con una API REST manual (interacción dinámica).
+- [x] **Seguimiento de Pedidos ("Mis Pedidos")**:
+    - Creación del componente React `MyOrdersSection`.
+    - Implementación de barra de progreso dinámica (Pendiente -> Preparando -> Listo).
+    - Sistema de auto-actualización (polling cada 10s) para ver cambios de cocina.
+    - Redirección automática al confirmar carrito.
+- [x] **Limpieza de Interfaz**: Eliminación de navegación y pies de página antiguos en `base.html.twig`.
+- [x] **Backend**: Endpoint funcional para obtener pedidos activos por token de mesa.
 
 ---
 
-## 2. Hacer funcional el Pedido (Controller Symfony) 🛒
+## 👨‍🍳 1. Fase 4: Pulido de Cocina (KDS)
 
-El botón "Confirmar Pedido" del carrito envía un POST a `/api/pedido`. Necesitamos crear el Controller que lo reciba.
+Aunque el tablero es funcional, faltan detalles de UX para el personal:
 
-> ⚠️ **Aclaración:** Aunque la ruta es `/api/pedido`, NO es API Platform. Es un Controller Symfony normal que recibe JSON y responde JSON. Es la forma más simple y eficiente para nuestro caso.
-
-- [ ] **Crear `PedidoController`**: Con ruta `POST /api/pedido`.
-- [ ] **Lógica de guardado**:
-    - Recibir JSON del frontend (`$request->getContent()`).
-    - Buscar la `Mesa` por ID.
-    - Crear nuevo objeto `Pedido` vinculado a la mesa.
-    - Crear objetos `DetallePedido` para cada item del carrito.
-    - Calcular total automáticamente.
-    - Persistir todo con Doctrine.
-- [ ] **Respuesta**: Devolver `JsonResponse` con éxito para que React limpie el carrito.
-
-### Ejemplo de estructura del Controller:
-
-```php
-#[Route('/api/pedido', name: 'api_crear_pedido', methods: ['POST'])]
-public function crearPedido(Request $request, MesaRepository $mesaRepo): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
-    // Crear Pedido y DetallePedido...
-    return $this->json(['success' => true, 'pedidoId' => $pedido->getId()]);
-}
-```
+- [ ] **Alertas de Alergias**: Resaltar visualmente en las tarjetas las notas que contengan alérgenos ("SIN GLUTEN", "CELIACO").
+- [ ] **Acciones de Finalización**: Asegurar que el estado "entregado" limpie correctamente la pantalla.
+- [ ] **Sonidos**: Añadir un aviso acústico opcional cuando entre un pedido nuevo.
 
 ---
 
-## 3. Fase 4: Frontend Cocina 👨‍🍳
+## 🔧 2. Fase 5: Panel de Administración (Próximo Gran Paso)
 
-Una vez que los pedidos se guarden en BBDD, necesitamos visualizarlos.
+Esta es la parte pendiente más importante:
 
-- [ ] **Crear vista Cocina**: Página `/cocina` que liste los pedidos con estado "pendiente".
-- [ ] **Diseño Kanban/Lista**: Tarjetas con los platos y número de mesa.
-- [ ] **Sistema Semáforo**: Colores según tiempo de espera (verde/amarillo/rojo).
-- [ ] **Acciones**: Botones para cambiar estado (Pendiente -> Preparando -> Listo).
-- [ ] **(Opcional)**: Mercure para tiempo real (que aparezcan solos sin recargar).
-
----
-
-## 4. Fase 5: Panel Admin 🔧
-
-- [ ] CRUD de productos y categorías.
-- [ ] Gestión de mesas (activar/desactivar).
-- [ ] Generación de códigos QR.
-- [ ] Vista de histórico de pedidos.
+- [ ] **Seguridad**: Implementar el login para el administrador (usando la entidad `User` ya existente).
+- [ ] **Gestión de Carta (CRUD)**:
+    - Formulario para añadir/editar productos y categorías.
+    - Subida de imágenes para los platos.
+    - Gestión de alérgenos por producto.
+- [ ] **Gestión de Mesas**:
+    - Crear nuevas mesas.
+    - Generar y visualizar el enlace/QR único para cada mesa basándose en su `tokenQr`.
+- [ ] **Histórico**: Ver pedidos antiguos y estadísticas básicas de ventas.
 
 ---
 
-### Comandos para arrancar:
+## 🌟 3. Mejoras Opcionales (Futuro)
+
+- [ ] **Mercure**: Cambiar el polling de 10s por notificaciones Push reales (Server-Sent Events) para que sea instantáneo.
+- [ ] **Cierre de Mesa**: Botón para que el cliente pida la cuenta y el sistema sume todos sus pedidos de la sesión.
+
+---
+
+## 💻 Comandos Útiles
 
 ```bash
-docker compose up -d          # Levantar contenedores
-npm run dev-server            # Levantar servidor de assets (o npm run watch)
-symfony server:start -d       # Servidor Symfony (opcional si usas Docker)
+# Levantar todo el entorno:
+cd Backend
+docker compose up -d
+npm run dev-server
+
+# Ver logs del servidor:
+docker logs -f symfony_app
 ```
-
----
-
-### Enlaces útiles:
-
-- [Symfony UX React Docs](https://symfony.com/bundles/ux-react/current/index.html)
-- [Mercure (tiempo real)](https://symfony.com/doc/current/mercure.html)
