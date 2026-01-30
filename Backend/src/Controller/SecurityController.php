@@ -19,10 +19,9 @@ final class SecurityController extends AbstractController
             $rol = $user->getRol();
             
             return match($rol) {
-                'admin' => $this->redirectToRoute('admin_panel'),
-                'cocina' => $this->redirectToRoute('cocina_panel'),
-                'barra' => $this->redirectToRoute('barra_panel'),
-                default => $this->redirectToRoute('barra_panel'),
+                'gerente' => $this->redirectToRoute('admin_panel'),
+                'staff' => $this->redirectToRoute('cocina_panel'),
+                default => $this->redirectToRoute('cocina_panel'),
             };
         }
 

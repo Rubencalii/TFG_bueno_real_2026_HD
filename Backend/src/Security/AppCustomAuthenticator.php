@@ -49,10 +49,9 @@ class AppCustomAuthenticator extends AbstractAuthenticator
 
         // Redirigir según el rol del usuario
         $targetRoute = match($rol) {
-            'admin' => 'admin_panel',
-            'cocina' => 'cocina_panel',
-            'barra' => 'barra_panel',
-            default => 'barra_panel', // Por defecto a barra
+            'gerente' => 'admin_panel',
+            'staff' => 'cocina_panel', // Staff empieza en cocina, puede navegar a barra
+            default => 'cocina_panel',
         };
 
         return new RedirectResponse($this->urlGenerator->generate($targetRoute));

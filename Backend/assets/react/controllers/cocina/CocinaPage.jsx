@@ -82,6 +82,13 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a 
+                            href="/barra"
+                            className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 transition-colors flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined">hail</span>
+                            Ir a Camarero
+                        </a>
+                        <a 
                             href="/logout"
                             className="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
                         >

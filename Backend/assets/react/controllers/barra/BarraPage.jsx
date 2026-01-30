@@ -88,8 +88,15 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                     <span className="material-symbols-outlined text-primary font-black">notifications_active</span>
                     <h2 className="text-xl font-black text-gray-800 dark:text-white">AVISOS</h2>
                     <a 
+                        href="/cocina"
+                        className="ml-auto p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        title="Ir a Cocina"
+                    >
+                        <span className="material-symbols-outlined">restaurant</span>
+                    </a>
+                    <a 
                         href="/logout"
-                        className="ml-auto p-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                        className="p-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                         title="Cerrar sesión"
                     >
                         <span className="material-symbols-outlined">logout</span>
@@ -142,7 +149,7 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                 <header className="mb-8 flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-black text-gray-800 dark:text-white flex items-center gap-3">
-                            🍸 Panel de Barra
+                            🍽️ Panel de Camarero
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Gestión de bebidas y servicio</p>
                     </div>
