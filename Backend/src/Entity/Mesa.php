@@ -19,7 +19,7 @@ class Mesa
     #[ORM\Column(type: 'integer')]
     private int $numero;
 
-    #[ORM\Column(type: 'string', length: 64, unique: true)]
+    #[ORM\Column(type: 'string', length: 12, unique: true)]
     private string $tokenQr;
 
     #[ORM\Column(type: 'boolean')]
@@ -34,10 +34,22 @@ class Mesa
     #[ORM\OneToMany(mappedBy: 'mesa', targetEntity: Pedido::class)]
     private Collection $pedidos;
 
+    private const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
     public function __construct()
     {
         $this->pedidos = new ArrayCollection();
-        $this->tokenQr = bin2hex(random_bytes(32));
+        $this->tokenQr = $this->generateShortToken();
+    }
+
+    private function generateShortToken(int $length = 8): string
+    {
+        $chars = self::TOKEN_CHARS;
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $token;
     }
 
     public function getId(): ?int
