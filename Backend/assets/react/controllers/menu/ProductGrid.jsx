@@ -5,9 +5,9 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
     if (!productos || productos.length === 0) {
         return (
             <div className="text-center py-12">
-                <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
-                <p className="text-text-muted text-lg">No se encontraron productos</p>
-                <p className="text-text-muted text-sm">Prueba a cambiar los filtros</p>
+                <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">No se encontraron productos</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm">Prueba a cambiar los filtros</p>
             </div>
         );
     }
@@ -22,10 +22,10 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
             {/* Section Header */}
             {activeCategory && (
                 <div className="flex items-center justify-between mb-6 sm:mb-8">
-                    <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-text-main">
+                    <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white">
                         {activeCategory.nombre.toUpperCase()}
                     </h3>
-                    <span className="px-2 sm:px-3 py-1 bg-gray-100 rounded-lg text-[10px] sm:text-xs font-bold text-text-muted uppercase tracking-widest border border-gray-200">
+                    <span className="px-2 sm:px-3 py-1 bg-gray-100 dark:bg-slate-700 rounded-lg text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border border-gray-200 dark:border-slate-600">
                         {productos.length} opciones
                     </span>
                 </div>

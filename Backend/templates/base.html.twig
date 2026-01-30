@@ -1,10 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html class="light" lang="es">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}Comanda Digital{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🍽️</text></svg>">
+        
+        <!-- Tailwind CSS CDN with dark mode -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#2463eb",
+                            "background-light": "#f6f6f8",
+                            "background-dark": "#111621",
+                            "text-main": "#1f2937",
+                        },
+                        fontFamily: {
+                            "display": ["Inter", "sans-serif"]
+                        },
+                    },
+                },
+            }
+            // Check and apply saved theme
+            if (localStorage.getItem('darkMode') === 'true' || 
+                (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            }
+        </script>
+        
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
@@ -12,8 +40,46 @@
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
+        
+        <style>
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+        </style>
     </head>
-    <body>
+    <body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 transition-colors duration-200">
         {% block body %}{% endblock %}
+        
+        <!-- Theme Toggle Button -->
+        <div class="fixed bottom-6 right-6 z-50">
+            <button 
+                id="themeToggle"
+                onclick="toggleDarkMode()"
+                class="size-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-yellow-400 hover:scale-110 transition-transform"
+                title="Cambiar tema"
+            >
+                <span class="material-symbols-outlined">contrast</span>
+            </button>
+        </div>
+        
+        <script>
+            function toggleDarkMode() {
+                const html = document.documentElement;
+                const isDark = html.classList.contains('dark');
+                
+                if (isDark) {
+                    html.classList.remove('dark');
+                    html.classList.add('light');
+                    localStorage.setItem('darkMode', 'false');
+                } else {
+                    html.classList.add('dark');
+                    html.classList.remove('light');
+                    localStorage.setItem('darkMode', 'true');
+                }
+            }
+        </script>
     </body>
 </html>

@@ -47,7 +47,7 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                     p.id === pedidoId ? { ...p, estado: nuevoEstado } : p
                 ));
                 
-                // Si es "listo", remover de la lista después de 2 segundos
+                // Si es "entregado", remover de la lista después de 500ms
                 if (nuevoEstado === 'entregado') {
                     setTimeout(() => {
                         setPedidos(prev => prev.filter(p => p.id !== pedidoId));
@@ -68,42 +68,51 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
     const pedidosListos = pedidos.filter(p => p.estado === ESTADOS.LISTO);
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 lg:p-6">
+        <div className="min-h-screen bg-gray-100 dark:bg-slate-900 p-4 lg:p-6 transition-colors">
             {/* Header */}
             <header className="mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-black text-gray-800">
+                        <h1 className="text-2xl lg:text-3xl font-black text-gray-800 dark:text-white">
                             🍳 Panel de Cocina
                         </h1>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">
                             {pedidos.length} pedido{pedidos.length !== 1 ? 's' : ''} activo{pedidos.length !== 1 ? 's' : ''}
                         </p>
                     </div>
-                    <button 
-                        onClick={refreshPedidos}
-                        className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors flex items-center gap-2"
-                    >
-                        <span className="material-symbols-outlined">refresh</span>
-                        Actualizar
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <a 
+                            href="/logout"
+                            className="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined">logout</span>
+                            Salir
+                        </a>
+                        <button 
+                            onClick={refreshPedidos}
+                            className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined">refresh</span>
+                            Actualizar
+                        </button>
+                    </div>
                 </div>
             </header>
 
             {/* Kanban Board */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* Columna: Pendientes */}
-                <div className="bg-gray-200 rounded-xl p-4">
+                <div className="bg-gray-200 dark:bg-slate-800 rounded-xl p-4 transition-colors">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="size-3 bg-amber-500 rounded-full animate-pulse"></span>
-                        <h2 className="font-bold text-gray-700">PENDIENTES</h2>
+                        <h2 className="font-bold text-gray-700 dark:text-gray-200">PENDIENTES</h2>
                         <span className="ml-auto bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                             {pedidosPendientes.length}
                         </span>
                     </div>
                     <div className="space-y-3">
                         {pedidosPendientes.length === 0 ? (
-                            <p className="text-gray-400 text-center py-8">Sin pedidos pendientes</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-center py-8">Sin pedidos pendientes</p>
                         ) : (
                             pedidosPendientes.map(pedido => (
                                 <PedidoCard 
@@ -120,17 +129,17 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                 </div>
 
                 {/* Columna: En Preparación */}
-                <div className="bg-gray-200 rounded-xl p-4">
+                <div className="bg-gray-200 dark:bg-slate-800 rounded-xl p-4 transition-colors">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="size-3 bg-blue-500 rounded-full animate-pulse"></span>
-                        <h2 className="font-bold text-gray-700">EN PREPARACIÓN</h2>
+                        <h2 className="font-bold text-gray-700 dark:text-gray-200">EN PREPARACIÓN</h2>
                         <span className="ml-auto bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                             {pedidosEnPreparacion.length}
                         </span>
                     </div>
                     <div className="space-y-3">
                         {pedidosEnPreparacion.length === 0 ? (
-                            <p className="text-gray-400 text-center py-8">Nada en preparación</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-center py-8">Nada en preparación</p>
                         ) : (
                             pedidosEnPreparacion.map(pedido => (
                                 <PedidoCard 
@@ -147,17 +156,17 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                 </div>
 
                 {/* Columna: Listos */}
-                <div className="bg-gray-200 rounded-xl p-4">
+                <div className="bg-gray-200 dark:bg-slate-800 rounded-xl p-4 transition-colors">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="size-3 bg-emerald-500 rounded-full"></span>
-                        <h2 className="font-bold text-gray-700">LISTOS PARA SERVIR</h2>
+                        <h2 className="font-bold text-gray-700 dark:text-gray-200">LISTOS PARA SERVIR</h2>
                         <span className="ml-auto bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                             {pedidosListos.length}
                         </span>
                     </div>
                     <div className="space-y-3">
                         {pedidosListos.length === 0 ? (
-                            <p className="text-gray-400 text-center py-8">Ningún pedido listo</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-center py-8">Ningún pedido listo</p>
                         ) : (
                             pedidosListos.map(pedido => (
                                 <PedidoCard 

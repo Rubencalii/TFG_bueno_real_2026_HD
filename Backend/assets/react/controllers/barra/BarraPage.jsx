@@ -81,37 +81,44 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
     const pedidosListos = pedidos.filter(p => p.estado === ESTADOS.LISTO);
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
+        <div className="min-h-screen bg-gray-100 dark:bg-slate-900 flex flex-col lg:flex-row transition-colors">
             {/* Sidebar: Notificaciones y Avisos */}
-            <aside className="w-full lg:w-80 bg-white border-r border-gray-200 p-6 flex-shrink-0">
+            <aside className="w-full lg:w-80 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-6 flex-shrink-0 transition-colors">
                 <div className="flex items-center gap-2 mb-8">
                     <span className="material-symbols-outlined text-primary font-black">notifications_active</span>
-                    <h2 className="text-xl font-black text-gray-800">AVISOS</h2>
+                    <h2 className="text-xl font-black text-gray-800 dark:text-white">AVISOS</h2>
+                    <a 
+                        href="/logout"
+                        className="ml-auto p-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                        title="Cerrar sesión"
+                    >
+                        <span className="material-symbols-outlined">logout</span>
+                    </a>
                 </div>
 
                 <div className="space-y-4">
                     {notificaciones.length === 0 ? (
                         <div className="text-center py-10">
-                            <span className="material-symbols-outlined text-gray-200 text-5xl mb-2">check_circle</span>
-                            <p className="text-gray-400 text-sm">Sin avisos pendientes</p>
+                            <span className="material-symbols-outlined text-gray-200 dark:text-gray-600 text-5xl mb-2">check_circle</span>
+                            <p className="text-gray-400 dark:text-gray-500 text-sm">Sin avisos pendientes</p>
                         </div>
                     ) : (
                         notificaciones.map((notif) => (
-                            <div key={notif.mesaId} className="bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-sm animate-pulse-subtle">
+                            <div key={notif.mesaId} className="bg-gray-50 dark:bg-slate-700 rounded-2xl p-4 border border-gray-100 dark:border-slate-600 shadow-sm animate-pulse-subtle transition-colors">
                                 <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-lg font-black text-gray-800 uppercase tracking-tighter">MESA {notif.numero}</h3>
-                                    <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-md uppercase tracking-widest">AHORA</span>
+                                    <h3 className="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tighter">MESA {notif.numero}</h3>
+                                    <span className="px-2 py-1 bg-primary/10 dark:bg-primary/20 text-primary text-[10px] font-black rounded-md uppercase tracking-widest">AHORA</span>
                                 </div>
                                 
                                 <div className="space-y-2 mb-4">
                                     {notif.llamaCamarero && (
-                                        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-2 rounded-lg border border-amber-100 dark:border-amber-800">
                                             <span className="material-symbols-outlined text-sm">hail</span>
                                             <span className="text-xs font-bold uppercase tracking-tight">Llama al camarero</span>
                                         </div>
                                     )}
                                     {notif.pideCuenta && (
-                                        <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                                             <span className="material-symbols-outlined text-sm">payments</span>
                                             <span className="text-xs font-bold uppercase tracking-tight">Pide la cuenta: {parseFloat(notif.totalCuenta).toFixed(2)}€</span>
                                         </div>
@@ -120,7 +127,7 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
 
                                 <button 
                                     onClick={() => cerrarMesa(notif.mesaId)}
-                                    className="w-full py-2 bg-text-main text-white text-xs font-black rounded-xl uppercase tracking-widest hover:bg-black transition-colors"
+                                    className="w-full py-2 bg-gray-800 dark:bg-white text-white dark:text-gray-800 text-xs font-black rounded-xl uppercase tracking-widest hover:bg-black dark:hover:bg-gray-100 transition-colors"
                                 >
                                     Cerrar Mesa
                                 </button>
@@ -134,10 +141,10 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
             <main className="flex-1 p-6 lg:p-10 overflow-x-auto">
                 <header className="mb-8 flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-black text-gray-800 flex items-center gap-3">
+                        <h1 className="text-3xl font-black text-gray-800 dark:text-white flex items-center gap-3">
                             🍸 Panel de Barra
                         </h1>
-                        <p className="text-gray-500 font-medium">Gestión de bebidas y servicio</p>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Gestión de bebidas y servicio</p>
                     </div>
                     <button 
                         onClick={refreshData}
@@ -150,10 +157,10 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-w-[900px]">
                     {/* Columna: Pendientes */}
-                    <div className="bg-gray-200/50 rounded-3xl p-6 border border-gray-200/50">
+                    <div className="bg-gray-200/50 dark:bg-slate-800/50 rounded-3xl p-6 border border-gray-200/50 dark:border-slate-700/50 transition-colors">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="size-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
-                            <h2 className="font-black text-gray-700 tracking-tighter uppercase">PENDIENTES</h2>
+                            <h2 className="font-black text-gray-700 dark:text-gray-200 tracking-tighter uppercase">PENDIENTES</h2>
                             <span className="ml-auto bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full">
                                 {pedidosPendientes.length}
                             </span>
@@ -173,10 +180,10 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                     </div>
 
                     {/* Columna: Preparando */}
-                    <div className="bg-gray-200/50 rounded-3xl p-6 border border-gray-200/50">
+                    <div className="bg-gray-200/50 dark:bg-slate-800/50 rounded-3xl p-6 border border-gray-200/50 dark:border-slate-700/50 transition-colors">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="size-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                            <h2 className="font-black text-gray-700 tracking-tighter uppercase">PREPARANDO</h2>
+                            <h2 className="font-black text-gray-700 dark:text-gray-200 tracking-tighter uppercase">PREPARANDO</h2>
                             <span className="ml-auto bg-blue-500 text-white text-xs font-black px-3 py-1 rounded-full">
                                 {pedidosEnPreparacion.length}
                             </span>
@@ -196,10 +203,10 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                     </div>
 
                     {/* Columna: Listos */}
-                    <div className="bg-gray-200/50 rounded-3xl p-6 border border-gray-200/50">
+                    <div className="bg-gray-200/50 dark:bg-slate-800/50 rounded-3xl p-6 border border-gray-200/50 dark:border-slate-700/50 transition-colors">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="size-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                            <h2 className="font-black text-gray-700 tracking-tighter uppercase">LISTOS</h2>
+                            <h2 className="font-black text-gray-700 dark:text-gray-200 tracking-tighter uppercase">LISTOS</h2>
                             <span className="ml-auto bg-emerald-500 text-white text-xs font-black px-3 py-1 rounded-full">
                                 {pedidosListos.length}
                             </span>

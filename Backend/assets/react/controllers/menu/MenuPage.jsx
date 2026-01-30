@@ -88,7 +88,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const cartCount = cart.reduce((sum, item) => sum + item.cantidad, 0);
 
     return (
-        <div className="bg-background-light text-text-main font-display min-h-screen selection:bg-primary selection:text-white">
+        <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-display min-h-screen selection:bg-primary selection:text-white transition-colors">
             <MenuHeader 
                 mesa={mesa} 
                 activeView={activeView} 
@@ -102,14 +102,14 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                         {/* Title Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
                     <div className="space-y-2">
-                        <h1 className="text-text-main text-4xl sm:text-6xl font-black leading-tight tracking-tighter">
+                        <h1 className="text-gray-900 dark:text-white text-4xl sm:text-6xl font-black leading-tight tracking-tighter">
                             MESA {mesa?.numero || '?'}
                         </h1>
                         <div className="flex items-center gap-3 flex-wrap">
-                            <span className="px-3 py-1 bg-primary/10 text-primary text-[11px] font-black rounded-full border border-primary/20 uppercase tracking-widest">
+                            <span className="px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-black rounded-full border border-primary/20 uppercase tracking-widest">
                                 LIVE SESSION
                             </span>
-                            <p className="text-text-muted text-sm font-medium tracking-wide">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
                                 Comanda Digital
                             </p>
                         </div>
@@ -149,7 +149,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
             {/* Notification Toast */}
             {toast && (
                 <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-bounce-in">
-                    <div className="bg-text-main text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-3 border border-white/10">
+                    <div className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-3 border border-white/10 dark:border-gray-200">
                         <span className="material-symbols-outlined text-primary">check_circle</span>
                         {toast}
                     </div>
