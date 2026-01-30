@@ -1,5 +1,11 @@
 # Ignorar archivos de entorno locales con secretos
 .env.local
+.env.local.php
+.env.*.local
+
+# Carpetas generadas por Symfony (NO subir a Git)
+/var/
+/vendor/
 
 ###> symfony/webpack-encore-bundle ###
 /node_modules/
@@ -7,3 +13,9 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

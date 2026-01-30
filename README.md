@@ -4,21 +4,41 @@
 
 ## 🚀 Inicio Rápido
 
-Si quieres ejecutar el proyecto en un ordenador nuevo, solo necesitas tener instalado **Docker** y **Git**. Sigue estos pasos:
+### Requisitos
 
-1. **Clonar el proyecto:**
+- **Docker** instalado y funcionando
+- **Git** para clonar el proyecto
 
-    ```bash
-    git clone [URL_DEL_REPOSITORIO]
-    cd TFG_bueno_real_2026_HD
-    ```
+### Un solo comando para todo
 
-2. **Levantar el sistema (Un solo comando):**
-   He preparado un script de configuración automática. Ejecuta:
-    ```bash
-    # Si estás en Linux o Mac:
-    chmod +x setup.sh && ./setup.sh
-    ```
+```bash
+# Clonar y ejecutar
+git clone [URL_DEL_REPOSITORIO]
+cd TFG_bueno_real_2026_HD/Backend
+
+# Levantar todo (contenedores + base de datos + datos de demo)
+docker compose up -d
+```
+
+Espera ~30 segundos y todo estará listo:
+
+- ✅ Contenedores arriba
+- ✅ Base de datos configurada
+- ✅ 15 mesas creadas con tokens QR
+- ✅ 35 productos del menú
+- ✅ Servidor funcionando
+
+### URLs de acceso
+
+| Sección       | URL                                  |
+| ------------- | ------------------------------------ |
+| **Menú mesa** | `http://localhost:8001/mesa/{token (QR de la mesa)}` |
+| **Cocina**    | `http://localhost:8001/cocina/`      |
+| **Barra**     | `http://localhost:8001/barra/`       |
+| **Admin**     | `http://localhost:8001/admin/`       |
+
+> 💡 Los tokens de las mesas se muestran automáticamente en los logs al arrancar.
+> Ejecuta `docker logs symfony_app` para verlos.
 
 ---
 
