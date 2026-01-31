@@ -136,23 +136,112 @@ class AdminController extends AbstractController
         return new JsonResponse(['success' => true, 'activo' => $prod->isActivo()]);
     }
 
-    #[Route('/api/producto/{id}/traduccion', name: 'admin_api_producto_traduccion', methods: ['PATCH'])]
-    public function updateTraduccion(Producto $prod, Request $request): JsonResponse
+    #[Route('/api/producto/{id}', name: 'admin_api_producto_update', methods: ['PUT'])]
+    public function updateProducto(Producto $prod, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         
-        if (isset($data['nombreEn'])) {
-            $prod->setNombreEn($data['nombreEn']);
-        }
-        if (isset($data['descripcionEn'])) {
-            $prod->setDescripcionEn($data['descripcionEn']);
+        if (isset($data['nombre'])) $prod->setNombre($data['nombre']);
+        if (isset($data['descripcion'])) $prod->setDescripcion($data['descripcion']);
+        if (isset($data['precio'])) $prod->setPrecio($data['precio']);
+        if (isset($data['imagen'])) $prod->setImagen($data['imagen']);
+        if (isset($data['categoriaId'])) {
+            $cat = $this->categoriaRepository->find($data['categoriaId']);
+            if ($cat) $prod->setCategoria($cat);
         }
 
         $this->entityManager->flush();
 
         $this->auditLogService->log(
-            'PRODUCTO_TRADUCCION', 
-            sprintf('Traducción actualizada para "%s" (ID: %d)', $prod->getNombre(), $prod->getId())
+            'PRODUCTO_UPDATE', 
+            sprintf('Producto "%s" (ID: %d) actualizado', $prod->getNombre(), $prod->getId())
+        );
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    #[Route('/api/producto', name: 'admin_api_producto_create', methods: ['POST'])]
+    public function createProducto(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        $prod = new Producto();
+        $prod->setNombre($data['nombre'] ?? 'Nuevo Producto');
+        $prod->setDescripcion($data['descripcion'] ?? '');
+        $prod->setPrecio($data['precio'] ?? '0.00');
+        $prod->setImagen($data['imagen'] ?? null);
+        $prod->setActivo(true);
+        
+        if (isset($data['categoriaId'])) {
+            $cat = $this->categoriaRepository->find($data['categoriaId']);
+            if ($cat) $prod->setCategoria($cat);
+        }
+
+        $this->entityManager->persist($prod);
+        $this->entityManager->flush();
+
+        $this->auditLogService->log(
+            'PRODUCTO_CREATE', 
+            sprintf('Nuevo producto creado: "%s" (ID: %d)', $prod->getNombre(), $prod->getId())
+        );
+
+        return new JsonResponse(['success' => true, 'id' => $prod->getId()]);
+    }
+
+    #[Route('/api/producto/{id}', name: 'admin_api_producto_delete', methods: ['DELETE'])]
+    public function deleteProducto(Producto $prod): JsonResponse
+    {
+        $nombre = $prod->getNombre();
+        $id = $prod->getId();
+        
+        $this->entityManager->remove($prod);
+        $this->entityManager->flush();
+
+        $this->auditLogService->log(
+            'PRODUCTO_DELETE', 
+            sprintf('Producto eliminado: "%s" (ID: %d)', $nombre, $id)
+        );
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    #[Route('/api/categoria', name: 'admin_api_categoria_create', methods: ['POST'])]
+    public function createCategoria(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        $cat = new Categoria();
+        $cat->setNombre($data['nombre'] ?? 'Nueva Categoría');
+        $cat->setActiva(true);
+        $cat->setOrden(count($this->categoriaRepository->findAll()) + 1);
+
+        $this->entityManager->persist($cat);
+        $this->entityManager->flush();
+
+        $this->auditLogService->log(
+            'CATEGORIA_CREATE', 
+            sprintf('Nueva categoría creada: "%s" (ID: %d)', $cat->getNombre(), $cat->getId())
+        );
+
+        return new JsonResponse(['success' => true, 'id' => $cat->getId()]);
+    }
+
+    #[Route('/api/categoria/{id}', name: 'admin_api_categoria_delete', methods: ['DELETE'])]
+    public function deleteCategoria(Categoria $cat): JsonResponse
+    {
+        if (!$cat->getProductos()->isEmpty()) {
+            return new JsonResponse(['success' => false, 'message' => 'No se puede eliminar una categoría que contiene productos.'], 400);
+        }
+
+        $nombre = $cat->getNombre();
+        $id = $cat->getId();
+        
+        $this->entityManager->remove($cat);
+        $this->entityManager->flush();
+
+        $this->auditLogService->log(
+            'CATEGORIA_DELETE', 
+            sprintf('Categoría eliminada: "%s" (ID: %d)', $nombre, $id)
         );
 
         return new JsonResponse(['success' => true]);
