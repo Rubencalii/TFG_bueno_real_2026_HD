@@ -12,18 +12,41 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
         LISTO: 'listo'
     };
 
+    const [audioEnabled, setAudioEnabled] = useState(localStorage.getItem('barra_audio') === 'true');
+
     const refreshData = async () => {
         try {
             // Refrescar pedidos
             const resPedidos = await fetch('/api/barra/pedidos');
             if (resPedidos.ok) {
                 const data = await resPedidos.json();
+                
+                if (audioEnabled && data.length > 0) {
+                    const nuevosIds = data.map(p => p.id);
+                    const actualesIds = pedidos.map(p => p.id);
+                    const hayNuevos = nuevosIds.some(id => !actualesIds.includes(id));
+                    if (hayNuevos) {
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Sound 1: Order
+                        audio.play().catch(e => console.log('Audio blocked'));
+                    }
+                }
                 setPedidos(data);
             }
+
             // Refrescar notificaciones
             const resNotif = await fetch('/api/barra/notificaciones');
             if (resNotif.ok) {
                 const data = await resNotif.json();
+                
+                if (audioEnabled && data.length > 0) {
+                    const nuevosIds = data.map(n => n.mesaId + '-' + (n.pideCuenta ? 'c' : 'l'));
+                    const actualesIds = notificaciones.map(n => n.mesaId + '-' + (n.pideCuenta ? 'c' : 'l'));
+                    const hayNuevos = nuevosIds.some(id => !actualesIds.includes(id));
+                    if (hayNuevos) {
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'); // Sound 2: Alert
+                        audio.play().catch(e => console.log('Audio blocked'));
+                    }
+                }
                 setNotificaciones(data);
             }
         } catch (error) {
@@ -31,10 +54,21 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
         }
     };
 
+    const toggleAudio = () => {
+        const newValue = !audioEnabled;
+        setAudioEnabled(newValue);
+        localStorage.setItem('barra_audio', newValue);
+        if (newValue) {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+            audio.volume = 0.1;
+            audio.play().catch(e => console.log('Unlock blocked'));
+        }
+    };
+
     useEffect(() => {
-        const interval = setInterval(refreshData, 5000); // Barra refresca más rápido (5s)
+        const interval = setInterval(refreshData, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [pedidos, notificaciones, audioEnabled]);
 
     const cambiarEstado = async (pedidoId, nuevoEstado) => {
         setLoading(true);
@@ -153,13 +187,22 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Gestión de bebidas y servicio</p>
                     </div>
-                    <button 
-                        onClick={refreshData}
-                        className="px-4 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
-                    >
-                        <span className="material-symbols-outlined">refresh</span>
-                        Actualizar
-                    </button>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={toggleAudio}
+                            className={`p-2 rounded-xl font-bold transition-all flex items-center gap-2 ${audioEnabled ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-gray-100 dark:bg-slate-700 text-gray-500'}`}
+                            title={audioEnabled ? 'Sonido activado' : 'Sonido desactivado'}
+                        >
+                            <span className="material-symbols-outlined text-[20px]">{audioEnabled ? 'notifications_active' : 'notifications_off'}</span>
+                        </button>
+                        <button 
+                            onClick={refreshData}
+                            className="px-4 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined">refresh</span>
+                            Actualizar
+                        </button>
+                    </div>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-w-[900px]">

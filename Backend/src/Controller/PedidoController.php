@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Pedido;
 use App\Entity\DetallePedido;
+use App\Entity\Producto;
 use App\Repository\MesaRepository;
 use App\Repository\ProductoRepository;
 use App\Repository\PedidoRepository;
@@ -234,6 +235,7 @@ class PedidoController extends AbstractController
                     return [
                         'id' => $detalle->getId(),
                         'producto' => $detalle->getProducto()->getNombre(),
+                        'productoId' => $detalle->getProducto()->getId(),
                         'cantidad' => $detalle->getCantidad(),
                         'notas' => $detalle->getNotas(),
                     ];
@@ -320,5 +322,39 @@ class PedidoController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json(['success' => true]);
+    }
+
+    #[Route('/api/producto/{id}/rate', name: 'api_producto_rate', methods: ['POST'])]
+    public function rateProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $producto = $em->getRepository(Producto::class)->find($id);
+        if (!$producto) {
+            return new JsonResponse(['error' => 'Producto no encontrado'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $rating = $data['rating'] ?? null;
+
+        if ($rating === null || $rating < 1 || $rating > 5) {
+            return new JsonResponse(['error' => 'Rating inválido'], 400);
+        }
+
+        // Calcular nueva media
+        $currentRating = (float)$producto->getValoracion();
+        $numRatings = $producto->getNumValoraciones();
+        
+        $newNumRatings = $numRatings + 1;
+        $newRating = (($currentRating * $numRatings) + $rating) / $newNumRatings;
+
+        $producto->setValoracion(number_format($newRating, 2, '.', ''));
+        $producto->setNumValoraciones($newNumRatings);
+
+        $em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'newRating' => $producto->getValoracion(),
+            'numRatings' => $producto->getNumValoraciones()
+        ]);
     }
 }

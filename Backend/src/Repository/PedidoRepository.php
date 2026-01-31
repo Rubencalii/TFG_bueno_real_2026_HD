@@ -89,20 +89,103 @@ class PedidoRepository extends ServiceEntityRepository
     }
 
     /**
+     * Devuelve el total acumulado de ventas en un rango de fechas por método de pago
+     */
+    public function getResumenVentasRange(\DateTimeInterface $inicio, \DateTimeInterface $fin): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('p.metodoPago, SUM(p.totalCalculado) as total')
+            ->where('p.createdAt >= :inicio')
+            ->andWhere('p.createdAt < :fin')
+            ->andWhere('p.estadoPago = :pagado')
+            ->setParameter('inicio', $inicio)
+            ->setParameter('fin', $fin)
+            ->setParameter('pagado', Pedido::PAGO_PAGADO)
+            ->groupBy('p.metodoPago');
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Devuelve el total acumulado de ventas de hoy por método de pago
+     */
+    public function getResumenVentasHoy(): array
+    {
+        return $this->getResumenVentasRange(new \DateTime('today'), new \DateTime('tomorrow'));
+    }
+
+    /**
+     * Devuelve todos los pedidos (tickets) en un rango de fechas para el panel de administración
+     */
+    public function findTicketsRange(\DateTimeInterface $inicio, \DateTimeInterface $fin): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.createdAt >= :inicio')
+            ->andWhere('p.createdAt < :fin')
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Devuelve todos los pedidos (tickets) de hoy para el panel de administración
+     */
+    public function findTicketsHoy(): array
+    {
+        return $this->findTicketsRange(new \DateTime('today'), new \DateTime('tomorrow'));
+    }
+
+    public function getTopProductos(int $limit = 5): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select('pr.nombre, SUM(dp.cantidad) as total')
+            ->from(\App\Entity\DetallePedido::class, 'dp')
+            ->join('dp.producto', 'pr')
+            ->groupBy('pr.id')
+            ->orderBy('total', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getVentasPorHora(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = '
+            SELECT HOUR(created_at) as hora, SUM(total_calculado) as total
+            FROM pedido
+            WHERE estado_pago = "PAGADO" AND created_at >= CURDATE()
+            GROUP BY HOUR(created_at)
+            ORDER BY hora ASC
+        ';
+        return $conn->executeQuery($sql)->fetchAllAssociative();
+    }
+
+    public function getVentasUltimos7Dias(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = '
+            SELECT DATE(created_at) as fecha, SUM(total_calculado) as total
+            FROM pedido
+            WHERE estado_pago = "PAGADO" AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY fecha ASC
+        ';
+        return $conn->executeQuery($sql)->fetchAllAssociative();
+    }
+
+    /**
      * Calcula el total de todos los pedidos de una mesa (para la cuenta)
      */
     public function calcularTotalMesa(Mesa $mesa): string
     {
         $pedidos = $this->findActivosByMesa($mesa);
-        $total = '0.00';
+        $total = 0.0;
         
         foreach ($pedidos as $pedido) {
-            $pedido->calcularTotal();
-            $total = (float)$total + (float)$pedido->getTotalCalculado();
+            $total += (float)$pedido->calcularTotal();
         }
         
         return number_format($total, 2, '.', '');
-        
-        return $total;
     }
 }

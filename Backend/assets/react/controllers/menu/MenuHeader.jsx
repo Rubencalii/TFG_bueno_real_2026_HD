@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function MenuHeader({ mesa, activeView, onViewChange, onToast }) {
+export default function MenuHeader({ mesa, activeView, onViewChange, onToast, lang, onLangChange }) {
     const handleMesaAction = async (action, message) => {
         try {
             const response = await fetch(`/api/mesa/${mesa.tokenQr}/` + action, { method: 'POST' });
@@ -27,6 +27,8 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast }) 
             localStorage.setItem('darkMode', 'true');
         }
     };
+
+    const t = (es, en) => lang === 'es' ? es : (en || es);
 
     return (
         <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-slate-700 transition-colors">
@@ -55,7 +57,7 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast }) 
                             }`}
                             onClick={() => onViewChange('menu')}
                         >
-                            Menú
+                            {t('Menú', 'Menu')}
                         </button>
                         <button 
                             className={`text-[10px] sm:text-xs font-black tracking-wider uppercase pb-1 transition-all ${
@@ -65,26 +67,33 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast }) 
                             }`}
                             onClick={() => onViewChange('orders')}
                         >
-                            Mis Pedidos
+                            {t('Mis Pedidos', 'My Orders')}
                         </button>
                         
                         {/* Acciones de mesa */}
-                        <div className="flex items-center gap-2 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-gray-100 dark:border-slate-700">
+                        <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-4 pl-1 sm:pl-4 border-l border-gray-100 dark:border-slate-700">
+                            {/* Lang Switcher */}
                             <button 
-                                onClick={() => handleMesaAction('llamar', 'Camarero avisado')}
+                                onClick={() => onLangChange(lang === 'es' ? 'en' : 'es')}
+                                className="size-8 sm:size-10 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-colors text-lg font-bold"
+                                title={t('Switch to English', 'Cambiar a Español')}
+                            >
+                                {lang === 'es' ? '🇺🇸' : '🇪🇸'}
+                            </button>
+                            
+                            <button 
+                                onClick={() => handleMesaAction('llamar', t('Camarero avisado', 'Waiter notified'))}
                                 className="size-8 sm:size-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors group relative"
-                                title="Llamar camarero"
+                                title={t('Llamar camarero', 'Call waiter')}
                             >
                                 <span className="material-symbols-outlined text-xl">hail</span>
-                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Llamar camarero</span>
                             </button>
                             <button 
-                                onClick={() => handleMesaAction('pagar', 'Cuenta solicitada')}
+                                onClick={() => handleMesaAction('pagar', t('Cuenta solicitada', 'Check requested'))}
                                 className="size-8 sm:size-10 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors group relative"
-                                title="Pedir cuenta"
+                                title={t('Pedir cuenta', 'Request check')}
                             >
                                 <span className="material-symbols-outlined text-xl">payments</span>
-                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Pedir cuenta</span>
                             </button>
                             {/* Dark mode toggle */}
                             <button 

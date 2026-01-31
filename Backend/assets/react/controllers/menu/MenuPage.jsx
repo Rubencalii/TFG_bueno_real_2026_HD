@@ -13,6 +13,9 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const [activeCategory, setActiveCategory] = useState(categorias?.[0] || null);
     const [toast, setToast] = useState(null);
     const [activeView, setActiveView] = useState('menu'); // 'menu' or 'orders'
+    const [lang, setLang] = useState('es');
+
+    const t = (es, en) => lang === 'es' ? es : (en || es);
 
     const showToast = (message) => {
         setToast(message);
@@ -94,6 +97,8 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                 activeView={activeView} 
                 onViewChange={setActiveView} 
                 onToast={showToast}
+                lang={lang}
+                onLangChange={setLang}
             />
             
             <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-40">
@@ -139,6 +144,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                         onAddToCart={addToCart}
                         onRemoveFromCart={removeFromCart}
                         cartItems={cart}
+                        lang={lang}
                     />
                 </>
                 ) : (

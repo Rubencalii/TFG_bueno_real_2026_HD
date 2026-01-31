@@ -16,6 +16,14 @@ class Pedido
     public const ESTADO_LISTO = 'listo';
     public const ESTADO_ENTREGADO = 'entregado';
 
+    public const METODO_PAGO_EFECTIVO = 'efectivo';
+    public const METODO_PAGO_STRIPE = 'stripe';
+    public const METODO_PAGO_TPV = 'tpv';
+
+    public const PAGO_PENDIENTE = 'pendiente';
+    public const PAGO_PAGADO = 'pagado';
+    public const PAGO_ANULADO = 'anulado';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -36,6 +44,24 @@ class Pedido
 
     #[ORM\OneToMany(mappedBy: 'pedido', targetEntity: DetallePedido::class, cascade: ['persist', 'remove'])]
     private Collection $detalles;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $metodoPago = null;
+
+    #[ORM\Column(type: 'string', length: 20)]
+    private string $estadoPago = self::PAGO_PENDIENTE;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, options: ['default' => '0.00'])]
+    private string $baseImponible = '0.00';
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, options: ['default' => '0.00'])]
+    private string $iva = '0.00';
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true, unique: true)]
+    private ?string $numeroFactura = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isAnulado = false;
 
     public function __construct()
     {
@@ -99,7 +125,7 @@ class Pedido
     }
 
     /**
-     * Calcula el total del pedido sumando los detalles
+     * Calcula el total del pedido sumando los detalles y desglosa IVA (10%)
      */
     public function calcularTotal(): string
     {
@@ -108,8 +134,85 @@ class Pedido
             $subtotal = (float) $detalle->getPrecioUnitario() * $detalle->getCantidad();
             $total += $subtotal;
         }
+        
         $this->totalCalculado = number_format($total, 2, '.', '');
+        
+        // Desglose IVA 10% (IVA incluido en PVP)
+        // Base = Total / 1.10
+        // IVA = Total - Base
+        $base = $total / 1.10;
+        $iva = $total - $base;
+        
+        $this->baseImponible = number_format($base, 2, '.', '');
+        $this->iva = number_format($iva, 2, '.', '');
+        
         return $this->totalCalculado;
+    }
+
+    public function getMetodoPago(): ?string
+    {
+        return $this->metodoPago;
+    }
+
+    public function setMetodoPago(?string $metodoPago): self
+    {
+        $this->metodoPago = $metodoPago;
+        return $this;
+    }
+
+    public function getEstadoPago(): string
+    {
+        return $this->estadoPago;
+    }
+
+    public function setEstadoPago(string $estadoPago): self
+    {
+        $this->estadoPago = $estadoPago;
+        return $this;
+    }
+
+    public function getBaseImponible(): string
+    {
+        return $this->baseImponible;
+    }
+
+    public function setBaseImponible(string $baseImponible): self
+    {
+        $this->baseImponible = $baseImponible;
+        return $this;
+    }
+
+    public function getIva(): string
+    {
+        return $this->iva;
+    }
+
+    public function setIva(string $iva): self
+    {
+        $this->iva = $iva;
+        return $this;
+    }
+
+    public function getNumeroFactura(): ?string
+    {
+        return $this->numeroFactura;
+    }
+
+    public function setNumeroFactura(?string $numeroFactura): self
+    {
+        $this->numeroFactura = $numeroFactura;
+        return $this;
+    }
+
+    public function isAnulado(): bool
+    {
+        return $this->isAnulado;
+    }
+
+    public function setIsAnulado(bool $isAnulado): self
+    {
+        $this->isAnulado = $isAnulado;
+        return $this;
     }
 
     /**

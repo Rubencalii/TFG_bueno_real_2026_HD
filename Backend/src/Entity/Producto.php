@@ -18,8 +18,14 @@ class Producto
     #[ORM\Column(type: 'string', length: 150)]
     private string $nombre;
 
+    #[ORM\Column(type: 'string', length: 150, nullable: true)]
+    private ?string $nombreEn = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $descripcion = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $descripcionEn = null;
 
     #[ORM\Column(type: 'decimal', precision: 6, scale: 2)]
     private string $precio;
@@ -35,6 +41,12 @@ class Producto
 
     #[ORM\Column(type: 'boolean')]
     private bool $vegetariano = false;
+
+    #[ORM\Column(type: 'decimal', precision: 3, scale: 2, options: ['default' => '0.00'])]
+    private string $valoracion = '0.00';
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $numValoraciones = 0;
 
     #[ORM\ManyToOne(targetEntity: Categoria::class, inversedBy: 'productos')]
     #[ORM\JoinColumn(nullable: false)]
@@ -127,6 +139,50 @@ class Producto
     public function setVegetariano(bool $vegetariano): self
     {
         $this->vegetariano = $vegetariano;
+        return $this;
+    }
+
+    public function getNombreEn(): ?string
+    {
+        return $this->nombreEn;
+    }
+
+    public function setNombreEn(?string $nombreEn): self
+    {
+        $this->nombreEn = $nombreEn;
+        return $this;
+    }
+
+    public function getDescripcionEn(): ?string
+    {
+        return $this->descripcionEn;
+    }
+
+    public function setDescripcionEn(?string $descripcionEn): self
+    {
+        $this->descripcionEn = $descripcionEn;
+        return $this;
+    }
+
+    public function getValoracion(): string
+    {
+        return $this->valoracion;
+    }
+
+    public function setValoracion(string $valoracion): self
+    {
+        $this->valoracion = $valoracion;
+        return $this;
+    }
+
+    public function getNumValoraciones(): int
+    {
+        return $this->numValoraciones;
+    }
+
+    public function setNumValoraciones(int $numValoraciones): self
+    {
+        $this->numValoraciones = $numValoraciones;
         return $this;
     }
 

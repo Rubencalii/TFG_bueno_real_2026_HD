@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 
-export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity }) {
+export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, lang }) {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [notes, setNotes] = useState('');
+
+    const t = (es, en) => lang === 'es' ? es : (en || es);
 
     const handleAdd = () => {
         onAddToCart(producto, notes);
@@ -25,18 +27,24 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                     
                     {/* Tags */}
-                    {producto.destacado && (
-                        <div className="p-3 sm:p-4 relative">
-                            <span className="bg-secondary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white orange-glow">
-                                TOP SELLER
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        {producto.destacado && (
+                            <span className="bg-secondary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white orange-glow w-fit">
+                                {t('TOP VENTAS', 'TOP SELLER')}
                             </span>
-                        </div>
-                    )}
-                    {producto.vegetariano && (
-                        <div className="p-3 sm:p-4 relative">
-                            <span className="bg-primary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white neon-glow">
-                                VEGETARIANA
+                        )}
+                        {producto.vegetariano && (
+                            <span className="bg-primary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white neon-glow w-fit">
+                                {t('VEGETARIANA', 'VEGGIE')}
                             </span>
+                        )}
+                    </div>
+
+                    {/* Rating Badge */}
+                    {parseFloat(producto.valoracion) > 0 && (
+                        <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                            <span className="material-symbols-outlined text-amber-500 text-sm filled">star</span>
+                            <span className="text-[11px] font-black text-gray-900 dark:text-white">{parseFloat(producto.valoracion).toFixed(1)}</span>
                         </div>
                     )}
                 </div>
@@ -46,7 +54,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                     {/* Title and Price */}
                     <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
                         <h4 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                            {producto.nombre}
+                            {t(producto.nombre, producto.nombreEn)}
                         </h4>
                         <p className="text-lg sm:text-xl font-black text-primary whitespace-nowrap">
                             {parseFloat(producto.precio).toFixed(2)}€
@@ -55,7 +63,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
 
                     {/* Description */}
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-8 leading-relaxed line-clamp-2">
-                        {producto.descripcion}
+                        {t(producto.descripcion, producto.descripcionEn)}
                     </p>
 
                     {/* Allergens and Add Button */}

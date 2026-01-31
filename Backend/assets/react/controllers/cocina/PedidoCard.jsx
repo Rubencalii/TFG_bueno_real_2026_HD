@@ -2,13 +2,17 @@ import React from 'react';
 
 export default function PedidoCard({ pedido, onNext, nextLabel, nextIcon, isReady, loading }) {
     // Colores del semáforo con soporte dark mode
-    const semaforoColors = {
-        verde: 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/30',
-        amarillo: 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/30',
-        rojo: 'border-l-red-500 bg-red-50 dark:bg-red-900/30 animate-pulse'
-    };
+    const [minutos, setMinutos] = React.useState(pedido.minutosEspera);
 
-    const borderColor = semaforoColors[pedido.colorSemaforo] || 'border-l-gray-300 dark:border-l-gray-600';
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setMinutos(prev => prev + 1);
+        }, 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const borderColor = minutos >= 15 ? semaforoColors.rojo : 
+                        minutos >= 7 ? semaforoColors.amarillo : semaforoColors.verde;
 
     // Verificar si hay notas especiales (alergias)
     const tieneNotasEspeciales = pedido.detalles.some(d => 
@@ -18,7 +22,7 @@ export default function PedidoCard({ pedido, onNext, nextLabel, nextIcon, isRead
     );
 
     return (
-        <div className={`bg-white dark:bg-slate-700 rounded-xl shadow-md overflow-hidden border-l-4 ${borderColor} transition-colors`}>
+        <div className={`bg-white dark:bg-slate-700 rounded-xl shadow-md overflow-hidden border-l-8 ${borderColor} transition-all duration-500`}>
             {/* Header de la tarjeta */}
             <div className="p-4 border-b border-gray-100 dark:border-slate-600">
                 <div className="flex items-center justify-between">
@@ -26,17 +30,18 @@ export default function PedidoCard({ pedido, onNext, nextLabel, nextIcon, isRead
                         <span className="text-3xl font-black text-gray-800 dark:text-white">
                             {pedido.mesa}
                         </span>
-                        <span className="text-xs bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full font-medium">
+                        <span className="text-[10px] bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-gray-300 px-2 py-1 rounded-md font-black uppercase tracking-widest">
                             Mesa
                         </span>
                     </div>
                     <div className="text-right">
-                        <p className="text-sm font-bold text-gray-800 dark:text-white">{pedido.createdAt}</p>
-                        <p className={`text-xs font-medium ${
-                            pedido.minutosEspera >= 10 ? 'text-red-600 dark:text-red-400' : 
-                            pedido.minutosEspera >= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-400">{pedido.createdAt}</p>
+                        <p className={`text-sm font-black flex items-center gap-1 justify-end ${
+                            minutos >= 15 ? 'text-red-600 dark:text-red-400 animate-pulse' : 
+                            minutos >= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
                         }`}>
-                            Hace {pedido.minutosEspera} min
+                            <span className="material-symbols-outlined text-sm">schedule</span>
+                            {minutos} min
                         </p>
                     </div>
                 </div>

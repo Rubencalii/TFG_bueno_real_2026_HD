@@ -12,12 +12,27 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
         LISTO: 'listo'
     };
 
+    const [audioEnabled, setAudioEnabled] = useState(localStorage.getItem('cocina_audio') === 'true');
+
     // Función para refrescar pedidos
     const refreshPedidos = async () => {
         try {
             const response = await fetch('/api/cocina/pedidos');
             if (response.ok) {
                 const data = await response.json();
+                
+                // Detección inteligente de nuevos pedidos
+                if (audioEnabled && data.length > 0) {
+                    const nuevosIds = data.map(p => p.id);
+                    const actualesIds = pedidos.map(p => p.id);
+                    const hayNuevos = nuevosIds.some(id => !actualesIds.includes(id));
+                    
+                    if (hayNuevos) {
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                        audio.play().catch(e => console.log('Audio blocked'));
+                    }
+                }
+                
                 setPedidos(data);
             }
         } catch (error) {
@@ -25,11 +40,23 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
         }
     };
 
+    const toggleAudio = () => {
+        const newValue = !audioEnabled;
+        setAudioEnabled(newValue);
+        localStorage.setItem('cocina_audio', newValue);
+        if (newValue) {
+            // Test sound to "unlock" audio context
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.volume = 0.1;
+            audio.play().catch(e => console.log('Initial unlock blocked'));
+        }
+    };
+
     // Auto-refresh cada 10 segundos
     useEffect(() => {
         const interval = setInterval(refreshPedidos, 10000);
         return () => clearInterval(interval);
-    }, []);
+    }, [pedidos, audioEnabled]);
 
     // Cambiar estado de un pedido
     const cambiarEstado = async (pedidoId, nuevoEstado) => {
@@ -95,6 +122,13 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                             <span className="material-symbols-outlined">logout</span>
                             Salir
                         </a>
+                        <button 
+                            onClick={toggleAudio}
+                            className={`p-2 rounded-lg font-bold transition-all flex items-center gap-2 ${audioEnabled ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}
+                            title={audioEnabled ? 'Sonido activado' : 'Sonido desactivado'}
+                        >
+                            <span className="material-symbols-outlined">{audioEnabled ? 'notifications_active' : 'notifications_off'}</span>
+                        </button>
                         <button 
                             onClick={refreshPedidos}
                             className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors flex items-center gap-2"

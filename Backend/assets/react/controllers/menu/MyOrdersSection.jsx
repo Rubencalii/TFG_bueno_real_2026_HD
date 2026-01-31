@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 export default function MyOrdersSection({ mesa }) {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [ratingsSubmitted, setRatingsSubmitted] = useState({});
 
     const fetchPedidos = async () => {
         try {
@@ -65,6 +66,38 @@ export default function MyOrdersSection({ mesa }) {
         }
     };
 
+    const submitRating = async (productoId, rating) => {
+        try {
+            const response = await fetch(`/api/producto/${productoId}/rate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating })
+            });
+            if (response.ok) {
+                setRatingsSubmitted(prev => ({ ...prev, [productoId]: true }));
+            }
+        } catch (error) {
+            console.error('Error rating product:', error);
+        }
+    };
+
+    const allOrderedProducts = useMemo(() => {
+        const products = [];
+        const seen = new Set();
+        pedidos.forEach(p => {
+            p.detalles.forEach(d => {
+                // We need the product ID from the detalles, assuming it's passed or available
+                // Looking at PedidoController, details have 'id' (detalleId) and 'producto' (nombre)
+                // We might need to adjust the backend to include 'productoId' in the details
+                if (!seen.has(d.productoId)) {
+                    products.push({ id: d.productoId, nombre: d.producto });
+                    seen.add(d.productoId);
+                }
+            });
+        });
+        return products;
+    }, [pedidos]);
+
     if (loading && pedidos.length === 0) {
         return (
             <div className="py-20 text-center">
@@ -87,7 +120,7 @@ export default function MyOrdersSection({ mesa }) {
     }
 
     return (
-        <div className="space-y-6 max-w-[600px] mx-auto">
+        <div className="space-y-6 max-w-[600px] mx-auto animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-black text-gray-900 dark:text-white">Mis Pedidos</h2>
                 <span className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-full uppercase tracking-widest">
@@ -156,6 +189,44 @@ export default function MyOrdersSection({ mesa }) {
                     </div>
                 );
             })}
+
+            {/* Satisfaction Survey - Only if there are finished products */}
+            {allOrderedProducts.length > 0 && (
+                <div className="p-8 bg-gradient-to-br from-gray-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <span className="material-symbols-outlined text-8xl">favorite</span>
+                    </div>
+                    
+                    <h3 className="text-2xl font-black mb-2 relative z-10">¿Te ha gustado la comida?</h3>
+                    <p className="text-gray-400 text-sm mb-8 font-medium">Ayúdanos a mejorar puntuando tus platos favoritos</p>
+
+                    <div className="space-y-4 relative z-10">
+                        {allOrderedProducts.map(prod => (
+                            <div key={prod.id} className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <span className="font-bold text-sm">{prod.nombre}</span>
+                                {ratingsSubmitted[prod.id] ? (
+                                    <span className="text-emerald-400 text-xs font-black uppercase tracking-widest flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                                        ¡Gracias!
+                                    </span>
+                                ) : (
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <button 
+                                                key={star}
+                                                onClick={() => submitRating(prod.id, star)}
+                                                className="size-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors group"
+                                            >
+                                                <span className="material-symbols-outlined text-lg text-gray-500 group-hover:text-amber-400">star</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="p-6 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 dark:border-primary/20">
                 <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-1">Nota</p>
