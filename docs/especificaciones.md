@@ -1,226 +1,561 @@
-# 1. Introduccion
-
-## 1.1. Contexto y Motivacion
-La hosteleria ha sufrido una transformacion digital acelerada en los ultimos años. Sin embargo, la mayoria de soluciones adoptadas por pequeños y medianos restaurantes se limitan a digitalizar una carta fisica en un archivo PDF estatico accesible por codigo QR.
-
-Esta solucion presenta graves problemas de **Experiencia de Usuario (UX)**: obliga al cliente a hacer zoom continuamente, no permite filtrar platos segun restricciones alimentarias y, lo mas critico, rompe el flujo de pedido, obligando al cliente a esperar a un camarero para tomar nota.
-
-El presente proyecto, **"Comanda Digital"**, nace para solucionar esta desconexion. No se trata solo de mostrar el menu, sino de facilitar, automatizar y acelerar el proceso completo, desde que el cliente se sienta hasta que la comida llega a la mesa.
-
-## 1.2. Objetivos del Proyecto
-
-El objetivo principal es desarrollar una Aplicacion Web Progresiva (PWA) que elimine los cuellos de botella en el servicio de un restaurante.
-
-**Objetivos Especificos:**
-1.  **Eliminar el "PDF estatico":** Crear una interfaz interactiva donde el cliente pueda añadir productos al carrito directamente desde su movil.
-2.  **Seguridad Alimentaria:** Implementar un sistema de filtrado dinamico de alergenos que oculte automaticamente los platos no aptos para el comensal.
-3.  **Optimizacion de Cocina (Sistema Semaforo):** Desarrollar un sistema de gestion visual para el personal de cocina que alerte mediante codigos de color (Verde/Amarillo/Rojo) sobre el tiempo de espera de cada comanda.
-4.  **Gestion de Cobro:** Automatizar el calculo de la cuenta por mesa, permitiendo al camarero cerrar la sesion con un solo clic y evitando errores manuales de suma.
-
----
-
-# 2. Estado del Arte (Contexto Tecnologico)
-
-Actualmente, existen soluciones en el mercado como *Square*, *GloriaFood* o los propios TPVs bancarios. Sin embargo, estas presentan barreras para el hostelero medio:
-* **Coste:** Suelen requerir suscripciones mensuales elevadas o comisiones por pedido.
-* **Hardware:** Muchas exigen comprar tablets o impresoras especificas.
-* **Complejidad:** Incluyen funciones innecesarias (reparto a domicilio, gestion de stock compleja) que dificultan su uso diario.
-
-Mi propuesta se diferencia por ser una solucion ligera, basada en tecnologias web estandar (no requiere instalar apps) y centrada especificamente en la **agilidad del servicio en sala** (Dine-in) y la comunicacion visual con cocina.
----
-# Especificaciones Tecnicas: Comanda Digital
+# Especificaciones Técnicas: Comanda Digital
 
 **Proyecto:** Trabajo de Fin de Grado (TFG)  
-**Descripcion:** Sistema de comanda con desarrollo web y el sistema responsive para que se vea en movil.
-
-## Tabla de contenido
-
-- [1. Requisitos del Sistema](#1-requisitos-del-sistema)
-  - [1.1 Requisitos Funcionales - Cliente](#11-modulo-cliente)
-  - [1.2 Requisitos Funcionales - Cocina](#12-modulo-cocina-y-barra)
-  - [1.3 Requisitos Funcionales - Administracion](#13-modulo-administracion)
-  - [1.4 Requisitos No Funcionales](#14-requisitos-no-funcionales-rnf)
-- [2. Stack Tecnologico](#2-stack-tecnologico)
-- [3. Arquitectura y Diseño de Interfaces](#3-arquitectura-y-diseno-de-interfaces)
-  - [3.1 Resumen Tecnico](#31-resumen-tecnico)
-  - [3.2 Contrato de API (Endpoints)](#32-contrato-de-api)
-  - [3.3 Flujo de Usuario](#33-flujo-de-usuario-happy-path)
-- [4. Modelo de Datos](#4-modelo-de-datos)
-- [5. Accesibilidad y Seguridad](#5-accesibilidad-y-seguridad)
-- [6. Estrategia de Pruebas (QA)](#6-estrategia-de-pruebas-qa)
-- [7. Anexos Visuales](#7-anexos-visuales)
+**Versión:** 2.0 (Febrero 2026)  
+**Descripción:** Sistema completo de gestión de comandas para restaurantes con interfaz web responsive.
 
 ---
 
-## 1. Requisitos del Sistema
+## 📋 Tabla de Contenido
 
-### 1.1 Modulo Cliente
-**Objetivo:** Ofrecer una experiencia rapida ("Quick Order") y accesible para que los clientes consulten la carta y pidan desde la mesa sin instalar apps.
-
-- **RF-01 — Acceso Directo QR:**
-  - El sistema identificara la mesa automaticamente mediante el token en la URL del QR.
-  - No requiere registro de usuario (login) para consultar y pedir.
-
-- **RF-02 — Navegacion Vertical (Single Page):**
-  - Toda la carta se carga en una unica vista.
-  - Navegacion fluida por anclas (scroll suave) entre categorias (Entrantes, Bebidas, etc.).
-
-- **RF-03 — Filtro Dinamico de Alergenos:**
-  - Panel lateral o superior con iconos de alergenos (Gluten, Lactosa, etc.).
-  - Al activar un filtro, los productos no aptos **desaparecen** visualmente de la lista.
-
-- **RF-04 — Añadido Rapido (1-Click):**
-  - Boton directo `[+]` en la tarjeta del producto para añadir 1 unidad al carrito sin abrir modales.
-
-- **RF-05 — Carrito Flotante:**
-  - Barra inferior persistente que muestra el total de items y precio.
-  - Acceso directo a "Confirmar Pedido".
-
-### 1.2 Modulo Cocina y Barra
-**Objetivo:** Panel operativo de alto rendimiento (KDS) para gestionar el flujo de trabajo.
-
-- **RF-06 — Tablero Kanban en Tiempo Real:**
-  - Columnas: *Pendiente*, *En Preparacion*, *Listo*.
-  - Los pedidos nuevos aparecen instantaneamente (WebSockets/Mercure) sin recargar la pagina.
-
-- **RF-07 — Interaccion Tactil Rapida:**
-  - Cambio de estado mediante "Drag & Drop" o un solo toque ("One-tap") en la tarjeta.
-
-- **RF-08 — Semaforo de Prioridad (Gestion Visual):**
-  - Las tarjetas cambian de color segun el tiempo de espera:
-    - 🟢 **Verde:** Pedido reciente.
-    - 🟡 **Amarillo:** Alerta de demora.
-    - 🔴 **Rojo:** Critico/Retrasado.
-
-- **RF-09 — Alertas Criticas:**
-  - Resaltado visual evidente para notas de seguridad ("ALERGIA", "CELIACO").
-
-- **RF-10 — Cierre de Mesa y Calculo Automatico:**
-  - Boton "Pedir la Cuenta" que agrupa todos los pedidos de la sesion de una mesa.
-  - Calculo automatico del total a pagar, eliminando errores manuales.
-
-### 1.3 Modulo Administracion
-**Objetivo:** Gestion del negocio y configuracion.
-
-- **RF-11 — Gestion del Catalogo (CRUD):**
-  - Alta, baja y modificacion de productos y categorias.
-  - Asignacion obligatoria de alergenos mediante checkboxes.
-  - Subida de imagenes optimizadas.
-
-- **RF-12 — Generacion de QR:**
-  - Generacion de codigos QR unicos asociados a cada ID de mesa.
-  - Opcion de descarga en formato imprimible (PDF/PNG).
-
-### 1.4 Requisitos No Funcionales (RNF)
-Definen la calidad del servicio.
-
-- **RNF-01 — Rendimiento:** La carga inicial de la carta (FCP) debe ser inferior a 2 segundos en redes 4G.
-- **RNF-02 — Disponibilidad:** El sistema debe ser resiliente a micro-cortes de red en la cocina (reconexion automatica de WebSockets).
-- **RNF-03 — Usabilidad:** Diseño *Mobile First* estricto, cumpliendo estandares de accesibilidad (tamaño de botones para dedos).
-- **RNF-04 — Escalabilidad:** Arquitectura preparada para soportar picos de concurrencia (viernes/sabados noche).
+1. [Introducción](#1-introducción)
+2. [Requisitos del Sistema](#2-requisitos-del-sistema)
+3. [Stack Tecnológico](#3-stack-tecnológico)
+4. [Arquitectura del Sistema](#4-arquitectura-del-sistema)
+5. [Modelo de Datos](#5-modelo-de-datos)
+6. [Contrato de API](#6-contrato-de-api)
+7. [Flujos de Usuario](#7-flujos-de-usuario)
+8. [Seguridad](#8-seguridad)
+9. [Estrategia de Pruebas](#9-estrategia-de-pruebas)
+10. [Conclusiones](#10-conclusiones)
 
 ---
 
-## 2. Stack Tecnologico
+## 1. Introducción
 
-Seleccion de herramientas basada en robustez, comunidad y rendimiento.
+### 1.1 Contexto y Motivación
 
-| Capa | Tecnologia / Herramienta | Justificacion |
-|---|---|---|
-| **Diseño** | Stitch IA | Prototipado UI/UX y definicion de Design System. |
-| **Frontend** | **React** (con Symfony UX React) + **Tailwind CSS** | Interfaces modernas, reactivas y reutilizables integradas directamente en Symfony mediante el bundle UX React. |
-| **Backend** | **Symfony 8** (PHP) | Framework MVC robusto, seguro y escalable. |
-| **Gestor Paquetes** | **Composer** | Gestion de dependencias de PHP. |
-| **Base de Datos** | **MariaDB** | Motor relacional fiable para integridad de datos. |
-| **Infraestructura** | **Docker** & **Docker Compose** | Contenerizacion para entorno de desarrollo identico a produccion. |
-| **Tiempo Real** | **Mercure** | Protocolo de notificaciones Push para el tablero de cocina. |
-| **Control Versiones** | GitHub | Git Flow, Pull Requests y backup en la nube. |
-| **IDE** | Visual Studio Code | Entorno ligero con extensiones para PHP/Symfony. |
+La hostelería ha sufrido una transformación digital acelerada. Sin embargo, la mayoría de soluciones adoptadas se limitan a digitalizar cartas físicas en PDFs estáticos accesibles por código QR.
 
----
+**Comanda Digital** resuelve esta desconexión, facilitando, automatizando y acelerando el proceso completo desde que el cliente se sienta hasta que la comida llega a la mesa.
 
-## 3. Arquitectura y Diseño de Interfaces
+### 1.2 Objetivos del Proyecto
 
-### 3.1 Resumen Tecnico
-El sistema sigue una arquitectura **Cliente-Servidor desacoplada** comunicada vía API REST, pero con integración avanzada entre Symfony y React.
-- **Frontend:** SPA/PWA desarrollada en **React** e integrada en Symfony mediante **Symfony UX React**. Los componentes React pueden ser renderizados directamente desde Twig, permitiendo una experiencia de usuario moderna y altamente interactiva, gestionando los assets con **Webpack Encore** o **Vite** para hot-reload y optimización.
-- **Backend:** API Platform / Symfony Controllers.
-
-### 3.2 Contrato de API
-Endpoints principales que expondra el Backend:
-
-| Metodo | Endpoint | Descripcion |
-| :--- | :--- | :--- |
-| `GET` | `/api/mesa/{token}/carta` | Obtiene categorias y productos (filtrados por disponibilidad). |
-| `POST` | `/api/pedido` | Recibe el carrito del cliente y lo guarda en BBDD. |
-| `GET` | `/api/cocina/stream` | (Mercure) Suscripcion a eventos de nuevos pedidos. |
-| `PATCH` | `/api/pedido/{id}/estado` | Cocina actualiza el estado (ej: Pendiente -> Listo). |
-| `GET` | `/api/admin/mesa/{id}/cuenta` | Calcula el total de la mesa para el cobro. |
-
-### 3.3 Flujo de Usuario (Happy Path)
-1. **Cliente** escanea QR -> El Frontend carga la carta asociada a la mesa.
-2. **Cliente** añade productos y confirma -> `POST /api/pedido`.
-3. **Backend** valida, guarda y emite evento a Mercure Hub.
-4. **Pantalla Cocina** recibe el evento -> Aparece tarjeta nueva (Sonido + Visual).
-5. **Cocinero** pulsa la tarjeta -> Estado cambia a "En preparacion".
+| Objetivo | Descripción |
+|----------|-------------|
+| **Eliminar el PDF estático** | Interfaz interactiva donde el cliente añade productos al carrito desde su móvil |
+| **Seguridad Alimentaria** | Filtrado dinámico de alérgenos que oculta platos no aptos |
+| **Optimización de Cocina** | Sistema semáforo (Verde/Amarillo/Rojo) según tiempo de espera |
+| **Gestión de Cobro** | Cálculo automático de cuenta con generación de tickets fiscales |
+| **Sistema de Reservas** | Gestión completa de reservas con estados y asignación de mesas |
 
 ---
 
-## 4. Modelo de Datos
+## 2. Requisitos del Sistema
 
-El diseño de base de datos soporta la casuistica real del restaurante (basado en el menu de "Casa Encarni"), incluyendo descripciones complejas y precios por categoria.
+### 2.1 Módulo Cliente (RF-01 a RF-05)
 
-**Entidades Principales:**
+| ID | Requisito | Descripción |
+|----|-----------|-------------|
+| RF-01 | Acceso Directo QR | Identificación automática de mesa mediante token en URL |
+| RF-02 | Navegación Single Page | Carta completa en una vista con scroll suave entre categorías |
+| RF-03 | Filtro de Alérgenos | Panel con iconos de alérgenos que oculta productos no aptos |
+| RF-04 | Añadido Rápido | Botón `[+]` para añadir productos sin abrir modales |
+| RF-05 | Carrito Flotante | Barra inferior persistente con total y acceso a confirmar |
 
-* **MESAS:** `id`, `numero`, `token_qr` (Identificador unico).
-* **CATEGORIAS:** `id`, `nombre`, `descripcion` (ej: "Todas las pizzas 11€").
-* **PRODUCTOS:** `id`, `nombre`, `descripcion` (Texto largo para ingredientes), `precio`, `activo`.
-* **ALERGENOS:** `id`, `nombre`, `icono`.
-* **PRODUCTO_ALERGENO:** Tabla intermedia (N:M) para filtrar la carta.
-* **PEDIDOS:** `id`, `mesa_id`, `estado`, `created_at` (Vital para el semaforo de colores), `total_calculado`.
-* **DETALLE_PEDIDO:** `id`, `pedido_id`, `producto_id`, `cantidad`, `notas` (ej: "Sin cebolla").
+### 2.2 Módulo Cocina y Barra (RF-06 a RF-10)
 
-> *Nota: Ver diagrama Entidad-Relacion en la seccion de Anexos.*
+| ID | Requisito | Descripción |
+|----|-----------|-------------|
+| RF-06 | Tablero Kanban | Columnas: Pendiente, En Preparación, Listo, Entregado |
+| RF-07 | Interacción Táctil | Cambio de estado con un solo toque |
+| RF-08 | Sistema Semáforo | 🟢 Verde (0-5min), 🟡 Amarillo (5-10min), 🔴 Rojo (+10min) |
+| RF-09 | Alertas Críticas | Resaltado para notas de alergia ("CELIACO", "SIN GLUTEN") |
+| RF-10 | Cierre de Mesa | Botón para generar ticket con cálculo automático |
 
----
+### 2.3 Módulo Administración (RF-11 a RF-18)
 
-## 5. Accesibilidad y Seguridad
+| ID | Requisito | Descripción |
+|----|-----------|-------------|
+| RF-11 | CRUD Productos | Alta, baja, modificación con asignación de alérgenos |
+| RF-12 | CRUD Categorías | Gestión de categorías con tipo (cocina/barra) |
+| RF-13 | Gestión de Mesas | Crear, editar, eliminar mesas con regeneración de QR |
+| RF-14 | Gestión de Usuarios | CRUD de usuarios con roles (admin, gerente, camarero, cocinero, barman) |
+| RF-15 | Sistema de Tickets | Creación, cobro, anulación y rectificación de tickets |
+| RF-16 | Reportes de Ventas | Estadísticas por período, método de pago, categoría |
+| RF-17 | Exportación | Exportar tickets a CSV/Excel |
+| RF-18 | Gestión de Reservas | CRUD completo con estados y asignación a mesas |
 
-- **Seguridad:**
-  - Validacion estricta en Backend para evitar inyeccion de pedidos falsos.
-  - Sanitizacion de inputs (notas de pedido) para evitar XSS.
-  - Acceso a panel Admin protegido por firewall y autenticacion.
-- **Accesibilidad:**
-  - Contraste de colores verificado para el semaforo de cocina.
-  - Botones con area tactil minima de 44x44px.
+### 2.4 Requisitos No Funcionales
 
----
-
-## 6. Estrategia de Pruebas (QA)
-
-Se implementara una estrategia de testing para garantizar la estabilidad:
-
-1.  **Pruebas Unitarias (PHPUnit):** Verificacion de la logica de negocio (ej: que el calculo total de la cuenta sea exacto, sumando suplementos).
-2.  **Pruebas de Integracion:** Verificar que la API responde correctamente a las peticiones del Frontend.
-3.  **Pruebas Manuales / User Acceptance Testing (UAT):** Validacion del flujo completo escaneando un QR real con un dispositivo movil.
-
----
-
-## 7. Anexos Visuales
-
-Las imagenes y diagramas tecnicos del proyecto.
-
-### 7.1 Diagrama Entidad-Relacion (BBDD)
-*(Insertar aqui la imagen exportada de dbdiagram.io)*
-![Diagrama ER](./img/Comanda.png)
+| ID | Requisito | Métrica |
+|----|-----------|---------|
+| RNF-01 | Rendimiento | Carga inicial < 2 segundos en 4G |
+| RNF-02 | Disponibilidad | Reconexión automática de polling |
+| RNF-03 | Usabilidad | Mobile First, botones mínimo 44x44px |
+| RNF-04 | Seguridad | Control de acceso por roles, CSRF protection |
+| RNF-05 | Escalabilidad | Arquitectura Docker para despliegue flexible |
 
 ---
 
-# 8. Conclusiones y Lineas Futuras
+## 3. Stack Tecnológico
 
-## 8.1. Conclusiones
-El desarrollo del proyecto "Comanda Digital" ha permitido cumplir con los objetivos planteados, entregando una solucion funcional que mejora la experiencia en sala frente a las cartas tradicionales.
+| Capa | Tecnología | Versión | Justificación |
+|------|------------|---------|---------------|
+| **Backend** | Symfony | 8.0 | Framework PHP robusto y escalable |
+| **Frontend** | React + Tailwind CSS | 18.x / 3.x | Interfaces reactivas con Symfony UX |
+| **Base de Datos** | MariaDB | 11.3 | Motor relacional fiable |
+| **Servidor** | Nginx | Latest | Servidor web de alto rendimiento |
+| **Infraestructura** | Docker + Docker Compose | Latest | Contenedorización completa |
+| **Bundler** | Webpack Encore | 4.x | Gestión de assets con hot-reload |
+| **Lenguaje** | PHP | 8.3+ | Última versión estable |
+| **Control Versiones** | Git + GitHub | - | Git Flow con Pull Requests |
 
-A nivel tecnico, la eleccion de una arquitectura desacoplada con **Symfony 7** en el backend y **React/Tailwind** en el frontend ha demostrado ser robusta. La implementacion de **Docker** ha facilitado enormemente el despliegue del entorno, y el uso de **Mercure** ha sido clave para lograr que el "semaforo de cocina" funcione en tiempo real sin saturar el servidor.
+---
 
-El sistema de filtrado de alergenos aporta un valor diferencial importante, alineandose con las normativas actuales de seguridad alimentaria y ofreciendo tranquilidad al cliente.
+## 4. Arquitectura del Sistema
+
+### 4.1 Diagrama de Componentes
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENTE                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  📱 Móvil (Cliente)    │  💻 Tablet (Cocina/Barra)  │  🖥️ Desktop (Admin) │
+│  - Carta digital       │  - Kanban pedidos           │  - Panel gestión     │
+│  - Carrito             │  - Sistema semáforo         │  - Reportes          │
+│  - Pedir cuenta        │  - Cambio estados           │  - Configuración     │
+└─────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      NGINX (Reverse Proxy)                       │
+│                         Puerto 80/443                            │
+└─────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   SYMFONY 8.0 (Backend)                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Controllers:                                                    │
+│  ├── AdminController (Panel administración)                      │
+│  ├── BarraController (Panel barra)                               │
+│  ├── CocinaController (Panel cocina)                             │
+│  ├── MesaController (Carta cliente)                              │
+│  ├── PedidoController (API pedidos)                              │
+│  └── SecurityController (Autenticación)                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Services: Doctrine ORM, Security, Twig, PasswordHasher         │
+└─────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    MariaDB 11.3 (Base de Datos)                  │
+│                         Puerto 3306                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 Estructura de Contenedores Docker
+
+```yaml
+services:
+  app:        # Symfony + PHP-FPM (Puerto 9000)
+  nginx:      # Servidor web (Puerto 80)
+  database:   # MariaDB (Puerto 3306)
+```
+
+---
+
+## 5. Modelo de Datos
+
+### 5.1 Entidades del Sistema
+
+| Entidad | Descripción | Campos Principales |
+|---------|-------------|-------------------|
+| **User** | Usuarios del sistema | id, email, password, roles[], rol |
+| **Mesa** | Mesas del restaurante | id, numero, tokenQr, activa, llamaCamarero, pideCuenta, metodoPagoPreferido, pagoOnlinePendiente |
+| **Categoria** | Categorías de productos | id, nombre, orden, activa, tipo (cocina/barra) |
+| **Producto** | Productos del menú | id, nombre, descripcion, precio, imagen, activo, destacado, vegetariano, categoria_id |
+| **Alergeno** | Alérgenos alimentarios | id, nombre |
+| **Pedido** | Pedidos de clientes | id, mesa_id, estado, createdAt, totalCalculado |
+| **DetallePedido** | Líneas de pedido | id, pedido_id, producto_id, cantidad, notas, precioUnitario |
+| **Ticket** | Tickets/Facturas | id, numero, mesa_id, baseImponible, iva, total, metodoPago, estado, createdAt, paidAt, detalleJson, ticketRectificadoId |
+| **Reserva** | Reservas de mesas | id, nombreCliente, telefono, email, fecha, hora, numPersonas, notas, estado, mesa_id, createdAt, updatedAt |
+
+### 5.2 Diagrama Entidad-Relación
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        DIAGRAMA ENTIDAD-RELACIÓN                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐
+│    USER     │
+├─────────────┤
+│ PK id       │
+│    email    │
+│    password │
+│    roles[]  │
+│    rol      │
+└─────────────┘
+
+┌─────────────┐       1:N        ┌─────────────┐       1:N        ┌──────────────────┐
+│    MESA     │──────────────────│   PEDIDO    │──────────────────│  DETALLE_PEDIDO  │
+├─────────────┤                  ├─────────────┤                  ├──────────────────┤
+│ PK id       │                  │ PK id       │                  │ PK id            │
+│    numero   │                  │ FK mesa_id  │                  │ FK pedido_id     │
+│    tokenQr  │                  │    estado   │                  │ FK producto_id   │
+│    activa   │                  │    createdAt│                  │    cantidad      │
+│    llama... │                  │    total... │                  │    notas         │
+│    pide...  │                  └─────────────┘                  │    precioUnit... │
+│    metodo...|                                                   └──────────────────┘
+│    pagoOn...|                                                            │
+└─────────────┘                                                            │
+      │                                                                    │
+      │ 1:N                                                               N:1
+      ▼                                                                    ▼
+┌─────────────┐                                                   ┌─────────────┐
+│   TICKET    │                                                   │  PRODUCTO   │
+├─────────────┤                                                   ├─────────────┤
+│ PK id       │                                                   │ PK id       │
+│    numero   │         N:M (producto_alergeno)                   │    nombre   │
+│ FK mesa_id  │         ┌───────────────────────────────────────▶│    descrip..│
+│    baseImp..│         │                                         │    precio   │
+│    iva      │         │                                         │    imagen   │
+│    total    │         │                                         │    activo   │
+│    metodo...|         │                                         │    destac.. │
+│    estado   │         │                                         │    vegetar..|
+│    created..|         │                                         │ FK categ_id │
+│    paidAt   │         │                                         └─────────────┘
+│    detalle..|         │                                                │
+│    ticketR..|         │                                               N:1
+└─────────────┘         │                                                ▼
+      │                 │                                         ┌─────────────┐
+      │ 1:N             │                                         │  CATEGORIA  │
+      ▼                 │                                         ├─────────────┤
+┌─────────────┐         │                                         │ PK id       │
+│   RESERVA   │         │                                         │    nombre   │
+├─────────────┤         │                                         │    orden    │
+│ PK id       │         │                                         │    activa   │
+│    nombre...|         │                                         │    tipo     │
+│    telefono │         │                                         └─────────────┘
+│    email    │         │
+│    fecha    │         │
+│    hora     │         │                                         ┌─────────────┐
+│    numPers..|         └─────────────────────────────────────────│  ALERGENO   │
+│    notas    │                                                   ├─────────────┤
+│    estado   │                                                   │ PK id       │
+│ FK mesa_id  │                                                   │    nombre   │
+│    created..|                                                   └─────────────┘
+│    updated..|
+└─────────────┘
+
+LEYENDA:
+────────
+PK = Primary Key (Clave Primaria)
+FK = Foreign Key (Clave Foránea)
+1:N = Relación Uno a Muchos
+N:M = Relación Muchos a Muchos
+```
+
+### 5.3 Estados de Entidades
+
+**Pedido.estado:**
+```
+pendiente → en_preparacion → listo → entregado
+```
+
+**Ticket.estado:**
+```
+pendiente → pagado
+          ↘ anulado
+```
+
+**Reserva.estado:**
+```
+pendiente → confirmada → completada
+          ↘ cancelada
+          ↘ no_show
+```
+
+**Ticket.metodoPago:**
+```
+efectivo | tarjeta | tpv
+```
+
+---
+
+## 6. Contrato de API
+
+### 6.1 Endpoints Públicos (Cliente)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/mesa/{token}` | Obtiene la carta para una mesa |
+| POST | `/api/pedido` | Crea un nuevo pedido |
+| GET | `/api/mesa/{token}/pedidos` | Lista pedidos de la mesa |
+| GET | `/api/mesa/{token}/total` | Obtiene el total a pagar |
+| POST | `/api/mesa/{token}/llamar` | Llama al camarero |
+| POST | `/api/mesa/{token}/pagar` | Solicita la cuenta |
+| POST | `/api/mesa/{token}/pagar-online` | Indica pago online |
+
+### 6.2 Endpoints Cocina/Barra
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/cocina/pedidos` | Lista pedidos de cocina |
+| GET | `/api/barra/pedidos` | Lista pedidos de barra |
+| PATCH | `/api/pedido/{id}/estado` | Cambia estado del pedido |
+| GET | `/api/barra/notificaciones` | Notificaciones de barra |
+| POST | `/api/barra/mesa/{id}/cerrar` | Cierra una mesa |
+
+### 6.3 Endpoints Administración
+
+| Recurso | Método | Endpoint | Descripción |
+|---------|--------|----------|-------------|
+| **Productos** | POST | `/admin/api/producto` | Crear producto |
+| | PUT | `/admin/api/producto/{id}` | Editar producto |
+| | DELETE | `/admin/api/producto/{id}` | Eliminar producto |
+| **Categorías** | POST | `/admin/api/categoria` | Crear categoría |
+| | PUT | `/admin/api/categoria/{id}` | Editar categoría |
+| | DELETE | `/admin/api/categoria/{id}` | Eliminar categoría |
+| **Mesas** | GET | `/admin/api/mesas` | Listar mesas |
+| | POST | `/admin/api/mesa` | Crear mesa |
+| | PUT | `/admin/api/mesa/{id}` | Editar mesa |
+| | DELETE | `/admin/api/mesa/{id}` | Eliminar mesa |
+| | POST | `/admin/api/mesa/{id}/toggle` | Activar/desactivar |
+| | POST | `/admin/api/mesa/{id}/regenerar-qr` | Regenerar QR |
+| | POST | `/admin/api/mesa/{id}/atender` | Atender alerta |
+| | POST | `/admin/api/mesa/{id}/confirmar-pago-online` | Confirmar pago |
+| | POST | `/admin/api/mesa/{id}/limpiar-alertas` | Limpiar alertas |
+| **Usuarios** | GET | `/admin/api/usuarios` | Listar usuarios |
+| | POST | `/admin/api/usuario` | Crear usuario |
+| | PUT | `/admin/api/usuario/{id}` | Editar usuario |
+| | DELETE | `/admin/api/usuario/{id}` | Eliminar usuario |
+| **Alérgenos** | GET | `/admin/api/alergenos` | Listar alérgenos |
+| | POST | `/admin/api/alergeno` | Crear alérgeno |
+| | DELETE | `/admin/api/alergeno/{id}` | Eliminar alérgeno |
+| **Tickets** | POST | `/admin/api/ticket` | Crear ticket |
+| | GET | `/admin/api/ticket/{id}` | Ver ticket |
+| | POST | `/admin/api/ticket/{id}/cobrar` | Cobrar ticket |
+| | POST | `/admin/api/ticket/{id}/anular` | Anular ticket |
+| | DELETE | `/admin/api/ticket/{id}` | Eliminar ticket |
+| | GET | `/admin/api/ticket/{id}/imprimir` | Imprimir ticket |
+| | GET | `/admin/api/tickets/resumen` | Resumen de caja |
+| **Reservas** | GET | `/admin/api/reservas` | Listar reservas |
+| | POST | `/admin/api/reserva` | Crear reserva |
+| | GET | `/admin/api/reserva/{id}` | Ver reserva |
+| | PUT | `/admin/api/reserva/{id}` | Editar reserva |
+| | DELETE | `/admin/api/reserva/{id}` | Eliminar reserva |
+| | POST | `/admin/api/reserva/{id}/estado` | Cambiar estado |
+| | GET | `/admin/api/reservas/estadisticas` | Estadísticas |
+| **Reportes** | GET | `/admin/api/reportes/ventas` | Reporte de ventas |
+| | GET | `/admin/api/exportar/tickets` | Exportar tickets |
+| **Pedidos** | GET | `/admin/api/pedidos/activos` | Pedidos activos |
+| | POST | `/admin/api/pedido/{id}/estado` | Cambiar estado |
+| **Config** | GET | `/admin/api/config` | Configuración |
+| | GET | `/admin/api/notificaciones` | Notificaciones |
+
+---
+
+## 7. Flujos de Usuario
+
+### 7.1 Flujo Cliente (Happy Path)
+
+```
+1. Cliente escanea QR de la mesa
+   └── GET /mesa/{token}
+       └── Se carga la carta con categorías y productos
+
+2. Cliente añade productos al carrito
+   └── Acción local en React (estado del carrito)
+
+3. Cliente confirma pedido
+   └── POST /api/pedido
+       └── Se guarda pedido con estado "pendiente"
+
+4. Cocina/Barra recibe el pedido
+   └── GET /api/cocina/pedidos (polling cada 10s)
+       └── Aparece tarjeta con semáforo verde
+
+5. Personal cambia estado
+   └── PATCH /api/pedido/{id}/estado
+       └── pendiente → en_preparacion → listo → entregado
+
+6. Cliente pide la cuenta
+   └── POST /api/mesa/{token}/pagar
+       └── Mesa.pideCuenta = true
+
+7. Barra genera ticket y cierra mesa
+   └── POST /api/barra/mesa/{id}/cerrar
+       └── Se crea Ticket, se limpian pedidos
+```
+
+### 7.2 Flujo Administración
+
+```
+1. Admin accede al panel
+   └── GET /admin/
+       └── Autenticación requerida (ROLE_ADMIN o ROLE_GERENTE)
+
+2. Gestiona catálogo
+   └── CRUD de productos, categorías, alérgenos
+
+3. Gestiona mesas
+   └── CRUD de mesas con generación de QR
+
+4. Gestiona usuarios
+   └── CRUD de usuarios con asignación de roles
+
+5. Consulta reportes
+   └── GET /admin/api/reportes/ventas
+       └── Estadísticas por período, método de pago, categoría
+```
+
+---
+
+## 8. Seguridad
+
+### 8.1 Autenticación
+
+- **Método:** Formulario de login con email/password
+- **Hasher:** Bcrypt/Argon2 (auto-selección por Symfony)
+- **Sesiones:** Cookies seguras con HttpOnly
+
+### 8.2 Autorización (Roles)
+
+| Rol | Código Symfony | Permisos |
+|-----|----------------|----------|
+| Administrador | `ROLE_ADMIN` | Acceso total al sistema |
+| Gerente | `ROLE_GERENTE` | Acceso a administración y reportes |
+| Cocinero | `ROLE_COCINA` | Acceso al panel de cocina |
+| Barman | `ROLE_BARRA` | Acceso al panel de barra |
+| Camarero | `ROLE_CAMARERO` | Acceso básico |
+
+### 8.3 Control de Acceso
+
+```yaml
+access_control:
+    - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_GERENTE] }
+    - { path: ^/cocina, roles: [ROLE_COCINA, ROLE_ADMIN, ROLE_GERENTE] }
+    - { path: ^/barra, roles: [ROLE_BARRA, ROLE_ADMIN, ROLE_GERENTE] }
+```
+
+### 8.4 Protección CSRF
+
+- Tokens CSRF stateless en formularios de login
+- Validación en backend con `CsrfTokenBadge`
+- Configuración en `csrf.yaml`
+
+### 8.5 Validación de Datos
+
+- Sanitización de inputs para evitar XSS
+- Validación de tipos en backend
+- Prepared statements (Doctrine) para prevenir SQL Injection
+
+---
+
+## 9. Estrategia de Pruebas
+
+### 9.1 Pruebas Unitarias (PHPUnit)
+
+```bash
+php bin/phpunit
+```
+
+- Verificación de lógica de negocio
+- Cálculos de totales y tickets
+- Validación de estados
+
+### 9.2 Pruebas de Integración
+
+- Verificación de endpoints API
+- Flujos completos de pedido
+- Validación de contenedor de servicios
+
+### 9.3 Validaciones Automáticas
+
+```bash
+# Validar contenedor
+php bin/console lint:container
+
+# Validar plantillas Twig
+php bin/console lint:twig templates/
+
+# Validar configuración YAML
+php bin/console lint:yaml config/
+
+# Validar esquema de base de datos
+php bin/console doctrine:schema:validate
+```
+
+### 9.4 Pruebas Manuales (UAT)
+
+- Escaneo de QR real con dispositivo móvil
+- Flujo completo de pedido
+- Cierre de mesa y generación de ticket
+
+---
+
+## 10. Conclusiones
+
+### 10.1 Objetivos Cumplidos
+
+✅ Carta digital interactiva con filtro de alérgenos  
+✅ Sistema de pedidos en tiempo real (polling)  
+✅ Panel de cocina con sistema semáforo  
+✅ Panel de barra con gestión de mesas  
+✅ Sistema de tickets fiscales con impresión  
+✅ Panel de administración completo  
+✅ Sistema de reservas con estados  
+✅ Control de acceso por roles  
+✅ Arquitectura Docker para despliegue  
+✅ Modo oscuro en interfaz  
+
+### 10.2 Líneas Futuras
+
+- **WebSockets/Mercure:** Notificaciones push en tiempo real
+- **App Nativa:** Desarrollo con React Native
+- **Integración TPV:** Conexión con terminales de punto de venta
+- **Multi-restaurante:** Soporte para cadenas
+- **Analytics Avanzados:** Dashboard con métricas de negocio
+- **Pagos Online:** Integración con Stripe/PayPal
+
+---
+
+## Anexos
+
+### Anexo A: Variables de Entorno
+
+```env
+APP_ENV=prod
+APP_SECRET=your-secret-key
+DATABASE_URL=mysql://user:pass@database:3306/comanda
+```
+
+### Anexo B: Comandos de Despliegue
+
+```bash
+# Levantar contenedores
+docker compose up -d
+
+# Ejecutar migraciones
+docker compose exec app php bin/console doctrine:migrations:migrate
+
+# Cargar datos de demo
+docker compose exec app php bin/console doctrine:fixtures:load
+
+# Build de assets
+npm run build
+```
+
+### Anexo C: Estructura de Archivos
+
+```
+Backend/
+├── src/
+│   ├── Controller/     # Controladores (Admin, Barra, Cocina, Mesa, Pedido, Security)
+│   ├── Entity/         # Entidades Doctrine (9 entidades)
+│   ├── Repository/     # Repositorios con queries personalizadas
+│   └── Security/       # Autenticador personalizado
+├── templates/          # Plantillas Twig
+├── assets/react/       # Componentes React
+├── config/             # Configuración Symfony
+├── migrations/         # Migraciones de base de datos
+└── public/             # Punto de entrada y assets compilados
+```
+
+---
+
+**Documento generado:** Febrero 2026  
+**Autor:** Proyecto TFG - Comanda Digital

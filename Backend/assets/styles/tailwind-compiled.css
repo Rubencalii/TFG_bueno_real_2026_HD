@@ -3557,6 +3557,16 @@ button:focus, a:focus, input:focus {
     color: rgb(250 204 21 / var(--tw-text-opacity, 1));
   }
 
+  .dark\:placeholder-gray-400::-moz-placeholder {
+    --tw-placeholder-opacity: 1;
+    color: rgb(156 163 175 / var(--tw-placeholder-opacity, 1));
+  }
+
+  .dark\:placeholder-gray-400::placeholder {
+    --tw-placeholder-opacity: 1;
+    color: rgb(156 163 175 / var(--tw-placeholder-opacity, 1));
+  }
+
   .dark\:shadow-\[0_15px_50px_rgba\(0\2c 0\2c 0\2c 0\.4\)\] {
     --tw-shadow: 0 15px 50px rgba(0,0,0,0.4);
     --tw-shadow-colored: 0 15px 50px var(--tw-shadow-color);

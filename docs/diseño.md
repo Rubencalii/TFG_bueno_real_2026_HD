@@ -1,33 +1,36 @@
-# Paleta de Colores - Comanda Digital
+# Diseño Visual - Comanda Digital
 
 **Proyecto:** Trabajo de Fin de Grado (TFG)  
 **Sistema:** Comanda Digital - Aplicación Web Progresiva para Restaurantes  
-**Diseño:** Mobile First & Responsive  
-**Framework CSS:** Tailwind CSS
+**Versión:** 2.0 (Febrero 2026)  
+**Framework CSS:** Tailwind CSS  
+**Diseño:** Mobile First & Responsive + Dark Mode
 
 ---
 
 ## 📋 Índice
 
-1. [Paleta Principal](#paleta-principal)
-2. [Sistema Semáforo (Cocina)](#sistema-semáforo-cocina)
-3. [Colores de Soporte](#colores-de-soporte)
-4. [Alertas y Estados](#alertas-y-estados)
-5. [Aplicación por Módulo](#aplicación-por-módulo)
-6. [Configuración Tailwind](#configuración-tailwind)
-7. [Criterios de Accesibilidad](#criterios-de-accesibilidad)
-8. [Ejemplos de Uso](#ejemplos-de-uso)
+1. [Paleta de Colores](#1-paleta-de-colores)
+2. [Sistema Semáforo (Cocina)](#2-sistema-semáforo-cocina)
+3. [Modo Oscuro](#3-modo-oscuro)
+4. [Componentes UI](#4-componentes-ui)
+5. [Diseño por Módulo](#5-diseño-por-módulo)
+6. [Configuración Tailwind](#6-configuración-tailwind)
+7. [Accesibilidad](#7-accesibilidad)
+8. [Iconografía](#8-iconografía)
 
 ---
 
-## 🎨 Paleta Principal
+## 1. Paleta de Colores
 
-### Primario (Acción/CTA)
+### 1.1 Color Primario (Acción/CTA)
 
-**Color:** Azul Profesional  
-**Hex:** `#2563EB`  
-**RGB:** `rgb(37, 99, 235)`  
-**Tailwind:** `blue-600`
+| Propiedad | Valor |
+|-----------|-------|
+| **Color** | Azul Profesional |
+| **Hex** | `#2563EB` |
+| **RGB** | `rgb(37, 99, 235)` |
+| **Tailwind** | `blue-600` / `primary` |
 
 **Uso:**
 - Botones principales ("Confirmar Pedido", "Añadir al Carrito")
@@ -36,19 +39,23 @@
 - Iconos de acción
 
 **Estados:**
-- Normal: `#2563EB`
-- Hover: `#1D4ED8` (blue-700)
-- Active: `#1E40AF` (blue-800)
-- Disabled: `#93C5FD` (blue-300)
+| Estado | Color | Clase Tailwind |
+|--------|-------|----------------|
+| Normal | `#2563EB` | `bg-primary` |
+| Hover | `#1D4ED8` | `hover:bg-blue-700` |
+| Active | `#1E40AF` | `active:bg-blue-800` |
+| Disabled | `#93C5FD` | `bg-blue-300` |
 
 ---
 
-### Secundario (Calidez)
+### 1.2 Color Secundario (Calidez)
 
-**Color:** Naranja Cálido  
-**Hex:** `#F97316`  
-**RGB:** `rgb(249, 115, 22)`  
-**Tailwind:** `orange-500`
+| Propiedad | Valor |
+|-----------|-------|
+| **Color** | Naranja Cálido |
+| **Hex** | `#F97316` |
+| **RGB** | `rgb(249, 115, 22)` |
+| **Tailwind** | `orange-500` |
 
 **Uso:**
 - Acentos visuales
@@ -56,352 +63,408 @@
 - Badges de "Nuevo" o "Destacado"
 - Elementos decorativos
 
-**Estados:**
-- Normal: `#F97316`
-- Hover: `#EA580C` (orange-600)
-- Active: `#C2410C` (orange-700)
+---
+
+### 1.3 Colores Neutros
+
+| Uso | Hex | Tailwind | Aplicación |
+|-----|-----|----------|------------|
+| Texto principal | `#1F2937` | `gray-800` | Títulos, encabezados |
+| Texto secundario | `#6B7280` | `gray-500` | Descripciones, subtítulos |
+| Texto deshabilitado | `#9CA3AF` | `gray-400` | Elementos inactivos |
+| Fondo claro | `#F9FAFB` | `gray-50` | Fondo general app |
+| Fondo tarjetas | `#FFFFFF` | `white` | Cards, modales |
+| Bordes | `#E5E7EB` | `gray-200` | Separadores, bordes |
 
 ---
 
-## 🚦 Sistema Semáforo (Cocina)
+## 2. Sistema Semáforo (Cocina)
 
 Sistema de alertas visuales basado en el tiempo de espera de los pedidos.
 
-### Verde - Pedido Reciente
+### 2.1 Configuración de Tiempos
 
-**Tiempo:** 0-5 minutos  
-**Hex:** `#10B981`  
-**RGB:** `rgb(16, 185, 129)`  
-**Tailwind:** `emerald-500`
+| Estado | Tiempo | Color | Hex | Tailwind |
+|--------|--------|-------|-----|----------|
+| 🟢 **Reciente** | 0-5 min | Verde | `#10B981` | `emerald-500` |
+| 🟡 **Alerta** | 5-10 min | Amarillo | `#F59E0B` | `amber-500` |
+| 🔴 **Crítico** | +10 min | Rojo | `#EF4444` | `red-500` |
 
-**Aplicación:**
-- Border-left de tarjetas: `border-l-4 border-emerald-500`
-- Background opcional: `bg-emerald-50`
+### 2.2 Aplicación Visual
 
----
-
-### Amarillo - Alerta de Demora
-
-**Tiempo:** 5-10 minutos  
-**Hex:** `#F59E0B`  
-**RGB:** `rgb(245, 158, 11)`  
-**Tailwind:** `amber-500`
-
-**Aplicación:**
-- Border-left de tarjetas: `border-l-4 border-amber-500`
-- Background opcional: `bg-amber-50`
-- Icono de advertencia
-
----
-
-### Rojo - Crítico/Retrasado
-
-**Tiempo:** +10 minutos  
-**Hex:** `#EF4444`  
-**RGB:** `rgb(239, 68, 68)`  
-**Tailwind:** `red-500`
-
-**Aplicación:**
-- Border-left de tarjetas: `border-l-4 border-red-500`
-- Background crítico: `bg-red-50`
-- Animación de pulso opcional
-- Alerta sonora
-
----
-
-## 🎯 Colores de Soporte
-
-### Texto Principal
-
-**Hex:** `#1F2937`  
-**RGB:** `rgb(31, 41, 55)`  
-**Tailwind:** `gray-800`
-
-**Uso:** Títulos, encabezados, texto de alta jerarquía
-
----
-
-### Texto Secundario
-
-**Hex:** `#6B7280`  
-**RGB:** `rgb(107, 114, 128)`  
-**Tailwind:** `gray-500`
-
-**Uso:** Descripciones, subtítulos, información complementaria
-
----
-
-### Texto Deshabilitado
-
-**Hex:** `#9CA3AF`  
-**RGB:** `rgb(156, 163, 175)`  
-**Tailwind:** `gray-400`
-
-**Uso:** Elementos inactivos, placeholders
-
----
-
-### Fondo Claro (App Background)
-
-**Hex:** `#F9FAFB`  
-**RGB:** `rgb(249, 250, 251)`  
-**Tailwind:** `gray-50`
-
-**Uso:** Fondo general de la aplicación
-
----
-
-### Fondo Tarjetas/Componentes
-
-**Hex:** `#FFFFFF`  
-**RGB:** `rgb(255, 255, 255)`  
-**Tailwind:** `white`
-
-**Uso:** Cards, modales, menús desplegables
-
----
-
-### Bordes Sutiles
-
-**Hex:** `#E5E7EB`  
-**RGB:** `rgb(229, 231, 235)`  
-**Tailwind:** `gray-200`
-
-**Uso:** Separadores, bordes de tarjetas
-
----
-
-## ⚠️ Alertas y Estados
-
-### Alerta Crítica (Alergia/Advertencia)
-
-**Hex:** `#DC2626`  
-**RGB:** `rgb(220, 38, 38)`  
-**Tailwind:** `red-600`
-
-**Fondo:** `#FEE2E2` (red-100)  
-**Texto:** `#DC2626` (red-600)
-
-**Uso:**
-- Badges "ALERGIA", "CELIACO", "SIN GLUTEN"
-- Notas críticas en pedidos
-- Advertencias de seguridad alimentaria
-
-**Código de ejemplo:**
 ```html
-<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+<!-- Tarjeta VERDE (0-5 min) -->
+<div class="bg-white border-l-4 border-emerald-500 rounded-lg shadow">
+  ...
+</div>
+
+<!-- Tarjeta AMARILLA (5-10 min) -->
+<div class="bg-amber-50 border-l-4 border-amber-500 rounded-lg shadow">
+  ...
+</div>
+
+<!-- Tarjeta ROJA (+10 min) - Con animación -->
+<div class="bg-red-50 border-l-4 border-red-500 rounded-lg shadow animate-pulse">
+  ...
+</div>
+```
+
+### 2.3 Gradientes de Tiempo (Implementación React)
+
+```javascript
+const getColorByTime = (minutes) => {
+  if (minutes < 5) return 'border-emerald-500';
+  if (minutes < 10) return 'border-amber-500 bg-amber-50';
+  return 'border-red-500 bg-red-50 animate-pulse';
+};
+```
+
+---
+
+## 3. Modo Oscuro
+
+El sistema soporta modo oscuro automático basado en preferencias del sistema.
+
+### 3.1 Colores Modo Oscuro
+
+| Elemento | Light Mode | Dark Mode |
+|----------|------------|-----------|
+| Fondo app | `gray-50` | `slate-900` |
+| Fondo tarjetas | `white` | `slate-800` |
+| Texto principal | `gray-800` | `white` |
+| Texto secundario | `gray-500` | `gray-400` |
+| Bordes | `gray-200` | `slate-700` |
+| Inputs | `white` | `slate-700` |
+
+### 3.2 Clases Tailwind Dark Mode
+
+```html
+<!-- Ejemplo de tarjeta con dark mode -->
+<div class="bg-white dark:bg-slate-800 
+            text-gray-800 dark:text-white 
+            border border-gray-200 dark:border-slate-700 
+            rounded-xl shadow">
+  <h3 class="font-bold dark:text-white">Título</h3>
+  <p class="text-gray-500 dark:text-gray-400">Descripción</p>
+</div>
+
+<!-- Ejemplo de input con dark mode -->
+<input class="w-full px-3 py-2 
+              bg-white dark:bg-slate-700 
+              border dark:border-slate-600 
+              text-gray-800 dark:text-white 
+              dark:placeholder-gray-400
+              rounded-lg" />
+```
+
+### 3.3 Configuración Tailwind para Dark Mode
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  darkMode: 'class', // o 'media' para automático
+  // ...
+}
+```
+
+---
+
+## 4. Componentes UI
+
+### 4.1 Botones
+
+#### Botón Primario
+```html
+<button class="px-4 py-2 bg-primary text-white rounded-lg 
+               hover:bg-blue-700 transition-colors
+               disabled:bg-blue-300 disabled:cursor-not-allowed">
+  Confirmar
+</button>
+```
+
+#### Botón Secundario
+```html
+<button class="px-4 py-2 border border-gray-300 dark:border-slate-600 
+               text-gray-700 dark:text-white rounded-lg 
+               hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+  Cancelar
+</button>
+```
+
+#### Botón Peligro
+```html
+<button class="px-4 py-2 bg-red-600 text-white rounded-lg 
+               hover:bg-red-700 transition-colors">
+  Eliminar
+</button>
+```
+
+#### Botón Éxito
+```html
+<button class="px-4 py-2 bg-emerald-600 text-white rounded-lg 
+               hover:bg-emerald-700 transition-colors">
+  Guardar
+</button>
+```
+
+### 4.2 Tarjetas
+
+#### Tarjeta Básica
+```html
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 
+            border border-gray-100 dark:border-slate-700">
+  <h3 class="font-bold text-gray-800 dark:text-white">Título</h3>
+  <p class="text-gray-500 dark:text-gray-400 mt-2">Contenido</p>
+</div>
+```
+
+#### Tarjeta de Producto
+```html
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden">
+  <img src="..." class="w-full h-32 object-cover" />
+  <div class="p-4">
+    <h3 class="font-bold dark:text-white">Producto</h3>
+    <p class="text-primary font-bold">12.50€</p>
+    <button class="mt-2 w-full py-2 bg-primary text-white rounded-lg">
+      Añadir
+    </button>
+  </div>
+</div>
+```
+
+### 4.3 Badges
+
+#### Badge de Estado
+```html
+<!-- Pendiente -->
+<span class="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+  Pendiente
+</span>
+
+<!-- En Preparación -->
+<span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+  En Preparación
+</span>
+
+<!-- Listo -->
+<span class="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">
+  Listo
+</span>
+
+<!-- Entregado -->
+<span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+  Entregado
+</span>
+```
+
+#### Badge de Alerta (Alergia)
+```html
+<span class="px-3 py-1 text-xs font-bold bg-red-600 text-white rounded-full 
+             animate-pulse">
   ⚠️ CELIACO
 </span>
 ```
 
----
+### 4.4 Modales
 
-### Estado Éxito
-
-**Hex:** `#059669`  
-**RGB:** `rgb(5, 150, 105)`  
-**Tailwind:** `emerald-600`
-
-**Fondo:** `#D1FAE5` (emerald-100)
-
-**Uso:**
-- Confirmación "Pedido enviado"
-- Estados completados
-- Mensajes de éxito
-
----
-
-### Estado Información
-
-**Hex:** `#2563EB`  
-**RGB:** `rgb(37, 99, 235)`  
-**Tailwind:** `blue-600`
-
-**Fondo:** `#DBEAFE` (blue-100)
-
-**Uso:**
-- Notificaciones informativas
-- Tips y ayudas contextuales
-
----
-
-### Estado Advertencia (No crítica)
-
-**Hex:** `#F59E0B`  
-**RGB:** `rgb(245, 158, 11)`  
-**Tailwind:** `amber-500`
-
-**Fondo:** `#FEF3C7` (amber-100)
-
-**Uso:**
-- Avisos de stock bajo
-- Recomendaciones
-
----
-
-## 📱 Aplicación por Módulo
-
-### Módulo Cliente (Móvil)
-
-#### Pantalla Principal
-```css
-background: #F9FAFB (gray-50)
+```html
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md 
+              shadow-xl transform transition-all">
+    <!-- Header -->
+    <div class="p-4 border-b dark:border-slate-700">
+      <h3 class="text-lg font-bold dark:text-white">Título Modal</h3>
+    </div>
+    
+    <!-- Content -->
+    <div class="p-4">
+      <p class="text-gray-600 dark:text-gray-300">Contenido del modal</p>
+    </div>
+    
+    <!-- Footer -->
+    <div class="p-4 border-t dark:border-slate-700 flex gap-2 justify-end">
+      <button class="px-4 py-2 border rounded-lg dark:border-slate-600 dark:text-white">
+        Cancelar
+      </button>
+      <button class="px-4 py-2 bg-primary text-white rounded-lg">
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>
 ```
 
-#### Tarjetas de Productos
-```css
-background: #FFFFFF
-border: 1px solid #E5E7EB (gray-200)
-border-radius: 12px
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1)
-```
+### 4.5 Formularios
 
-#### Botón [+] Añadir
-```css
-background: #2563EB (blue-600)
-color: #FFFFFF
-hover: #1D4ED8 (blue-700)
-```
-
-#### Carrito Flotante
-```css
-background: #2563EB (blue-600)
-color: #FFFFFF
-border-top: 2px solid #1E40AF (blue-800)
-```
-
-#### Badges de Alérgenos
-```css
-background: #FEE2E2 (red-100)
-color: #DC2626 (red-600)
-border: 1px solid #FECACA (red-200)
-```
-
-#### Navegación de Categorías
-```css
-active: #F97316 (orange-500)
-inactive: #6B7280 (gray-500)
+```html
+<form class="space-y-4">
+  <!-- Input de texto -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Nombre
+    </label>
+    <input type="text" 
+           class="w-full px-3 py-2 border rounded-lg
+                  bg-white dark:bg-slate-700 
+                  border-gray-300 dark:border-slate-600
+                  text-gray-800 dark:text-white
+                  focus:ring-2 focus:ring-primary focus:border-transparent
+                  dark:placeholder-gray-400"
+           placeholder="Introduce el nombre" />
+  </div>
+  
+  <!-- Select -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Categoría
+    </label>
+    <select class="w-full px-3 py-2 border rounded-lg
+                   bg-white dark:bg-slate-700 
+                   border-gray-300 dark:border-slate-600
+                   text-gray-800 dark:text-white">
+      <option>Opción 1</option>
+      <option>Opción 2</option>
+    </select>
+  </div>
+  
+  <!-- Textarea -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Descripción
+    </label>
+    <textarea class="w-full px-3 py-2 border rounded-lg
+                     bg-white dark:bg-slate-700 
+                     border-gray-300 dark:border-slate-600
+                     text-gray-800 dark:text-white
+                     dark:placeholder-gray-400"
+              rows="3"
+              placeholder="Descripción del producto"></textarea>
+  </div>
+</form>
 ```
 
 ---
 
-### Módulo Cocina (Tablero Kanban)
+## 5. Diseño por Módulo
 
-#### Fondo General
-```css
-background: #F3F4F6 (gray-100)
+### 5.1 Módulo Cliente (Móvil)
+
+```
+┌────────────────────────────────────┐
+│  🍽️ Restaurante       Mesa 5      │  ← Header fijo
+├────────────────────────────────────┤
+│  [Entrantes] [Pizzas] [Bebidas]   │  ← Navegación categorías
+├────────────────────────────────────┤
+│                                    │
+│  ┌─────────────────────────────┐   │
+│  │ 🍕 Margherita         9.50€ │   │  ← Tarjetas de productos
+│  │ Tomate, mozzarella, albahaca│   │
+│  │                       [+]   │   │
+│  └─────────────────────────────┘   │
+│                                    │
+│  ┌─────────────────────────────┐   │
+│  │ 🥗 Ensalada César    8.00€  │   │
+│  │ Lechuga, pollo, parmesano   │   │
+│  │                       [+]   │   │
+│  └─────────────────────────────┘   │
+│                                    │
+├────────────────────────────────────┤
+│  🛒 3 items              25.50€   │  ← Carrito flotante
+│  [        Ver Pedido         ]    │
+└────────────────────────────────────┘
 ```
 
-#### Columnas Kanban
-```css
-background: #E5E7EB (gray-200)
-border-radius: 8px
-padding: 16px
+**Colores aplicados:**
+- Fondo: `bg-gray-50 dark:bg-slate-900`
+- Header: `bg-white dark:bg-slate-800`
+- Tarjetas: `bg-white dark:bg-slate-800`
+- Carrito: `bg-primary text-white`
+
+### 5.2 Módulo Cocina (Tablero Kanban)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🍳 COCINA                                    12:45 | 8 pedidos │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐ │
+│  │  PENDIENTE  │  │ EN PREPAR.  │  │    LISTO    │  │ENTREGADO│ │
+│  │    (3)      │  │    (2)      │  │    (2)      │  │   (1)   │ │
+│  ├─────────────┤  ├─────────────┤  ├─────────────┤  ├─────────┤ │
+│  │┌───────────┐│  │┌───────────┐│  │┌───────────┐│  │         │ │
+│  ││🟢 Mesa 5  ││  ││🟡 Mesa 3  ││  ││🟢 Mesa 7  ││  │         │ │
+│  ││ 2x Pizza  ││  ││ 1x Burger ││  ││ 3x Pasta  ││  │         │ │
+│  ││ 12:42     ││  ││ 12:35     ││  ││ 12:40     ││  │         │ │
+│  │└───────────┘│  │└───────────┘│  │└───────────┘│  │         │ │
+│  │             │  │             │  │             │  │         │ │
+│  │┌───────────┐│  │┌───────────┐│  │┌───────────┐│  │         │ │
+│  ││🟢 Mesa 2  ││  ││🔴 Mesa 1  ││  ││🟡 Mesa 4  ││  │         │ │
+│  ││ 1x Risotto││  ││ ⚠️ CELIACO││  ││ 2x Ensala.││  │         │ │
+│  ││ 12:44     ││  ││ 12:25     ││  ││ 12:38     ││  │         │ │
+│  │└───────────┘│  │└───────────┘│  │└───────────┘│  │         │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────┘ │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### Tarjeta de Pedido (Base)
-```css
-background: #FFFFFF
-border-radius: 8px
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)
-min-height: 200px
+**Colores aplicados:**
+- Fondo: `bg-gray-100 dark:bg-slate-900`
+- Columnas: `bg-gray-200/50 dark:bg-slate-800`
+- Tarjetas: `bg-white dark:bg-slate-700`
+- Semáforo: bordes coloreados según tiempo
+
+### 5.3 Módulo Barra
+
+Similar a cocina pero con:
+- Filtro solo para categorías tipo "barra"
+- Indicadores de mesas que piden cuenta
+- Indicadores de mesas que llaman al camarero
+- Botón de cierre de mesa y generación de ticket
+
+### 5.4 Módulo Administración (Desktop)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🔧 Panel de Administración              [Usuario] [🚪 Salir]  │
+├──────────────┬──────────────────────────────────────────────────┤
+│              │                                                   │
+│  📦 Productos│   GESTIÓN DE PRODUCTOS                           │
+│  📁 Categorías│  ┌─────────────────────────────────────────────┐ │
+│  🪑 Mesas    │  │ [+ Nuevo Producto]                  🔍 Buscar│ │
+│  👥 Usuarios │  ├─────────────────────────────────────────────┤ │
+│  🎫 Tickets  │  │ Nombre      │ Categoría │ Precio │ Acciones │ │
+│  📅 Reservas │  ├─────────────────────────────────────────────┤ │
+│  📊 Reportes │  │ Margherita  │ Pizzas    │ 9.50€  │ ✏️ 🗑️   │ │
+│              │  │ César       │ Ensaladas │ 8.00€  │ ✏️ 🗑️   │ │
+│              │  │ Cerveza     │ Bebidas   │ 3.00€  │ ✏️ 🗑️   │ │
+│              │  └─────────────────────────────────────────────┘ │
+│              │                                                   │
+└──────────────┴──────────────────────────────────────────────────┘
 ```
 
-#### Tarjeta VERDE (0-5 min)
-```css
-border-left: 4px solid #10B981 (emerald-500)
-```
-
-#### Tarjeta AMARILLA (5-10 min)
-```css
-border-left: 4px solid #F59E0B (amber-500)
-background: #FFFBEB (amber-50)
-```
-
-#### Tarjeta ROJA (+10 min)
-```css
-border-left: 4px solid #EF4444 (red-500)
-background: #FEF2F2 (red-50)
-animation: pulse 2s infinite
-```
-
-#### Nota de Alergia (Dentro de tarjeta)
-```css
-background: #DC2626 (red-600)
-color: #FFFFFF
-padding: 8px 12px
-border-radius: 4px
-font-weight: 700
-```
-
-#### Número de Mesa
-```css
-font-size: 32px
-font-weight: 700
-color: #1F2937 (gray-800)
-```
-
-#### Timestamp
-```css
-color: #6B7280 (gray-500)
-font-size: 14px
-```
+**Colores aplicados:**
+- Sidebar: `bg-slate-800 text-white`
+- Contenido: `bg-gray-50 dark:bg-slate-900`
+- Tablas: `bg-white dark:bg-slate-800`
+- Acciones: iconos con colores semánticos
 
 ---
 
-### Módulo Admin (Desktop)
+## 6. Configuración Tailwind
 
-#### Sidebar de Navegación
-```css
-background: #1F2937 (gray-800)
-color: #FFFFFF
-width: 240px
-```
-
-#### Área Principal
-```css
-background: #FFFFFF
-padding: 32px
-```
-
-#### Botones Principales
-```css
-background: #2563EB (blue-600)
-hover: #1D4ED8 (blue-700)
-```
-
-#### Botones Secundarios
-```css
-background: #F97316 (orange-500)
-hover: #EA580C (orange-600)
-```
-
-#### Tablas de Datos
-```css
-header-background: #F9FAFB (gray-50)
-border: 1px solid #E5E7EB (gray-200)
-row-hover: #F3F4F6 (gray-100)
-```
-
-#### Estados de Mesa
-```css
-Ocupada: #10B981 (emerald-500)
-Libre: #9CA3AF (gray-400)
-Reservada: #F59E0B (amber-500)
-```
-
----
-
-## ⚙️ Configuración Tailwind
-
-### tailwind.config.js
+### 6.1 tailwind.config.js
 
 ```javascript
 module.exports = {
+  darkMode: 'class',
+  content: [
+    './templates/**/*.html.twig',
+    './assets/**/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
-        // Colores principales
+        // Color primario personalizado
         'primary': {
           DEFAULT: '#2563EB',
           50: '#EFF6FF',
@@ -414,19 +477,6 @@ module.exports = {
           700: '#1D4ED8',
           800: '#1E40AF',
           900: '#1E3A8A',
-        },
-        'secondary': {
-          DEFAULT: '#F97316',
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#F97316',
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
         },
         
         // Sistema semáforo
@@ -449,6 +499,14 @@ module.exports = {
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
+      
+      // Espaciado mínimo para áreas táctiles
+      minWidth: {
+        'touch': '44px',
+      },
+      minHeight: {
+        'touch': '44px',
+      },
     },
   },
   plugins: [],
@@ -457,117 +515,162 @@ module.exports = {
 
 ---
 
-## ✅ Criterios de Accesibilidad
+## 7. Accesibilidad
 
-### Contraste WCAG 2.1
+### 7.1 Contraste WCAG 2.1
 
-Todos los colores cumplen con el **nivel AA** (mínimo 4.5:1 para texto normal, 3:1 para texto grande).
-
-#### Combinaciones Validadas
+Todas las combinaciones cumplen con el **nivel AA** (mínimo 4.5:1 para texto normal).
 
 | Texto | Fondo | Ratio | Nivel |
 |-------|-------|-------|-------|
-| `#1F2937` | `#FFFFFF` | 14.8:1 | AAA ✅ |
-| `#6B7280` | `#FFFFFF` | 7.0:1 | AAA ✅ |
-| `#FFFFFF` | `#2563EB` | 6.1:1 | AA ✅ |
-| `#FFFFFF` | `#F97316` | 4.7:1 | AA ✅ |
-| `#DC2626` | `#FEE2E2` | 7.8:1 | AAA ✅ |
-| `#FFFFFF` | `#DC2626` | 5.9:1 | AA ✅ |
+| `gray-800` | `white` | 14.8:1 | AAA ✅ |
+| `gray-500` | `white` | 7.0:1 | AAA ✅ |
+| `white` | `primary` | 6.1:1 | AA ✅ |
+| `white` | `red-600` | 5.9:1 | AA ✅ |
+| `white` | `slate-800` | 12.6:1 | AAA ✅ |
 
-**Herramienta de validación:**  
-https://webaim.org/resources/contrastchecker/
+### 7.2 Áreas Táctiles
 
----
+- **Mínimo:** 44x44px (Apple) / 48x48px (Android)
+- **Implementación:** `min-h-[44px] min-w-[44px]` o `min-h-touch min-w-touch`
 
-### Áreas Táctiles Mínimas
-
-- **Botones:** Mínimo 44x44px (Apple) / 48x48px (Android)
-- **Implementación:** `min-h-[44px] min-w-[44px]`
-
----
-
-### Indicadores No Dependientes del Color
+### 7.3 Indicadores No Dependientes del Color
 
 El sistema semáforo se complementa con:
 - **Iconos:** ⏰ (reloj) para indicar tiempo
 - **Texto:** Timestamp visible (ej: "12:45 - Hace 8 min")
 - **Orden:** Tarjetas más antiguas arriba
+- **Animación:** Pulso para estados críticos
+
+### 7.4 Herramientas de Validación
+
+- **Contraste:** https://webaim.org/resources/contrastchecker/
+- **WCAG Guidelines:** https://www.w3.org/WAI/WCAG21/quickref/
 
 ---
 
-## 📊 Visualización Completa de la Paleta
+## 8. Iconografía
+
+### 8.1 Emojis del Sistema
+
+| Contexto | Emoji | Uso |
+|----------|-------|-----|
+| Mesa | 🪑 | Identificación de mesas |
+| Cocina | 🍳 | Panel de cocina |
+| Barra | 🍺 | Panel de barra |
+| Producto | 🍕🥗🍔 | Categorías de productos |
+| Usuario | 👤 | Gestión de usuarios |
+| Admin | 👑 | Rol administrador |
+| Gerente | 👔 | Rol gerente |
+| Camarero | 🧑‍🍳 | Rol camarero |
+| Cocinero | 👨‍🍳 | Rol cocinero |
+| Barman | 🍸 | Rol barman |
+| Alerta | ⚠️ | Alertas de alergia |
+| Éxito | ✅ | Confirmaciones |
+| Error | ❌ | Errores |
+| Ticket | 🎫 | Sistema de tickets |
+| Reserva | 📅 | Sistema de reservas |
+| Dinero | 💰 | Pagos y cobros |
+
+### 8.2 Estados de Pedido
+
+| Estado | Emoji | Color |
+|--------|-------|-------|
+| Pendiente | ⏳ | `amber-500` |
+| En Preparación | 🔥 | `blue-500` |
+| Listo | ✅ | `emerald-500` |
+| Entregado | 📦 | `gray-500` |
+
+### 8.3 Métodos de Pago
+
+| Método | Emoji |
+|--------|-------|
+| Efectivo | 💵 |
+| Tarjeta | 💳 |
+| TPV | 📱 |
+
+---
+
+## Visualización de la Paleta
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    PALETA DE COLORES                        │
-│                   COMANDA DIGITAL                           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    PALETA DE COLORES                             │
+│                   COMANDA DIGITAL v2.0                           │
+└─────────────────────────────────────────────────────────────────┘
 
 COLORES PRINCIPALES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 █████████  Primario (Blue-600)
            #2563EB · rgb(37, 99, 235)
-           Botones CTA, Enlaces
+           Botones CTA, Enlaces, Acciones
 
 █████████  Secundario (Orange-500)
            #F97316 · rgb(249, 115, 22)
-           Acentos, Categorías
+           Acentos, Destacados
 
 
 SISTEMA SEMÁFORO (COCINA)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 █████████  Verde (Emerald-500) · 0-5 min
-           #10B981 · rgb(16, 185, 129)
+           #10B981 · Pedido reciente
 
 █████████  Amarillo (Amber-500) · 5-10 min
-           #F59E0B · rgb(245, 158, 11)
+           #F59E0B · Alerta de demora
 
 █████████  Rojo (Red-500) · +10 min
-           #EF4444 · rgb(239, 68, 68)
+           #EF4444 · Crítico/Retrasado
 
 
-NEUTRALES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MODO CLARO (Light Mode)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 █████████  Gray-800 · Texto principal
-           #1F2937 · rgb(31, 41, 55)
+           #1F2937
 
 █████████  Gray-500 · Texto secundario
-           #6B7280 · rgb(107, 114, 128)
-
-█████████  Gray-200 · Bordes
-           #E5E7EB · rgb(229, 231, 235)
+           #6B7280
 
 █████████  Gray-50 · Fondo app
-           #F9FAFB · rgb(249, 250, 251)
+           #F9FAFB
+
+█████████  White · Tarjetas
+           #FFFFFF
+
+
+MODO OSCURO (Dark Mode)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+█████████  Slate-900 · Fondo app
+           #0F172A
+
+█████████  Slate-800 · Tarjetas
+           #1E293B
+
+█████████  Slate-700 · Inputs, bordes
+           #334155
+
+█████████  White · Texto principal
+           #FFFFFF
 
 
 ALERTAS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 █████████  Red-600 · Alergia crítica
-           #DC2626 · rgb(220, 38, 38)
+           #DC2626
 
 █████████  Emerald-600 · Éxito
-           #059669 · rgb(5, 150, 105)
+           #059669
+
+█████████  Amber-500 · Advertencia
+           #F59E0B
 ```
 
 ---
 
-## 🔗 Recursos y Herramientas
-
-### Verificación de Contraste
-- **WebAIM Contrast Checker:** https://webaim.org/resources/contrastchecker/
-- **Accessible Colors:** https://accessible-colors.com/
-
-### Generadores de Paleta
-- **Coolors:** https://coolors.co/2563eb-f97316-10b981-f59e0b-ef4444
-- **Tailwind Shades:** https://www.tailwindshades.com/
-
-### Documentación Oficial
-- **Tailwind CSS Colors:** https://tailwindcss.com/docs/customizing-colors
-- **WCAG 2.1 Guidelines:** https://www.w3.org/WAI/WCAG21/quickref/
-
----
+**Documento generado:** Febrero 2026  
+**Autor:** Proyecto TFG - Comanda Digital  
+**Framework:** Tailwind CSS 3.x

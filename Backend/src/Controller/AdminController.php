@@ -704,7 +704,10 @@ class AdminController extends AbstractController
         };
         $user->setRoles($roles);
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password'] ?? '123456');
+        if (empty($data['password'])) {
+            return $this->json(['error' => 'La contraseña es obligatoria'], 400);
+        }
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
         $this->entityManager->persist($user);
