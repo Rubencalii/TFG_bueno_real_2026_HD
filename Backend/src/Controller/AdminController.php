@@ -4,10 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Producto;
 use App\Entity\Categoria;
+use App\Entity\Ticket;
 use App\Repository\ProductoRepository;
 use App\Repository\CategoriaRepository;
 use App\Repository\MesaRepository;
 use App\Repository\PedidoRepository;
+use App\Repository\TicketRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +25,7 @@ class AdminController extends AbstractController
         private CategoriaRepository $categoriaRepository,
         private MesaRepository $mesaRepository,
         private PedidoRepository $pedidoRepository,
+        private TicketRepository $ticketRepository,
         private EntityManagerInterface $entityManager
     ) {}
 
@@ -62,6 +65,12 @@ class AdminController extends AbstractController
         // Serializar mesas
         $mesasData = array_map(function($m) {
             $pedidosActivos = $this->pedidoRepository->findActivosByMesa($m);
+            $total = 0;
+            foreach ($pedidosActivos as $pedido) {
+                foreach ($pedido->getDetalles() as $detalle) {
+                    $total += (float)$detalle->getPrecioUnitario() * $detalle->getCantidad();
+                }
+            }
             return [
                 'id' => $m->getId(),
                 'numero' => $m->getNumero(),
@@ -70,13 +79,39 @@ class AdminController extends AbstractController
                 'ocupada' => count($pedidosActivos) > 0,
                 'llamaCamarero' => $m->isLlamaCamarero(),
                 'pideCuenta' => $m->isPideCuenta(),
+                'total' => $total,
             ];
         }, $mesas);
+
+        // Obtener tickets de hoy y resumen de caja
+        $ticketsHoy = $this->ticketRepository->findHoy();
+        $resumenCaja = $this->ticketRepository->getResumenCajaHoy();
+
+        // Serializar tickets
+        $ticketsData = array_map(function(Ticket $t) {
+            return [
+                'id' => $t->getId(),
+                'numero' => $t->getNumero(),
+                'mesa' => $t->getMesa()->getNumero(),
+                'mesaId' => $t->getMesa()->getId(),
+                'baseImponible' => $t->getBaseImponible(),
+                'iva' => $t->getIva(),
+                'total' => $t->getTotal(),
+                'metodoPago' => $t->getMetodoPago(),
+                'estado' => $t->getEstado(),
+                'createdAt' => $t->getCreatedAt()->format('H:i'),
+                'fecha' => $t->getCreatedAt()->format('d/m/Y'),
+                'paidAt' => $t->getPaidAt()?->format('H:i'),
+                'ticketRectificadoId' => $t->getTicketRectificadoId(),
+            ];
+        }, $ticketsHoy);
 
         return $this->render('admin/panel.html.twig', [
             'productos' => $productosData,
             'categorias' => $categoriasData,
             'mesas' => $mesasData,
+            'tickets' => $ticketsData,
+            'resumenCaja' => $resumenCaja,
         ]);
     }
 
@@ -231,6 +266,190 @@ class AdminController extends AbstractController
             'success' => true,
             'activa' => $mesa->isActiva(),
             'mensaje' => $mesa->isActiva() ? 'Mesa activada' : 'Mesa desactivada'
+        ]);
+    }
+
+    // ============ API TICKETS / FACTURACIÓN ============
+
+    #[Route('/api/ticket', name: 'admin_api_crear_ticket', methods: ['POST'])]
+    public function crearTicket(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $mesa = $this->mesaRepository->find($data['mesaId'] ?? 0);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 400);
+        }
+
+        // Calcular total de la mesa
+        $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
+        if ((float)$totalMesa <= 0) {
+            return $this->json(['error' => 'La mesa no tiene pedidos activos'], 400);
+        }
+
+        // Generar número correlativo
+        $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
+        $numero = Ticket::generarNumero($ultimoId);
+
+        // Crear ticket
+        $ticket = new Ticket();
+        $ticket->setNumero($numero);
+        $ticket->setMesa($mesa);
+        $ticket->setMetodoPago($data['metodoPago'] ?? Ticket::METODO_EFECTIVO);
+        $ticket->setEstado(Ticket::ESTADO_PENDIENTE);
+        $ticket->calcularDesgloseIVA($totalMesa);
+
+        // Guardar detalle de pedidos
+        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
+        $detalles = [];
+        foreach ($pedidos as $pedido) {
+            foreach ($pedido->getDetalles() as $d) {
+                $detalles[] = [
+                    'producto' => $d->getProducto()->getNombre(),
+                    'cantidad' => $d->getCantidad(),
+                    'precio' => $d->getPrecioUnitario(),
+                    'notas' => $d->getNotas(),
+                ];
+            }
+        }
+        $ticket->setDetalleJson(json_encode($detalles));
+
+        $this->entityManager->persist($ticket);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'id' => $ticket->getId(),
+            'numero' => $ticket->getNumero(),
+            'total' => $ticket->getTotal(),
+            'mensaje' => 'Ticket creado correctamente'
+        ]);
+    }
+
+    #[Route('/api/ticket/{id}/cobrar', name: 'admin_api_cobrar_ticket', methods: ['POST'])]
+    public function cobrarTicket(int $id, Request $request): JsonResponse
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            return $this->json(['error' => 'Ticket no encontrado'], 404);
+        }
+
+        if ($ticket->getEstado() !== Ticket::ESTADO_PENDIENTE) {
+            return $this->json(['error' => 'El ticket ya fue procesado'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        
+        if (isset($data['metodoPago'])) {
+            $ticket->setMetodoPago($data['metodoPago']);
+        }
+
+        $ticket->setEstado(Ticket::ESTADO_PAGADO);
+        $ticket->setPaidAt(new \DateTime());
+
+        // Cerrar mesa: marcar pedidos como entregados
+        $mesa = $ticket->getMesa();
+        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
+        foreach ($pedidos as $pedido) {
+            $pedido->setEstado('entregado');
+        }
+        $mesa->setLlamaCamarero(false);
+        $mesa->setPideCuenta(false);
+
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Ticket cobrado correctamente',
+            'paidAt' => $ticket->getPaidAt()->format('H:i')
+        ]);
+    }
+
+    #[Route('/api/ticket/{id}/anular', name: 'admin_api_anular_ticket', methods: ['POST'])]
+    public function anularTicket(int $id): JsonResponse
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            return $this->json(['error' => 'Ticket no encontrado'], 404);
+        }
+
+        if ($ticket->getEstado() === Ticket::ESTADO_ANULADO) {
+            return $this->json(['error' => 'El ticket ya está anulado'], 400);
+        }
+
+        // Si estaba pagado, crear ticket rectificativo
+        if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
+            $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
+            $numero = Ticket::generarNumero($ultimoId);
+
+            $rectificativo = new Ticket();
+            $rectificativo->setNumero($numero);
+            $rectificativo->setMesa($ticket->getMesa());
+            $rectificativo->setMetodoPago($ticket->getMetodoPago());
+            $rectificativo->setEstado(Ticket::ESTADO_ANULADO);
+            $rectificativo->setBaseImponible('-' . $ticket->getBaseImponible());
+            $rectificativo->setIva('-' . $ticket->getIva());
+            $rectificativo->setTotal('-' . $ticket->getTotal());
+            $rectificativo->setTicketRectificadoId($ticket->getId());
+            $rectificativo->setDetalleJson($ticket->getDetalleJson());
+
+            $this->entityManager->persist($rectificativo);
+        }
+
+        $ticket->setEstado(Ticket::ESTADO_ANULADO);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Ticket anulado correctamente'
+        ]);
+    }
+
+    #[Route('/api/ticket/{id}', name: 'admin_api_ver_ticket', methods: ['GET'])]
+    public function verTicket(int $id): JsonResponse
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            return $this->json(['error' => 'Ticket no encontrado'], 404);
+        }
+
+        return $this->json([
+            'id' => $ticket->getId(),
+            'numero' => $ticket->getNumero(),
+            'mesa' => $ticket->getMesa()->getNumero(),
+            'baseImponible' => $ticket->getBaseImponible(),
+            'iva' => $ticket->getIva(),
+            'total' => $ticket->getTotal(),
+            'metodoPago' => $ticket->getMetodoPago(),
+            'estado' => $ticket->getEstado(),
+            'createdAt' => $ticket->getCreatedAt()->format('d/m/Y H:i'),
+            'paidAt' => $ticket->getPaidAt()?->format('d/m/Y H:i'),
+            'detalles' => json_decode($ticket->getDetalleJson() ?? '[]', true),
+            'ticketRectificadoId' => $ticket->getTicketRectificadoId(),
+        ]);
+    }
+
+    #[Route('/api/tickets/resumen', name: 'admin_api_resumen_caja', methods: ['GET'])]
+    public function resumenCaja(): JsonResponse
+    {
+        $resumen = $this->ticketRepository->getResumenCajaHoy();
+        $tickets = $this->ticketRepository->findHoy();
+
+        $ticketsData = array_map(function(Ticket $t) {
+            return [
+                'id' => $t->getId(),
+                'numero' => $t->getNumero(),
+                'mesa' => $t->getMesa()->getNumero(),
+                'total' => $t->getTotal(),
+                'metodoPago' => $t->getMetodoPago(),
+                'estado' => $t->getEstado(),
+                'createdAt' => $t->getCreatedAt()->format('H:i'),
+            ];
+        }, $tickets);
+
+        return $this->json([
+            'resumen' => $resumen,
+            'tickets' => $ticketsData,
         ]);
     }
 }

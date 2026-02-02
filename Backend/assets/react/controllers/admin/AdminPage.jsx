@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 
-export default function AdminPage({ productos: initialProductos, categorias: initialCategorias, mesas: initialMesas }) {
+export default function AdminPage({ 
+    productos: initialProductos, 
+    categorias: initialCategorias, 
+    mesas: initialMesas,
+    tickets: initialTickets,
+    resumenCaja: initialResumen
+}) {
     const [productos, setProductos] = useState(initialProductos || []);
     const [categorias, setCategorias] = useState(initialCategorias || []);
     const [mesas, setMesas] = useState(initialMesas || []);
+    const [tickets, setTickets] = useState(initialTickets || []);
+    const [resumenCaja, setResumenCaja] = useState(initialResumen || {});
     const [activeSection, setActiveSection] = useState('dashboard');
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
@@ -12,11 +20,108 @@ export default function AdminPage({ productos: initialProductos, categorias: ini
     // Modal states
     const [showProductoModal, setShowProductoModal] = useState(false);
     const [showCategoriaModal, setShowCategoriaModal] = useState(false);
+    const [showTicketModal, setShowTicketModal] = useState(false);
+    const [showTicketDetailModal, setShowTicketDetailModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [selectedTicket, setSelectedTicket] = useState(null);
+
+    // Formateo de moneda español
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value || 0);
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
+    };
+
+    // ============ TICKETS ============
+    const handleCrearTicket = async (mesaId, metodoPago) => {
+        setLoading(true);
+        try {
+            const response = await fetch('/admin/api/ticket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mesaId, metodoPago })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast(`Ticket ${data.numero} creado - Total: ${formatCurrency(data.total)}`);
+                window.location.reload();
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Error al crear ticket', 'error');
+        } finally {
+            setLoading(false);
+            setShowTicketModal(false);
+        }
+    };
+
+    const handleCobrarTicket = async (ticketId, metodoPago) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`/admin/api/ticket/${ticketId}/cobrar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ metodoPago })
+            });
+            const data = await response.json();
+            if (data.success) {
+                setTickets(prev => prev.map(t => 
+                    t.id === ticketId ? { ...t, estado: 'pagado', paidAt: data.paidAt } : t
+                ));
+                showToast('Ticket cobrado correctamente');
+                // Refresh resumen
+                refreshResumen();
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Error al cobrar', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAnularTicket = async (ticketId) => {
+        if (!confirm('¿Anular este ticket? Se creará un ticket rectificativo.')) return;
+        
+        try {
+            const response = await fetch(`/admin/api/ticket/${ticketId}/anular`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Ticket anulado');
+                window.location.reload();
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Error al anular', 'error');
+        }
+    };
+
+    const handleVerTicket = async (ticketId) => {
+        try {
+            const response = await fetch(`/admin/api/ticket/${ticketId}`);
+            const data = await response.json();
+            setSelectedTicket(data);
+            setShowTicketDetailModal(true);
+        } catch (error) {
+            showToast('Error al cargar ticket', 'error');
+        }
+    };
+
+    const refreshResumen = async () => {
+        try {
+            const response = await fetch('/admin/api/tickets/resumen');
+            const data = await response.json();
+            setResumenCaja(data.resumen);
+            setTickets(data.tickets);
+        } catch (error) {
+            console.error('Error refreshing:', error);
+        }
     };
 
     // ============ PRODUCTOS ============
@@ -143,10 +248,13 @@ export default function AdminPage({ productos: initialProductos, categorias: ini
         totalCategorias: categorias.length,
         mesasOcupadas: mesas.filter(m => m.ocupada).length,
         totalMesas: mesas.length,
+        ventasHoy: resumenCaja.totalVentas || '0.00',
+        ticketsPendientes: resumenCaja.numTicketsPendientes || 0,
     };
 
     const menuItems = [
         { id: 'dashboard', icon: 'dashboard', label: 'Panel de Control' },
+        { id: 'facturacion', icon: 'receipt_long', label: 'Facturación' },
         { id: 'productos', icon: 'inventory_2', label: 'Productos' },
         { id: 'categorias', icon: 'label', label: 'Categorías' },
         { id: 'mesas', icon: 'table_restaurant', label: 'Mesas' },
@@ -253,21 +361,23 @@ export default function AdminPage({ productos: initialProductos, categorias: ini
                                 <p className="text-slate-500 dark:text-slate-400 mt-1">Resumen general del restaurante</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatCard icon="inventory_2" label="Productos" value={stats.totalProductos} color="blue" />
-                                <StatCard icon="check_circle" label="Productos Activos" value={stats.productosActivos} color="green" />
-                                <StatCard icon="label" label="Categorías" value={stats.totalCategorias} color="amber" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                                <StatCard icon="payments" label="Ventas Hoy" value={formatCurrency(stats.ventasHoy)} color="green" />
+                                <StatCard icon="pending" label="Tickets Pendientes" value={stats.ticketsPendientes} color="amber" />
                                 <StatCard icon="table_restaurant" label="Mesas Ocupadas" value={`${stats.mesasOcupadas}/${stats.totalMesas}`} color="purple" />
+                                <StatCard icon="inventory_2" label="Productos" value={stats.totalProductos} color="blue" />
+                                <StatCard icon="label" label="Categorías" value={stats.totalCategorias} color="blue" />
                             </div>
 
                             {/* Quick Actions */}
                             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Accesos Rápidos</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                    <QuickAction onClick={() => setActiveSection('facturacion')} icon="receipt_long" label="Facturación" color="green" />
                                     <QuickAction href="/cocina" icon="skillet" label="Cocina" color="orange" />
                                     <QuickAction href="/barra" icon="hail" label="Camarero" color="amber" />
                                     <QuickAction onClick={() => setActiveSection('productos')} icon="inventory_2" label="Productos" color="blue" />
-                                    <QuickAction onClick={() => setActiveSection('mesas')} icon="table_restaurant" label="Mesas" color="green" />
+                                    <QuickAction onClick={() => setActiveSection('mesas')} icon="table_restaurant" label="Mesas" color="purple" />
                                 </div>
                             </div>
                         </>
@@ -475,6 +585,192 @@ export default function AdminPage({ productos: initialProductos, categorias: ini
                             </div>
                         </>
                     )}
+
+                    {/* FACTURACIÓN */}
+                    {activeSection === 'facturacion' && (
+                        <>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">📑 Gestión de Ventas y Facturación</h2>
+                                    <p className="text-slate-500 dark:text-slate-400 mt-1">Resumen del turno: {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="size-3 bg-green-500 rounded-full animate-pulse"></span>
+                                    <span className="text-green-600 dark:text-green-400 font-bold text-sm">CAJA ABIERTA</span>
+                                </div>
+                            </div>
+
+                            {/* Resumen de Caja */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">💶</span>
+                                        <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Efectivo</span>
+                                    </div>
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(resumenCaja.totalEfectivo)}</p>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">💳</span>
+                                        <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Tarjeta</span>
+                                    </div>
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(resumenCaja.totalTarjeta)}</p>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">📟</span>
+                                        <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">TPV Barra</span>
+                                    </div>
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(resumenCaja.totalTPV)}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-5 text-white">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">💰</span>
+                                        <span className="text-green-100 text-sm font-medium">Total Ventas</span>
+                                    </div>
+                                    <p className="text-2xl font-black">{formatCurrency(resumenCaja.totalVentas)}</p>
+                                    <p className="text-green-200 text-xs mt-1">IVA: {formatCurrency(resumenCaja.totalIVA)}</p>
+                                </div>
+                            </div>
+
+                            {/* Crear Ticket desde Mesa */}
+                            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Generar Ticket</h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {mesas.filter(m => m.ocupada).map(mesa => (
+                                        <button
+                                            key={mesa.id}
+                                            onClick={() => { setEditingItem(mesa); setShowTicketModal(true); }}
+                                            className="px-4 py-2 bg-primary/10 text-primary rounded-lg font-bold text-sm hover:bg-primary/20 transition-colors flex items-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">table_restaurant</span>
+                                            Mesa {String(mesa.numero).padStart(2, '0')}
+                                            {mesa.pideCuenta && <span className="bg-amber-500 text-white text-[10px] px-1.5 rounded">CUENTA</span>}
+                                        </button>
+                                    ))}
+                                    {mesas.filter(m => m.ocupada).length === 0 && (
+                                        <p className="text-slate-400 italic">No hay mesas ocupadas</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tabla de Tickets */}
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                                    <h3 className="font-bold text-slate-900 dark:text-white">📊 Histórico de Tickets - Hoy</h3>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">ID Factura</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Mesa</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Método</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Base Imp.</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">IVA (10%)</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                                                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                            {tickets.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="8" className="px-6 py-12 text-center text-slate-400 italic">
+                                                        No hay tickets registrados hoy.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                tickets.map(ticket => (
+                                                    <tr key={ticket.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 ${ticket.estado === 'anulado' ? 'opacity-50' : ''}`}>
+                                                        <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
+                                                            {ticket.numero}
+                                                            {ticket.ticketRectificadoId && (
+                                                                <span className="ml-2 text-xs text-red-500">(Rectif.)</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 font-bold">{String(ticket.mesa).padStart(2, '0')}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="flex items-center gap-1">
+                                                                {ticket.metodoPago === 'efectivo' && '💶'}
+                                                                {ticket.metodoPago === 'tarjeta' && '💳'}
+                                                                {ticket.metodoPago === 'tpv' && '📟'}
+                                                                <span className="capitalize">{ticket.metodoPago}</span>
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                                                                ticket.estado === 'pagado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                                ticket.estado === 'pendiente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                            }`}>
+                                                                {ticket.estado}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-mono">{formatCurrency(ticket.baseImponible)}</td>
+                                                        <td className="px-6 py-4 text-right font-mono">{formatCurrency(ticket.iva)}</td>
+                                                        <td className="px-6 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(ticket.total)}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex justify-end gap-1">
+                                                                <button
+                                                                    onClick={() => handleVerTicket(ticket.id)}
+                                                                    className="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                                                                    title="Ver detalle"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-lg">visibility</span>
+                                                                </button>
+                                                                {ticket.estado === 'pendiente' && (
+                                                                    <button
+                                                                        onClick={() => handleCobrarTicket(ticket.id, ticket.metodoPago)}
+                                                                        className="p-1.5 text-green-500 hover:text-green-600 transition-colors"
+                                                                        title="Cobrar"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-lg">check_circle</span>
+                                                                    </button>
+                                                                )}
+                                                                {ticket.estado !== 'anulado' && (
+                                                                    <button
+                                                                        onClick={() => handleAnularTicket(ticket.id)}
+                                                                        className="p-1.5 text-red-400 hover:text-red-500 transition-colors"
+                                                                        title="Anular"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-lg">cancel</span>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Cierre de Caja */}
+                            <div className="bg-slate-800 dark:bg-slate-950 rounded-xl p-6 text-white">
+                                <h3 className="text-lg font-bold mb-4">💰 Cierre de Caja Estimado</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <p className="text-slate-400 text-sm">Base Imponible</p>
+                                        <p className="text-xl font-bold">{formatCurrency(resumenCaja.totalBase)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-slate-400 text-sm">IVA Acumulado (10%)</p>
+                                        <p className="text-xl font-bold">{formatCurrency(resumenCaja.totalIVA)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-slate-400 text-sm">Tickets Pagados</p>
+                                        <p className="text-xl font-bold">{resumenCaja.numTicketsPagados || 0}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-green-400 text-sm font-bold">TOTAL NETO</p>
+                                        <p className="text-3xl font-black text-green-400">{formatCurrency(resumenCaja.totalVentas)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </main>
 
@@ -496,6 +792,24 @@ export default function AdminPage({ productos: initialProductos, categorias: ini
                     onSave={handleSaveCategoria}
                     onClose={() => { setShowCategoriaModal(false); setEditingItem(null); }}
                     loading={loading}
+                />
+            )}
+
+            {/* Modal Ticket */}
+            {showTicketModal && editingItem && (
+                <TicketModal
+                    mesa={editingItem}
+                    onSave={handleCrearTicket}
+                    onClose={() => { setShowTicketModal(false); setEditingItem(null); }}
+                    loading={loading}
+                />
+            )}
+
+            {/* Modal Detalle Ticket */}
+            {showTicketDetailModal && selectedTicket && (
+                <TicketDetailModal
+                    ticket={selectedTicket}
+                    onClose={() => { setShowTicketDetailModal(false); setSelectedTicket(null); }}
                 />
             )}
 
@@ -759,6 +1073,261 @@ function CategoriaModal({ categoria, onSave, onClose, loading }) {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+function TicketModal({ mesa, onSave, onClose, loading }) {
+    const [metodoPago, setMetodoPago] = useState('efectivo');
+
+    const handleSubmit = () => {
+        onSave(mesa.id, metodoPago);
+    };
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md">
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                        🧾 Generar Ticket - Mesa {mesa.numero}
+                    </h3>
+                </div>
+                <div className="p-6 space-y-6">
+                    {/* Resumen de la cuenta */}
+                    <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+                        <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-3">Resumen de la cuenta</h4>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-500 dark:text-slate-400">Base Imponible</span>
+                                <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
+                                    {formatCurrency(mesa.total / 1.10)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-500 dark:text-slate-400">IVA (10%)</span>
+                                <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
+                                    {formatCurrency(mesa.total - (mesa.total / 1.10))}
+                                </span>
+                            </div>
+                            <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-600">
+                                <span className="font-bold text-slate-900 dark:text-white">TOTAL</span>
+                                <span className="font-mono font-bold text-lg text-primary">
+                                    {formatCurrency(mesa.total)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Método de pago */}
+                    <div>
+                        <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-3">Método de pago</h4>
+                        <div className="grid grid-cols-3 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setMetodoPago('efectivo')}
+                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                    metodoPago === 'efectivo'
+                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                        : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
+                                }`}
+                            >
+                                <span className="text-3xl">💵</span>
+                                <span className={`text-sm font-medium ${
+                                    metodoPago === 'efectivo' ? 'text-green-700 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'
+                                }`}>Efectivo</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMetodoPago('tarjeta')}
+                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                    metodoPago === 'tarjeta'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                        : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
+                                }`}
+                            >
+                                <span className="text-3xl">💳</span>
+                                <span className={`text-sm font-medium ${
+                                    metodoPago === 'tarjeta' ? 'text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'
+                                }`}>Tarjeta</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMetodoPago('tpv')}
+                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                    metodoPago === 'tpv'
+                                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                        : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'
+                                }`}
+                            >
+                                <span className="text-3xl">📱</span>
+                                <span className={`text-sm font-medium ${
+                                    metodoPago === 'tpv' ? 'text-purple-700 dark:text-purple-400' : 'text-slate-600 dark:text-slate-400'
+                                }`}>TPV</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-3 border border-slate-300 dark:border-slate-600 rounded-xl font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? 'Procesando...' : (
+                                <>
+                                    <span className="material-symbols-outlined">receipt_long</span>
+                                    Generar Ticket
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function TicketDetailModal({ ticket, onClose }) {
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+    };
+
+    const formatDateTime = (dateString) => {
+        return new Date(dateString).toLocaleString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const getMetodoPagoIcon = (metodo) => {
+        switch (metodo) {
+            case 'efectivo': return '💵';
+            case 'tarjeta': return '💳';
+            case 'tpv': return '📱';
+            default: return '💰';
+        }
+    };
+
+    const getEstadoStyles = (estado) => {
+        switch (estado) {
+            case 'pagado':
+                return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+            case 'pendiente':
+                return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+            case 'anulado':
+                return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            default:
+                return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            🧾 Ticket #{ticket.numero}
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {formatDateTime(ticket.fechaCreacion)}
+                        </p>
+                    </div>
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider ${getEstadoStyles(ticket.estado)}`}>
+                        {ticket.estado}
+                    </span>
+                </div>
+
+                <div className="p-6 space-y-6">
+                    {/* Info general */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Mesa</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-white">
+                                Mesa {ticket.mesa}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Método de pago</p>
+                            <p className="text-xl font-bold text-slate-900 dark:text-white">
+                                {getMetodoPagoIcon(ticket.metodoPago)} {ticket.metodoPago}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Productos */}
+                    {ticket.detalles && ticket.detalles.length > 0 && (
+                        <div>
+                            <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-3">Productos</h4>
+                            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-slate-100 dark:bg-slate-700">
+                                        <tr>
+                                            <th className="text-left px-4 py-2 text-slate-600 dark:text-slate-300">Producto</th>
+                                            <th className="text-center px-4 py-2 text-slate-600 dark:text-slate-300">Cant.</th>
+                                            <th className="text-right px-4 py-2 text-slate-600 dark:text-slate-300">Precio</th>
+                                            <th className="text-right px-4 py-2 text-slate-600 dark:text-slate-300">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {ticket.detalles.map((detalle, idx) => (
+                                            <tr key={idx} className="border-t border-slate-200 dark:border-slate-600">
+                                                <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{detalle.producto}</td>
+                                                <td className="px-4 py-2 text-center text-slate-600 dark:text-slate-400">{detalle.cantidad}</td>
+                                                <td className="px-4 py-2 text-right font-mono text-slate-600 dark:text-slate-400">{formatCurrency(detalle.precio)}</td>
+                                                <td className="px-4 py-2 text-right font-mono font-medium text-slate-700 dark:text-slate-300">{formatCurrency(detalle.cantidad * detalle.precio)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Desglose fiscal */}
+                    <div className="bg-slate-800 dark:bg-slate-950 rounded-xl p-4 text-white">
+                        <h4 className="font-bold mb-4">Desglose Fiscal</h4>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-slate-300">
+                                <span>Base Imponible</span>
+                                <span className="font-mono">{formatCurrency(ticket.baseImponible)}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300">
+                                <span>IVA (10%)</span>
+                                <span className="font-mono">{formatCurrency(ticket.iva)}</span>
+                            </div>
+                            <div className="flex justify-between pt-2 border-t border-slate-600 text-lg">
+                                <span className="font-bold">TOTAL</span>
+                                <span className="font-mono font-bold text-green-400">{formatCurrency(ticket.total)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Botón cerrar */}
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-300 dark:hover:bg-slate-600"
+                    >
+                        Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     );
