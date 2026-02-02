@@ -5,17 +5,22 @@ namespace App\Controller;
 use App\Entity\Producto;
 use App\Entity\Categoria;
 use App\Entity\Ticket;
+use App\Entity\User;
+use App\Entity\Alergeno;
+use App\Entity\Mesa;
 use App\Repository\ProductoRepository;
 use App\Repository\CategoriaRepository;
 use App\Repository\MesaRepository;
 use App\Repository\PedidoRepository;
 use App\Repository\TicketRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[Route('/admin')]
 class AdminController extends AbstractController
@@ -26,7 +31,9 @@ class AdminController extends AbstractController
         private MesaRepository $mesaRepository,
         private PedidoRepository $pedidoRepository,
         private TicketRepository $ticketRepository,
-        private EntityManagerInterface $entityManager
+        private UserRepository $userRepository,
+        private EntityManagerInterface $entityManager,
+        private UserPasswordHasherInterface $passwordHasher
     ) {}
 
     #[Route('/', name: 'admin_panel')]
@@ -106,12 +113,77 @@ class AdminController extends AbstractController
             ];
         }, $ticketsHoy);
 
+        // Usuarios
+        $usuarios = $this->userRepository->findAll();
+        $usuariosData = array_map(fn(User $u) => [
+            'id' => $u->getId(),
+            'email' => $u->getEmail(),
+            'rol' => $u->getRol(),
+        ], $usuarios);
+
+        // Alérgenos
+        $alergenos = $this->entityManager->getRepository(Alergeno::class)->findAll();
+        $alergenosData = array_map(fn(Alergeno $a) => [
+            'id' => $a->getId(),
+            'nombre' => $a->getNombre(),
+        ], $alergenos);
+
+        // Pedidos activos
+        $pedidosActivos = $this->pedidoRepository->findBy(
+            ['estado' => ['pendiente', 'en_preparacion', 'listo']]
+        );
+        $pedidosData = [];
+        foreach ($pedidosActivos as $pedido) {
+            $detalles = [];
+            foreach ($pedido->getDetalles() as $d) {
+                $detalles[] = [
+                    'producto' => $d->getProducto()->getNombre(),
+                    'cantidad' => $d->getCantidad(),
+                    'notas' => $d->getNotas(),
+                ];
+            }
+            $pedidosData[] = [
+                'id' => $pedido->getId(),
+                'mesa' => $pedido->getMesa()->getNumero(),
+                'estado' => $pedido->getEstado(),
+                'createdAt' => $pedido->getCreatedAt()->format('H:i'),
+                'minutosEspera' => $pedido->getMinutosEspera(),
+                'colorSemaforo' => $pedido->getColorSemaforo(),
+                'detalles' => $detalles,
+            ];
+        }
+
+        // Notificaciones
+        $notificaciones = [];
+        foreach ($mesas as $mesa) {
+            if ($mesa->isLlamaCamarero()) {
+                $notificaciones[] = [
+                    'tipo' => 'camarero',
+                    'mensaje' => "Mesa {$mesa->getNumero()} llama al camarero",
+                    'mesaId' => $mesa->getId(),
+                    'prioridad' => 'alta',
+                ];
+            }
+            if ($mesa->isPideCuenta()) {
+                $notificaciones[] = [
+                    'tipo' => 'cuenta',
+                    'mensaje' => "Mesa {$mesa->getNumero()} pide la cuenta",
+                    'mesaId' => $mesa->getId(),
+                    'prioridad' => 'media',
+                ];
+            }
+        }
+
         return $this->render('admin/panel.html.twig', [
             'productos' => $productosData,
             'categorias' => $categoriasData,
             'mesas' => $mesasData,
             'tickets' => $ticketsData,
             'resumenCaja' => $resumenCaja,
+            'usuarios' => $usuariosData,
+            'alergenos' => $alergenosData,
+            'pedidosActivos' => $pedidosData,
+            'notificaciones' => $notificaciones,
         ]);
     }
 
@@ -450,6 +522,433 @@ class AdminController extends AbstractController
         return $this->json([
             'resumen' => $resumen,
             'tickets' => $ticketsData,
+        ]);
+    }
+
+    // ============ API REPORTES Y ESTADÍSTICAS ============
+
+    #[Route('/api/reportes/ventas', name: 'admin_api_reportes_ventas', methods: ['GET'])]
+    public function reporteVentas(Request $request): JsonResponse
+    {
+        $periodo = $request->query->get('periodo', 'semana'); // dia, semana, mes
+        $datos = [];
+        
+        $fechaFin = new \DateTime('today');
+        $fechaInicio = match($periodo) {
+            'dia' => new \DateTime('today'),
+            'semana' => (new \DateTime())->modify('-7 days'),
+            'mes' => (new \DateTime())->modify('-30 days'),
+            default => (new \DateTime())->modify('-7 days'),
+        };
+
+        // Ventas por día
+        $tickets = $this->ticketRepository->findEntreFechas($fechaInicio, $fechaFin);
+        $ventasPorDia = [];
+        foreach ($tickets as $ticket) {
+            if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
+                $dia = $ticket->getCreatedAt()->format('Y-m-d');
+                if (!isset($ventasPorDia[$dia])) {
+                    $ventasPorDia[$dia] = ['fecha' => $dia, 'total' => 0, 'count' => 0];
+                }
+                $ventasPorDia[$dia]['total'] += (float)$ticket->getTotal();
+                $ventasPorDia[$dia]['count']++;
+            }
+        }
+
+        // Productos más vendidos
+        $productoStats = [];
+        foreach ($tickets as $ticket) {
+            if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
+                $detalles = json_decode($ticket->getDetalleJson() ?? '[]', true);
+                foreach ($detalles as $det) {
+                    $nombre = $det['producto'] ?? 'Desconocido';
+                    if (!isset($productoStats[$nombre])) {
+                        $productoStats[$nombre] = ['nombre' => $nombre, 'cantidad' => 0, 'total' => 0];
+                    }
+                    $productoStats[$nombre]['cantidad'] += $det['cantidad'] ?? 1;
+                    $productoStats[$nombre]['total'] += ($det['precio'] ?? 0) * ($det['cantidad'] ?? 1);
+                }
+            }
+        }
+        usort($productoStats, fn($a, $b) => $b['cantidad'] - $a['cantidad']);
+
+        // Horas punta
+        $horasPunta = array_fill(0, 24, 0);
+        foreach ($tickets as $ticket) {
+            if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
+                $hora = (int)$ticket->getCreatedAt()->format('H');
+                $horasPunta[$hora] += (float)$ticket->getTotal();
+            }
+        }
+
+        return $this->json([
+            'ventasPorDia' => array_values($ventasPorDia),
+            'productosTop' => array_slice($productoStats, 0, 10),
+            'horasPunta' => $horasPunta,
+            'totalPeriodo' => array_sum(array_column($ventasPorDia, 'total')),
+            'ticketsPeriodo' => array_sum(array_column($ventasPorDia, 'count')),
+        ]);
+    }
+
+    // ============ API USUARIOS/EMPLEADOS ============
+
+    #[Route('/api/usuarios', name: 'admin_api_usuarios', methods: ['GET'])]
+    public function listarUsuarios(): JsonResponse
+    {
+        $usuarios = $this->userRepository->findAll();
+        return $this->json(array_map(fn(User $u) => [
+            'id' => $u->getId(),
+            'email' => $u->getEmail(),
+            'rol' => $u->getRol(),
+            'roles' => $u->getRoles(),
+        ], $usuarios));
+    }
+
+    #[Route('/api/usuario', name: 'admin_api_crear_usuario', methods: ['POST'])]
+    public function crearUsuario(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $user = new User();
+        $user->setEmail($data['email'] ?? '');
+        $user->setRol($data['rol'] ?? 'camarero');
+        
+        $roles = match($data['rol'] ?? 'camarero') {
+            'admin' => ['ROLE_ADMIN'],
+            'gerente' => ['ROLE_GERENTE'],
+            'cocinero' => ['ROLE_COCINA'],
+            'barman' => ['ROLE_BARRA'],
+            default => ['ROLE_CAMARERO'],
+        };
+        $user->setRoles($roles);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password'] ?? '123456');
+        $user->setPassword($hashedPassword);
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true, 'id' => $user->getId()]);
+    }
+
+    #[Route('/api/usuario/{id}', name: 'admin_api_editar_usuario', methods: ['PUT'])]
+    public function editarUsuario(int $id, Request $request): JsonResponse
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        
+        if (isset($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+        if (isset($data['rol'])) {
+            $user->setRol($data['rol']);
+            $roles = match($data['rol']) {
+                'admin' => ['ROLE_ADMIN'],
+                'gerente' => ['ROLE_GERENTE'],
+                'cocinero' => ['ROLE_COCINA'],
+                'barman' => ['ROLE_BARRA'],
+                default => ['ROLE_CAMARERO'],
+            };
+            $user->setRoles($roles);
+        }
+        if (!empty($data['password'])) {
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
+            $user->setPassword($hashedPassword);
+        }
+
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/api/usuario/{id}', name: 'admin_api_eliminar_usuario', methods: ['DELETE'])]
+    public function eliminarUsuario(int $id): JsonResponse
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $this->entityManager->remove($user);
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    // ============ API ALÉRGENOS ============
+
+    #[Route('/api/alergenos', name: 'admin_api_alergenos', methods: ['GET'])]
+    public function listarAlergenos(): JsonResponse
+    {
+        $alergenos = $this->entityManager->getRepository(Alergeno::class)->findAll();
+        return $this->json(array_map(fn(Alergeno $a) => [
+            'id' => $a->getId(),
+            'nombre' => $a->getNombre(),
+        ], $alergenos));
+    }
+
+    #[Route('/api/alergeno', name: 'admin_api_crear_alergeno', methods: ['POST'])]
+    public function crearAlergeno(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $alergeno = new Alergeno();
+        $alergeno->setNombre($data['nombre'] ?? '');
+
+        $this->entityManager->persist($alergeno);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true, 'id' => $alergeno->getId()]);
+    }
+
+    #[Route('/api/alergeno/{id}', name: 'admin_api_eliminar_alergeno', methods: ['DELETE'])]
+    public function eliminarAlergeno(int $id): JsonResponse
+    {
+        $alergeno = $this->entityManager->getRepository(Alergeno::class)->find($id);
+        if (!$alergeno) {
+            return $this->json(['error' => 'Alérgeno no encontrado'], 404);
+        }
+
+        $this->entityManager->remove($alergeno);
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    // ============ API MESAS (QR) ============
+
+    #[Route('/api/mesa/{id}/regenerar-qr', name: 'admin_api_regenerar_qr', methods: ['POST'])]
+    public function regenerarQR(int $id): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        // Generar nuevo token
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $token = '';
+        for ($i = 0; $i < 8; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        $mesa->setTokenQr($token);
+
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'tokenQr' => $token,
+            'qrUrl' => '/mesa/' . $token,
+        ]);
+    }
+
+    #[Route('/api/mesa', name: 'admin_api_crear_mesa', methods: ['POST'])]
+    public function crearMesa(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $mesa = new Mesa();
+        $mesa->setNumero($data['numero'] ?? 1);
+        $mesa->setActiva($data['activa'] ?? true);
+
+        $this->entityManager->persist($mesa);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true, 
+            'id' => $mesa->getId(),
+            'tokenQr' => $mesa->getTokenQr(),
+        ]);
+    }
+
+    #[Route('/api/mesa/{id}', name: 'admin_api_editar_mesa', methods: ['PUT'])]
+    public function editarMesa(int $id, Request $request): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        
+        if (isset($data['numero'])) {
+            $mesa->setNumero($data['numero']);
+        }
+        if (isset($data['activa'])) {
+            $mesa->setActiva($data['activa']);
+        }
+
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/api/mesa/{id}', name: 'admin_api_eliminar_mesa', methods: ['DELETE'])]
+    public function eliminarMesa(int $id): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $this->entityManager->remove($mesa);
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    // ============ API PEDIDOS EN TIEMPO REAL ============
+
+    #[Route('/api/pedidos/activos', name: 'admin_api_pedidos_activos', methods: ['GET'])]
+    public function pedidosActivos(): JsonResponse
+    {
+        $pedidos = $this->pedidoRepository->findBy(
+            ['estado' => ['pendiente', 'en_preparacion', 'listo']],
+            ['createdAt' => 'ASC']
+        );
+
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $detalles = [];
+            foreach ($pedido->getDetalles() as $d) {
+                $detalles[] = [
+                    'producto' => $d->getProducto()->getNombre(),
+                    'cantidad' => $d->getCantidad(),
+                    'notas' => $d->getNotas(),
+                ];
+            }
+            $data[] = [
+                'id' => $pedido->getId(),
+                'mesa' => $pedido->getMesa()->getNumero(),
+                'estado' => $pedido->getEstado(),
+                'createdAt' => $pedido->getCreatedAt()->format('H:i'),
+                'minutosEspera' => $pedido->getMinutosEspera(),
+                'colorSemaforo' => $pedido->getColorSemaforo(),
+                'detalles' => $detalles,
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/pedido/{id}/estado', name: 'admin_api_cambiar_estado_pedido', methods: ['POST'])]
+    public function cambiarEstadoPedido(int $id, Request $request): JsonResponse
+    {
+        $pedido = $this->pedidoRepository->find($id);
+        if (!$pedido) {
+            return $this->json(['error' => 'Pedido no encontrado'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $pedido->setEstado($data['estado'] ?? 'pendiente');
+
+        $this->entityManager->flush();
+        return $this->json(['success' => true]);
+    }
+
+    // ============ API EXPORTACIÓN ============
+
+    #[Route('/api/exportar/tickets', name: 'admin_api_exportar_tickets', methods: ['GET'])]
+    public function exportarTickets(Request $request): Response
+    {
+        $desde = new \DateTime($request->query->get('desde', 'first day of this month'));
+        $hasta = new \DateTime($request->query->get('hasta', 'today'));
+
+        $tickets = $this->ticketRepository->findEntreFechas($desde, $hasta);
+
+        // Generar CSV
+        $csv = "Numero;Fecha;Mesa;Metodo;Estado;Base;IVA;Total\n";
+        foreach ($tickets as $t) {
+            $csv .= sprintf(
+                "%s;%s;%d;%s;%s;%.2f;%.2f;%.2f\n",
+                $t->getNumero(),
+                $t->getCreatedAt()->format('d/m/Y H:i'),
+                $t->getMesa()->getNumero(),
+                $t->getMetodoPago(),
+                $t->getEstado(),
+                (float)$t->getBaseImponible(),
+                (float)$t->getIva(),
+                (float)$t->getTotal()
+            );
+        }
+
+        $response = new Response($csv);
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="tickets_' . $desde->format('Ymd') . '_' . $hasta->format('Ymd') . '.csv"');
+
+        return $response;
+    }
+
+    // ============ API NOTIFICACIONES ============
+
+    #[Route('/api/notificaciones', name: 'admin_api_notificaciones', methods: ['GET'])]
+    public function notificaciones(): JsonResponse
+    {
+        $notificaciones = [];
+
+        // Mesas que llaman al camarero
+        $mesasLlaman = $this->mesaRepository->findBy(['llamaCamarero' => true]);
+        foreach ($mesasLlaman as $mesa) {
+            $notificaciones[] = [
+                'tipo' => 'camarero',
+                'mensaje' => "Mesa {$mesa->getNumero()} llama al camarero",
+                'mesaId' => $mesa->getId(),
+                'prioridad' => 'alta',
+            ];
+        }
+
+        // Mesas que piden cuenta
+        $mesasCuenta = $this->mesaRepository->findBy(['pideCuenta' => true]);
+        foreach ($mesasCuenta as $mesa) {
+            $notificaciones[] = [
+                'tipo' => 'cuenta',
+                'mensaje' => "Mesa {$mesa->getNumero()} pide la cuenta",
+                'mesaId' => $mesa->getId(),
+                'prioridad' => 'media',
+            ];
+        }
+
+        // Pedidos retrasados (más de 10 min)
+        $pedidos = $this->pedidoRepository->findBy(['estado' => ['pendiente', 'en_preparacion']]);
+        foreach ($pedidos as $pedido) {
+            if ($pedido->getMinutosEspera() > 10) {
+                $notificaciones[] = [
+                    'tipo' => 'retraso',
+                    'mensaje' => "Pedido de Mesa {$pedido->getMesa()->getNumero()} lleva {$pedido->getMinutosEspera()} min",
+                    'pedidoId' => $pedido->getId(),
+                    'prioridad' => $pedido->getMinutosEspera() > 15 ? 'alta' : 'media',
+                ];
+            }
+        }
+
+        return $this->json($notificaciones);
+    }
+
+    #[Route('/api/mesa/{id}/atender', name: 'admin_api_atender_mesa', methods: ['POST'])]
+    public function atenderMesa(int $id): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $mesa->setLlamaCamarero(false);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true]);
+    }
+
+    // ============ API CONFIGURACIÓN ============
+
+    #[Route('/api/config', name: 'admin_api_config', methods: ['GET'])]
+    public function getConfig(): JsonResponse
+    {
+        // Por ahora valores por defecto, se puede extender con una tabla Config
+        return $this->json([
+            'nombreRestaurante' => 'Comanda Digital',
+            'direccion' => '',
+            'telefono' => '',
+            'iva' => 10,
+            'moneda' => 'EUR',
         ]);
     }
 }
