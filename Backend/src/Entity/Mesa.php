@@ -31,6 +31,12 @@ class Mesa
     #[ORM\Column(type: 'boolean')]
     private bool $pideCuenta = false;
 
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $metodoPagoPreferido = null;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $pagoOnlinePendiente = false;
+
     #[ORM\OneToMany(mappedBy: 'mesa', targetEntity: Pedido::class)]
     private Collection $pedidos;
 
@@ -109,6 +115,28 @@ class Mesa
     public function setPideCuenta(bool $pideCuenta): self
     {
         $this->pideCuenta = $pideCuenta;
+        return $this;
+    }
+
+    public function getMetodoPagoPreferido(): ?string
+    {
+        return $this->metodoPagoPreferido;
+    }
+
+    public function setMetodoPagoPreferido(?string $metodoPagoPreferido): self
+    {
+        $this->metodoPagoPreferido = $metodoPagoPreferido;
+        return $this;
+    }
+
+    public function isPagoOnlinePendiente(): bool
+    {
+        return $this->pagoOnlinePendiente;
+    }
+
+    public function setPagoOnlinePendiente(bool $pagoOnlinePendiente): self
+    {
+        $this->pagoOnlinePendiente = $pagoOnlinePendiente;
         return $this;
     }
 

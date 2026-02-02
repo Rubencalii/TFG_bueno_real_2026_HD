@@ -35,18 +35,21 @@ class AppFixtures extends Fixture
         // ========== CATEGORÍAS - MENÚ CASA ENCARNI ==========
         $categorias = [];
         $categoriasData = [
-            ['nombre' => 'Platos Principales', 'orden' => 1],
-            ['nombre' => 'Combos', 'orden' => 2],
-            ['nombre' => 'Pizzas', 'orden' => 3],
-            ['nombre' => 'Bocadillos y Sándwiches', 'orden' => 4],
-            ['nombre' => 'Hamburguesas', 'orden' => 5],
-            ['nombre' => 'Bebidas', 'orden' => 6],
+            ['nombre' => 'Platos Principales', 'orden' => 1, 'tipo' => 'cocina'],
+            ['nombre' => 'Combos', 'orden' => 2, 'tipo' => 'cocina'],
+            ['nombre' => 'Pizzas', 'orden' => 3, 'tipo' => 'cocina'],
+            ['nombre' => 'Bocadillos y Sándwiches', 'orden' => 4, 'tipo' => 'cocina'],
+            ['nombre' => 'Hamburguesas', 'orden' => 5, 'tipo' => 'cocina'],
+            ['nombre' => 'Bebidas', 'orden' => 6, 'tipo' => 'barra'],
+            ['nombre' => 'Cócteles', 'orden' => 7, 'tipo' => 'barra'],
+            ['nombre' => 'Cafés e Infusiones', 'orden' => 8, 'tipo' => 'barra'],
         ];
 
         foreach ($categoriasData as $data) {
             $categoria = new Categoria();
             $categoria->setNombre($data['nombre']);
             $categoria->setOrden($data['orden']);
+            $categoria->setTipo($data['tipo']);
             $categoria->setActiva(true);
             $manager->persist($categoria);
             $categorias[$data['nombre']] = $categoria;

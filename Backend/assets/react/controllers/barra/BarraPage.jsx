@@ -62,11 +62,16 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
         }
     };
 
-    const cerrarMesa = async (mesaId) => {
-        if (!confirm('¿Confirmar cierre de mesa y pago?')) return;
+    const cerrarMesa = async (mesaId, metodoPago) => {
+        const metodoLabel = metodoPago === 'tarjeta' ? 'TARJETA' : 'EFECTIVO';
+        if (!confirm(`¿Confirmar cierre de mesa con pago ${metodoLabel}?`)) return;
         
         try {
-            const response = await fetch(`/api/barra/mesa/${mesaId}/cerrar`, { method: 'POST' });
+            const response = await fetch(`/api/barra/mesa/${mesaId}/cerrar`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ metodoPago: metodoPago || 'efectivo' })
+            });
             if (response.ok) {
                 setNotificaciones(prev => prev.filter(n => n.mesaId !== mesaId));
                 refreshData();
@@ -127,16 +132,36 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                                     {notif.pideCuenta && (
                                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                                             <span className="material-symbols-outlined text-sm">payments</span>
-                                            <span className="text-xs font-bold uppercase tracking-tight">Pide la cuenta: {parseFloat(notif.totalCuenta).toFixed(2)}€</span>
+                                            <span className="text-xs font-bold uppercase tracking-tight">
+                                                Pide la cuenta: {parseFloat(notif.totalCuenta).toFixed(2)}€
+                                            </span>
+                                        </div>
+                                    )}
+                                    {notif.pideCuenta && notif.metodoPago && (
+                                        <div className={`flex items-center gap-2 p-2 rounded-lg border ${
+                                            notif.metodoPago === 'tarjeta' 
+                                                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800' 
+                                                : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-100 dark:border-green-800'
+                                        }`}>
+                                            <span className="material-symbols-outlined text-sm">
+                                                {notif.metodoPago === 'tarjeta' ? 'credit_card' : 'payments'}
+                                            </span>
+                                            <span className="text-xs font-bold uppercase tracking-tight">
+                                                Método: {notif.metodoPago === 'tarjeta' ? 'TARJETA (datáfono)' : 'EFECTIVO'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
 
                                 <button 
-                                    onClick={() => cerrarMesa(notif.mesaId)}
-                                    className="w-full py-2 bg-gray-800 dark:bg-white text-white dark:text-gray-800 text-xs font-black rounded-xl uppercase tracking-widest hover:bg-black dark:hover:bg-gray-100 transition-colors"
+                                    onClick={() => cerrarMesa(notif.mesaId, notif.metodoPago)}
+                                    className="w-full py-2 bg-gray-800 dark:bg-white text-white dark:text-gray-800 text-xs font-black rounded-xl uppercase tracking-widest hover:bg-black dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    Cerrar Mesa
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    {notif.pideCuenta 
+                                        ? `Cobrar ${notif.metodoPago === 'tarjeta' ? '💳' : '💵'} y Cerrar`
+                                        : 'Atendido'
+                                    }
                                 </button>
                             </div>
                         ))

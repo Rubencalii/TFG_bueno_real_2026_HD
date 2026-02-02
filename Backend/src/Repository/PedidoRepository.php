@@ -89,20 +89,46 @@ class PedidoRepository extends ServiceEntityRepository
     }
 
     /**
+     * Devuelve TODOS los pedidos de una mesa (para facturar - incluye entregados)
+     * @return Pedido[]
+     */
+    public function findFacturablesByMesa(Mesa $mesa): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.mesa = :mesa')
+            ->setParameter('mesa', $mesa)
+            ->orderBy('p.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Calcula el total de todos los pedidos de una mesa (para la cuenta)
+     * Incluye todos los pedidos, también los entregados
      */
     public function calcularTotalMesa(Mesa $mesa): string
     {
-        $pedidos = $this->findActivosByMesa($mesa);
-        $total = '0.00';
+        $pedidos = $this->findFacturablesByMesa($mesa);
+        $total = 0.00;
         
         foreach ($pedidos as $pedido) {
             $pedido->calcularTotal();
-            $total = (float)$total + (float)$pedido->getTotalCalculado();
+            $total += (float)$pedido->getTotalCalculado();
         }
         
         return number_format($total, 2, '.', '');
-        
-        return $total;
+    }
+
+    /**
+     * Elimina todos los pedidos de una mesa (al facturar)
+     */
+    public function limpiarPedidosMesa(Mesa $mesa): int
+    {
+        return $this->createQueryBuilder('p')
+            ->delete()
+            ->andWhere('p.mesa = :mesa')
+            ->setParameter('mesa', $mesa)
+            ->getQuery()
+            ->execute();
     }
 }

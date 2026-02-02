@@ -26,6 +26,9 @@ export default function AdminPage({
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [lastUpdate, setLastUpdate] = useState(new Date());
+    const [soundEnabled, setSoundEnabled] = useState(true);
 
     // Modal states
     const [showProductoModal, setShowProductoModal] = useState(false);
@@ -45,16 +48,121 @@ export default function AdminPage({
         setTimeout(() => setToast(null), 3000);
     };
 
-    // Polling para notificaciones
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (activeSection === 'pedidos' || activeSection === 'dashboard') {
-                refreshPedidos();
-                refreshNotificaciones();
+    // Sistema de sonidos de alerta
+    const playAlertSound = (type = 'notification') => {
+        if (!soundEnabled) return;
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'urgent') {
+                // Sonido urgente: 3 beeps rápidos agudos
+                oscillator.frequency.value = 880;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                oscillator.start(audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.stop(audioContext.currentTime + 0.1);
+                
+                // Segundo beep
+                setTimeout(() => {
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2); gain2.connect(audioContext.destination);
+                    osc2.frequency.value = 880; osc2.type = 'sine';
+                    gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    osc2.start(); gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    osc2.stop(audioContext.currentTime + 0.1);
+                }, 150);
+                
+                // Tercer beep
+                setTimeout(() => {
+                    const osc3 = audioContext.createOscillator();
+                    const gain3 = audioContext.createGain();
+                    osc3.connect(gain3); gain3.connect(audioContext.destination);
+                    osc3.frequency.value = 1100; osc3.type = 'sine';
+                    gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    osc3.start(); gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    osc3.stop(audioContext.currentTime + 0.15);
+                }, 300);
+            } else {
+                // Sonido de notificación: ding suave
+                oscillator.frequency.value = 587.33; // D5
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                oscillator.start(audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.stop(audioContext.currentTime + 0.3);
             }
-        }, 10000);
+        } catch (e) {
+            console.log('Audio no soportado:', e);
+        }
+    };
+
+    // Auto-refresh global cada 5 segundos
+    useEffect(() => {
+        if (!autoRefresh) return;
+        
+        // Hacer refresh inicial
+        refreshAll();
+        
+        const interval = setInterval(() => {
+            refreshAll();
+        }, 5000);
+        
         return () => clearInterval(interval);
-    }, [activeSection]);
+    }, [autoRefresh]);
+
+    // Refresh completo de todos los datos
+    const refreshAll = async () => {
+        try {
+            // Hacer las llamadas por separado para manejar errores individuales
+            const pedidosRes = await fetch('/admin/api/pedidos/activos');
+            if (pedidosRes.ok) {
+                const pedidosData = await pedidosRes.json();
+                
+                // Detectar nuevos pedidos
+                if (pedidosData.length > pedidosActivos.length) {
+                    playAlertSound('notification');
+                }
+                setPedidosActivos(pedidosData);
+            }
+
+            const notifRes = await fetch('/admin/api/notificaciones');
+            if (notifRes.ok) {
+                const notifData = await notifRes.json();
+                
+                // Detectar nuevas alertas urgentes
+                if (notifData.length > notificaciones.length) {
+                    const hasUrgent = notifData.some(n => n.tipo === 'camarero' || n.tipo === 'cuenta');
+                    playAlertSound(hasUrgent ? 'urgent' : 'notification');
+                    showToast(`🔔 Nueva alerta`, 'warning');
+                }
+                setNotificaciones(notifData);
+            }
+
+            const resumenRes = await fetch('/admin/api/tickets/resumen');
+            if (resumenRes.ok) {
+                const resumenData = await resumenRes.json();
+                if (resumenData.resumen) setResumenCaja(resumenData.resumen);
+                if (resumenData.tickets) setTickets(resumenData.tickets);
+            }
+
+            const mesasRes = await fetch('/admin/api/mesas');
+            if (mesasRes.ok) {
+                const mesasData = await mesasRes.json();
+                setMesas(mesasData);
+            }
+            
+            setLastUpdate(new Date());
+        } catch (error) { 
+            console.error('Error en auto-refresh:', error); 
+        }
+    };
 
     const refreshPedidos = async () => {
         try {
@@ -93,10 +201,28 @@ export default function AdminPage({
             const data = await response.json();
             if (data.success) {
                 showToast(`Ticket ${data.numero} creado`);
-                window.location.reload();
             } else showToast(data.error, 'error');
-        } catch (error) { showToast('Error', 'error'); }
-        finally { setLoading(false); setShowTicketModal(false); }
+        } catch (error) { showToast('Error al crear ticket', 'error'); }
+        finally { setLoading(false); setShowTicketModal(false); setEditingItem(null); refreshAll(); }
+    };
+
+    // Confirmar pago online (solo gerente)
+    const handleConfirmarPagoOnline = async (mesaId) => {
+        if (!confirm('¿Confirmar recepción del pago online y cerrar mesa?')) return;
+        setLoading(true);
+        try {
+            const response = await fetch(`/admin/api/mesa/${mesaId}/confirmar-pago-online`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                playSound('normal');
+                showToast(`✅ Pago online confirmado - Ticket ${data.numero} generado`);
+                refreshAll();
+            } else showToast(data.error, 'error');
+        } catch (error) { showToast('Error al confirmar pago', 'error'); }
+        finally { setLoading(false); }
     };
 
     const handleCobrarTicket = async (ticketId, metodoPago) => {
@@ -109,10 +235,10 @@ export default function AdminPage({
             const data = await response.json();
             if (data.success) {
                 setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, estado: 'pagado' } : t));
-                showToast('Ticket cobrado');
-                refreshResumen();
+                showToast('✅ Ticket cobrado correctamente');
+                refreshAll();
             } else showToast(data.error, 'error');
-        } catch (error) { showToast('Error', 'error'); }
+        } catch (error) { showToast('Error al cobrar', 'error'); }
     };
 
     const handleAnularTicket = async (ticketId) => {
@@ -120,7 +246,7 @@ export default function AdminPage({
         try {
             const response = await fetch(`/admin/api/ticket/${ticketId}/anular`, { method: 'POST' });
             const data = await response.json();
-            if (data.success) { showToast('Ticket anulado'); window.location.reload(); }
+            if (data.success) { showToast('Ticket anulado'); refreshAll(); }
             else showToast(data.error, 'error');
         } catch (error) { showToast('Error', 'error'); }
     };
@@ -386,7 +512,32 @@ export default function AdminPage({
             {/* Main */}
             <main className="flex-1 flex flex-col overflow-y-auto">
                 <header className="h-12 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-between px-4 sticky top-0 z-10">
-                    <input type="text" className="bg-slate-100 dark:bg-slate-700 border-none rounded-lg px-3 py-1.5 text-sm w-64" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    <div className="flex items-center gap-3">
+                        <input type="text" className="bg-slate-100 dark:bg-slate-700 border-none rounded-lg px-3 py-1.5 text-sm w-64" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        
+                        {/* Indicador de auto-refresh */}
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setAutoRefresh(!autoRefresh)} 
+                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-all ${autoRefresh ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-200 text-slate-500 dark:bg-slate-700'}`}
+                                title={autoRefresh ? 'Auto-refresh activo (cada 5s)' : 'Auto-refresh pausado'}
+                            >
+                                <span className={`material-symbols-outlined text-sm ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>sync</span>
+                                {autoRefresh ? 'LIVE' : 'Pausado'}
+                            </button>
+                            <button 
+                                onClick={() => setSoundEnabled(!soundEnabled)} 
+                                className={`p-1.5 rounded-lg transition-all ${soundEnabled ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' : 'bg-slate-200 text-slate-400 dark:bg-slate-700'}`}
+                                title={soundEnabled ? 'Sonidos activados - Click para silenciar' : 'Sonidos desactivados - Click para activar'}
+                            >
+                                <span className="material-symbols-outlined text-sm">{soundEnabled ? 'volume_up' : 'volume_off'}</span>
+                            </button>
+                            <button onClick={refreshAll} className="p-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600" title="Actualizar ahora">
+                                <span className="material-symbols-outlined text-sm text-slate-500">refresh</span>
+                            </button>
+                            <span className="text-xs text-slate-400 hidden md:block">Últ: {lastUpdate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                        </div>
+                    </div>
                     <div className="flex gap-2">
                         {activeSection === 'productos' && <button onClick={() => { setEditingItem(null); setShowProductoModal(true); }} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Producto</button>}
                         {activeSection === 'categorias' && <button onClick={() => { setEditingItem(null); setShowCategoriaModal(true); }} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Categoría</button>}
@@ -416,7 +567,15 @@ export default function AdminPage({
                                         {notificaciones.slice(0, 5).map((n, i) => (
                                             <div key={i} className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-lg p-2 text-sm">
                                                 <span>{n.mensaje}</span>
-                                                {n.tipo === 'camarero' && <button onClick={() => handleAtenderMesa(n.mesaId)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Atender</button>}
+                                                <div className="flex gap-2">
+                                                    {n.tipo === 'camarero' && <button onClick={() => handleAtenderMesa(n.mesaId)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Atender</button>}
+                                                    {n.tipo === 'cuenta' && (
+                                                        <button onClick={() => { 
+                                                            const mesa = mesas.find(m => m.id === n.mesaId);
+                                                            if (mesa) { setEditingItem(mesa); setShowTicketModal(true); }
+                                                        }} className="bg-primary text-white px-2 py-1 rounded text-xs">💳 Cobrar</button>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -487,16 +646,63 @@ export default function AdminPage({
                                 </div>
                             </div>
 
+                            {/* PAGOS ONLINE PENDIENTES DE CONFIRMACIÓN - Solo Gerente */}
+                            {mesas.filter(m => m.pagoOnlinePendiente && m.total > 0).length > 0 && (
+                                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 border-2 border-purple-400 dark:border-purple-600 animate-pulse">
+                                    <h3 className="font-bold mb-3 text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                                        <span className="material-symbols-outlined">phone_iphone</span>
+                                        💳 PAGOS ONLINE RECIBIDOS - Confirmar para cerrar
+                                    </h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {mesas.filter(m => m.pagoOnlinePendiente && m.total > 0).map(m => (
+                                            <button 
+                                                key={m.id} 
+                                                onClick={() => handleConfirmarPagoOnline(m.id)} 
+                                                className="bg-gradient-to-br from-purple-100 to-indigo-100 border-2 border-purple-400 rounded-lg p-3 hover:from-purple-200 hover:to-indigo-200 relative"
+                                            >
+                                                <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full animate-bounce">PAGO RECIBIDO</span>
+                                                <p className="font-bold text-purple-700">Mesa {m.numero}</p>
+                                                <p className="text-xl font-bold text-purple-800">{formatCurrency(m.total)}</p>
+                                                <p className="text-sm mt-1 font-medium text-purple-600">📱 Online</p>
+                                                <p className="text-xs mt-2 text-purple-500">Click para confirmar</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Mesas que PIDEN LA CUENTA (Efectivo/Tarjeta) - Para camarero */}
+                            {mesas.filter(m => m.pideCuenta && !m.pagoOnlinePendiente && m.total > 0).length > 0 && (
+                                <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border-2 border-red-300 dark:border-red-700 animate-pulse">
+                                    <h3 className="font-bold mb-3 text-red-700 dark:text-red-400">🔔 Mesas que PIDEN LA CUENTA (Efectivo/Tarjeta)</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {mesas.filter(m => m.pideCuenta && !m.pagoOnlinePendiente && m.total > 0).map(m => (
+                                            <button key={m.id} onClick={() => { setEditingItem(m); setShowTicketModal(true); }} className="bg-red-100 border-2 border-red-400 rounded-lg p-3 hover:bg-red-200 relative">
+                                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">URGENTE</span>
+                                                <p className="font-bold text-red-700">Mesa {m.numero}</p>
+                                                <p className="text-xl font-bold text-red-800">{formatCurrency(m.total)}</p>
+                                                {m.metodoPagoPreferido && (
+                                                    <p className="text-sm mt-1 font-medium text-red-600">
+                                                        {m.metodoPagoPreferido === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta'}
+                                                    </p>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-                                <h3 className="font-bold mb-3">Generar Ticket</h3>
+                                <h3 className="font-bold mb-3">Generar Ticket - Mesas Ocupadas</h3>
                                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                                    {mesas.filter(m => m.ocupada).map(m => (
-                                        <button key={m.id} onClick={() => { setEditingItem(m); setShowTicketModal(true); }} className="bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100">
+                                    {mesas.filter(m => m.ocupada && !m.pideCuenta).map(m => (
+                                        <button key={m.id} onClick={() => { setEditingItem(m); setShowTicketModal(true); }} className={`rounded-lg p-3 hover:opacity-80 ${m.llamaCamarero ? 'bg-amber-100 border-2 border-amber-400' : 'bg-amber-50 border border-amber-200'}`}>
+                                            {m.llamaCamarero && <span className="text-xs text-amber-600">🔔 Llama</span>}
                                             <p className="font-bold text-amber-700">Mesa {m.numero}</p>
                                             <p className="text-lg font-bold">{formatCurrency(m.total)}</p>
                                         </button>
                                     ))}
-                                    {mesas.filter(m => m.ocupada).length === 0 && <p className="col-span-full text-center text-slate-500 py-4">No hay mesas ocupadas</p>}
+                                    {mesas.filter(m => m.ocupada && !m.pideCuenta).length === 0 && !mesas.some(m => m.pideCuenta) && <p className="col-span-full text-center text-slate-500 py-4">No hay mesas ocupadas</p>}
                                 </div>
                             </div>
 
@@ -720,7 +926,7 @@ export default function AdminPage({
             {showAlergenoModal && <AlergenoModal onSave={handleSaveAlergeno} onClose={() => setShowAlergenoModal(false)} loading={loading} />}
             {showMesaModal && <MesaModal mesa={editingItem} onSave={handleSaveMesa} onClose={() => { setShowMesaModal(false); setEditingItem(null); }} loading={loading} />}
 
-            {toast && <div className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white text-sm z-50 ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>{toast.message}</div>}
+            {toast && <div className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white text-sm z-50 animate-pulse ${toast.type === 'error' ? 'bg-red-500' : toast.type === 'warning' ? 'bg-amber-500' : 'bg-green-500'}`}>{toast.message}</div>}
         </div>
     );
 }
@@ -799,8 +1005,22 @@ function CategoriaModal({ categoria, onSave, onClose, loading }) {
 }
 
 function TicketModal({ mesa, onSave, onClose, loading }) {
-    const [metodo, setMetodo] = useState('efectivo');
+    // Mapear método preferido del cliente al formato del ticket
+    const getInitialMetodo = () => {
+        if (mesa.metodoPagoPreferido === 'efectivo') return 'efectivo';
+        if (mesa.metodoPagoPreferido === 'tarjeta') return 'tarjeta';
+        if (mesa.metodoPagoPreferido === 'online') return 'tpv';
+        return 'efectivo';
+    };
+    const [metodo, setMetodo] = useState(getInitialMetodo());
     const formatCurrency = (v) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v || 0);
+    
+    // Mostrar el método preferido por el cliente
+    const getClientePreferido = () => {
+        const labels = { efectivo: '💵 Efectivo', tarjeta: '💳 Tarjeta', online: '📱 Online' };
+        return labels[mesa.metodoPagoPreferido] || null;
+    };
+    
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-sm">
@@ -810,6 +1030,12 @@ function TicketModal({ mesa, onSave, onClose, loading }) {
                         <p className="text-sm text-slate-500">Total</p>
                         <p className="text-2xl font-bold text-primary">{formatCurrency(mesa.total)}</p>
                     </div>
+                    {mesa.metodoPagoPreferido && (
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-center">
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">📋 El cliente prefiere pagar con:</p>
+                            <p className="font-bold text-blue-700 dark:text-blue-300">{getClientePreferido()}</p>
+                        </div>
+                    )}
                     <div className="grid grid-cols-3 gap-2">
                         {['efectivo', 'tarjeta', 'tpv'].map(m => (
                             <button key={m} onClick={() => setMetodo(m)} className={`p-3 rounded-lg border-2 flex flex-col items-center ${metodo === m ? 'border-primary bg-primary/10' : 'border-slate-200'}`}>

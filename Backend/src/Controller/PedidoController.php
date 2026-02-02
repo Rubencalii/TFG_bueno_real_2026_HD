@@ -263,19 +263,72 @@ class PedidoController extends AbstractController
      * Pedir la cuenta
      */
     #[Route('/mesa/{token}/pagar', name: 'api_mesa_pagar', methods: ['POST'])]
-    public function pedirCuenta(string $token): JsonResponse
+    public function pedirCuenta(string $token, Request $request): JsonResponse
     {
         $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
         if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
 
+        $data = json_decode($request->getContent(), true);
+        $metodoPago = $data['metodoPago'] ?? null;
+        
         $mesa->setPideCuenta(true);
+        if ($metodoPago) {
+            $mesa->setMetodoPagoPreferido($metodoPago);
+        }
         $this->entityManager->flush();
 
-        return $this->json(['success' => true]);
+        return $this->json(['success' => true, 'metodoPago' => $metodoPago]);
+    }
+
+    /**
+     * Obtener el total de la cuenta de una mesa
+     */
+    #[Route('/mesa/{token}/total', name: 'api_mesa_total', methods: ['GET'])]
+    public function getTotalMesa(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        $total = $this->pedidoRepository->calcularTotalMesa($mesa);
+
+        return $this->json(['total' => (float)$total]);
+    }
+
+    /**
+     * Procesar pago online desde el móvil del cliente
+     * Solo marca el pago como pendiente de confirmación por el gerente
+     */
+    #[Route('/mesa/{token}/pagar-online', name: 'api_mesa_pagar_online', methods: ['POST'])]
+    public function pagarOnline(string $token, Request $request): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        $data = json_decode($request->getContent(), true);
+        
+        // Calcular total
+        $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
+        if ((float)$totalMesa <= 0) {
+            return $this->json(['error' => 'No hay nada que pagar'], 400);
+        }
+
+        // Marcar pago online como pendiente de confirmación del gerente
+        $mesa->setPideCuenta(true);
+        $mesa->setMetodoPagoPreferido('online');
+        $mesa->setPagoOnlinePendiente(true);
+        
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Pago recibido. El gerente confirmará en breve.',
+            'total' => $totalMesa,
+        ]);
     }
 
     /**
      * Obtener notificaciones para barra
+     * Solo muestra mesas con efectivo/tarjeta (el pago online va al gerente)
      */
     #[Route('/barra/notificaciones', name: 'api_barra_notificaciones', methods: ['GET'])]
     public function getNotificaciones(): JsonResponse
@@ -284,12 +337,17 @@ class PedidoController extends AbstractController
         $notificaciones = [];
 
         foreach ($mesas as $mesa) {
-            if ($mesa->isLlamaCamarero() || $mesa->isPideCuenta()) {
+            // Solo mostrar si llama al camarero O (pide cuenta Y NO es pago online pendiente)
+            $mostrar = $mesa->isLlamaCamarero() || 
+                       ($mesa->isPideCuenta() && !$mesa->isPagoOnlinePendiente());
+            
+            if ($mostrar) {
                 $notificaciones[] = [
                     'mesaId' => $mesa->getId(),
                     'numero' => $mesa->getNumero(),
                     'llamaCamarero' => $mesa->isLlamaCamarero(),
                     'pideCuenta' => $mesa->isPideCuenta(),
+                    'metodoPago' => $mesa->getMetodoPagoPreferido(),
                     'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];
             }
@@ -299,26 +357,67 @@ class PedidoController extends AbstractController
     }
 
     /**
-     * Cerrar mesa (desde barra)
+     * Cerrar mesa (desde barra) - GENERA EL TICKET
      */
     #[Route('/barra/mesa/{id}/cerrar', name: 'api_barra_mesa_cerrar', methods: ['POST'])]
-    public function cerrarMesa(int $id): JsonResponse
+    public function cerrarMesa(int $id, Request $request): JsonResponse
     {
         $mesa = $this->mesaRepository->find($id);
         if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
 
-        // Resetear avisos
+        $data = json_decode($request->getContent(), true);
+        $metodoPago = $data['metodoPago'] ?? $mesa->getMetodoPagoPreferido() ?? 'efectivo';
+        
+        // Calcular total de la mesa
+        $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
+        
+        if ((float)$totalMesa > 0) {
+            // Crear ticket
+            $ticketRepo = $this->entityManager->getRepository(\App\Entity\Ticket::class);
+            $ultimoId = $ticketRepo->getUltimoIdDelAño();
+            $numero = \App\Entity\Ticket::generarNumero($ultimoId);
+
+            $ticket = new \App\Entity\Ticket();
+            $ticket->setNumero($numero);
+            $ticket->setMesa($mesa);
+            $ticket->setMetodoPago($metodoPago);
+            $ticket->setEstado(\App\Entity\Ticket::ESTADO_PAGADO);
+            $ticket->setPaidAt(new \DateTime());
+            $ticket->calcularDesgloseIVA($totalMesa);
+
+            // Guardar detalle de pedidos
+            $pedidos = $this->pedidoRepository->findFacturablesByMesa($mesa);
+            $detalles = [];
+            foreach ($pedidos as $pedido) {
+                foreach ($pedido->getDetalles() as $d) {
+                    $detalles[] = [
+                        'producto' => $d->getProducto()->getNombre(),
+                        'cantidad' => $d->getCantidad(),
+                        'precio' => $d->getPrecioUnitario(),
+                        'notas' => $d->getNotas(),
+                    ];
+                }
+            }
+            $ticket->setDetalleJson(json_encode($detalles));
+
+            $this->entityManager->persist($ticket);
+            
+            // Limpiar pedidos de la mesa
+            $this->pedidoRepository->limpiarPedidosMesa($mesa);
+        }
+
+        // Resetear avisos y flags
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
-
-        // Marcar todos los pedidos como entregados para limpiar la sesión
-        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
-        foreach ($pedidos as $pedido) {
-            $pedido->setEstado(Pedido::ESTADO_ENTREGADO);
-        }
+        $mesa->setMetodoPagoPreferido(null);
+        $mesa->setPagoOnlinePendiente(false);
 
         $this->entityManager->flush();
 
-        return $this->json(['success' => true]);
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Mesa cerrada y ticket generado',
+            'total' => $totalMesa ?? 0
+        ]);
     }
 }
