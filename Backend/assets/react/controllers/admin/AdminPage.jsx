@@ -9,7 +9,9 @@ export default function AdminPage({
     usuarios: initialUsuarios,
     alergenos: initialAlergenos,
     pedidosActivos: initialPedidos,
-    notificaciones: initialNotificaciones
+    notificaciones: initialNotificaciones,
+    reservasHoy: initialReservasHoy,
+    reservasProximas: initialReservasProximas
 }) {
     const [productos, setProductos] = useState(initialProductos || []);
     const [categorias, setCategorias] = useState(initialCategorias || []);
@@ -20,6 +22,7 @@ export default function AdminPage({
     const [alergenos, setAlergenos] = useState(initialAlergenos || []);
     const [pedidosActivos, setPedidosActivos] = useState(initialPedidos || []);
     const [notificaciones, setNotificaciones] = useState(initialNotificaciones || []);
+    const [reservas, setReservas] = useState(initialReservasProximas || []);
     const [reportes, setReportes] = useState(null);
     
     const [activeSection, setActiveSection] = useState('dashboard');
@@ -38,6 +41,7 @@ export default function AdminPage({
     const [showUsuarioModal, setShowUsuarioModal] = useState(false);
     const [showAlergenoModal, setShowAlergenoModal] = useState(false);
     const [showMesaModal, setShowMesaModal] = useState(false);
+    const [showReservaModal, setShowReservaModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedTicket, setSelectedTicket] = useState(null);
 
@@ -427,6 +431,68 @@ export default function AdminPage({
         } catch (error) { showToast('Error', 'error'); }
     };
 
+    // ============ RESERVAS ============
+    const refreshReservas = async () => {
+        try {
+            const response = await fetch('/admin/api/reservas?filtro=proximas');
+            const data = await response.json();
+            setReservas(data);
+        } catch (error) { console.error('Error:', error); }
+    };
+
+    const handleSaveReserva = async (formData) => {
+        setLoading(true);
+        try {
+            const url = editingItem ? `/admin/api/reserva/${editingItem.id}` : '/admin/api/reserva';
+            const response = await fetch(url, {
+                method: editingItem ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            if (data.success) { 
+                showToast(editingItem ? 'Reserva actualizada' : 'Reserva creada'); 
+                refreshReservas();
+                setShowReservaModal(false);
+                setEditingItem(null);
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) { showToast('Error', 'error'); }
+        finally { setLoading(false); }
+    };
+
+    const handleCambiarEstadoReserva = async (id, nuevoEstado) => {
+        try {
+            const response = await fetch(`/admin/api/reserva/${id}/estado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: nuevoEstado })
+            });
+            const data = await response.json();
+            if (data.success) { 
+                setReservas(prev => prev.map(r => r.id === id ? { ...r, estado: nuevoEstado } : r));
+                showToast('Estado actualizado'); 
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) { showToast('Error', 'error'); }
+    };
+
+    const handleDeleteReserva = async (id) => {
+        if (!confirm('¿Eliminar esta reserva?')) return;
+        try {
+            const response = await fetch(`/admin/api/reserva/${id}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (data.success) { 
+                setReservas(prev => prev.filter(r => r.id !== id)); 
+                showToast('Reserva eliminada'); 
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (error) { showToast('Error', 'error'); }
+    };
+
     // ============ REPORTES ============
     const loadReportes = async (periodo = 'semana') => {
         try {
@@ -456,6 +522,7 @@ export default function AdminPage({
 
     const menuItems = [
         { id: 'dashboard', icon: 'dashboard', label: 'Panel' },
+        { id: 'reservas', icon: 'calendar_month', label: 'Reservas', badge: reservas.filter(r => r.estado === 'pendiente').length },
         { id: 'facturacion', icon: 'receipt_long', label: 'Facturación' },
         { id: 'pedidos', icon: 'orders', label: 'Pedidos', badge: stats.pedidosActivos },
         { id: 'productos', icon: 'inventory_2', label: 'Productos' },
@@ -544,6 +611,7 @@ export default function AdminPage({
                         {activeSection === 'usuarios' && <button onClick={() => { setEditingItem(null); setShowUsuarioModal(true); }} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Usuario</button>}
                         {activeSection === 'alergenos' && <button onClick={() => setShowAlergenoModal(true)} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Alérgeno</button>}
                         {activeSection === 'mesas' && <button onClick={() => { setEditingItem(null); setShowMesaModal(true); }} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Mesa</button>}
+                        {activeSection === 'reservas' && <button onClick={() => { setEditingItem(null); setShowReservaModal(true); }} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium">+ Reserva</button>}
                     </div>
                 </header>
 
@@ -783,6 +851,136 @@ export default function AdminPage({
                         </>
                     )}
 
+                    {/* RESERVAS */}
+                    {activeSection === 'reservas' && (
+                        <>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">📅 Reservas</h2>
+                                <div className="flex gap-2">
+                                    <button onClick={refreshReservas} className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">refresh</span>
+                                        Actualizar
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Resumen de reservas de hoy */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
+                                    <div className="text-2xl font-bold text-blue-600">{reservas.filter(r => r.fecha === new Date().toISOString().slice(0,10)).length}</div>
+                                    <div className="text-sm text-slate-500">Hoy</div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
+                                    <div className="text-2xl font-bold text-amber-600">{reservas.filter(r => r.estado === 'pendiente').length}</div>
+                                    <div className="text-sm text-slate-500">Pendientes</div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
+                                    <div className="text-2xl font-bold text-green-600">{reservas.filter(r => r.estado === 'confirmada').length}</div>
+                                    <div className="text-sm text-slate-500">Confirmadas</div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
+                                    <div className="text-2xl font-bold text-purple-600">{reservas.reduce((sum, r) => sum + r.numPersonas, 0)}</div>
+                                    <div className="text-sm text-slate-500">Personas total</div>
+                                </div>
+                            </div>
+
+                            {/* Tabla de reservas */}
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-slate-50 dark:bg-slate-700">
+                                        <tr>
+                                            <th className="text-left px-4 py-3">Cliente</th>
+                                            <th className="text-left px-4 py-3">Teléfono</th>
+                                            <th className="text-left px-4 py-3">Fecha</th>
+                                            <th className="text-left px-4 py-3">Hora</th>
+                                            <th className="text-center px-4 py-3">Personas</th>
+                                            <th className="text-left px-4 py-3">Mesa</th>
+                                            <th className="text-left px-4 py-3">Estado</th>
+                                            <th className="text-right px-4 py-3">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                        {reservas.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                                                    No hay reservas próximas
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            reservas.map(r => (
+                                                <tr key={r.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700 ${r.fecha === new Date().toISOString().slice(0,10) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-medium">{r.nombreCliente}</div>
+                                                        {r.notas && <div className="text-xs text-slate-400 truncate max-w-[150px]" title={r.notas}>📝 {r.notas}</div>}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <a href={`tel:${r.telefono}`} className="text-blue-600 hover:underline">{r.telefono}</a>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={r.fecha === new Date().toISOString().slice(0,10) ? 'font-bold text-blue-600' : ''}>
+                                                            {new Date(r.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-medium">{r.hora}</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <span className="bg-slate-100 dark:bg-slate-600 px-2 py-1 rounded-full text-xs font-bold">
+                                                            {r.numPersonas} 👥
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        {r.mesaNumero ? (
+                                                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">Mesa {r.mesaNumero}</span>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs">Sin asignar</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <select
+                                                            value={r.estado}
+                                                            onChange={(e) => handleCambiarEstadoReserva(r.id, e.target.value)}
+                                                            className={`text-xs px-2 py-1 rounded border-none font-medium ${
+                                                                r.estado === 'pendiente' ? 'bg-amber-100 text-amber-700' :
+                                                                r.estado === 'confirmada' ? 'bg-green-100 text-green-700' :
+                                                                r.estado === 'cancelada' ? 'bg-red-100 text-red-700' :
+                                                                r.estado === 'completada' ? 'bg-blue-100 text-blue-700' :
+                                                                r.estado === 'no_show' ? 'bg-gray-100 text-gray-700' :
+                                                                'bg-slate-100 text-slate-700'
+                                                            }`}
+                                                        >
+                                                            <option value="pendiente">⏳ Pendiente</option>
+                                                            <option value="confirmada">✅ Confirmada</option>
+                                                            <option value="cancelada">❌ Cancelada</option>
+                                                            <option value="completada">🎉 Completada</option>
+                                                            <option value="no_show">👻 No se presentó</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="flex justify-end gap-1">
+                                                            <button 
+                                                                onClick={() => { setEditingItem(r); setShowReservaModal(true); }} 
+                                                                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded"
+                                                                title="Editar"
+                                                            >
+                                                                <span className="material-symbols-outlined text-sm">edit</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteReserva(r.id)} 
+                                                                className="p-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded"
+                                                                title="Eliminar"
+                                                            >
+                                                                <span className="material-symbols-outlined text-sm">delete</span>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+
                     {/* MESAS */}
                     {activeSection === 'mesas' && (
                         <>
@@ -925,6 +1123,7 @@ export default function AdminPage({
             {showUsuarioModal && <UsuarioModal usuario={editingItem} onSave={handleSaveUsuario} onClose={() => { setShowUsuarioModal(false); setEditingItem(null); }} loading={loading} />}
             {showAlergenoModal && <AlergenoModal onSave={handleSaveAlergeno} onClose={() => setShowAlergenoModal(false)} loading={loading} />}
             {showMesaModal && <MesaModal mesa={editingItem} onSave={handleSaveMesa} onClose={() => { setShowMesaModal(false); setEditingItem(null); }} loading={loading} />}
+            {showReservaModal && <ReservaModal reserva={editingItem} mesas={mesas} onSave={handleSaveReserva} onClose={() => { setShowReservaModal(false); setEditingItem(null); }} loading={loading} />}
 
             {toast && <div className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white text-sm z-50 animate-pulse ${toast.type === 'error' ? 'bg-red-500' : toast.type === 'warning' ? 'bg-amber-500' : 'bg-green-500'}`}>{toast.message}</div>}
         </div>
@@ -1131,6 +1330,169 @@ function MesaModal({ mesa, onSave, onClose, loading }) {
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg">Cancelar</button>
                         <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg">{loading ? '...' : 'Guardar'}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+function ReservaModal({ reserva, mesas, onSave, onClose, loading }) {
+    const [formData, setFormData] = useState({
+        nombreCliente: reserva?.nombreCliente || '',
+        telefono: reserva?.telefono || '',
+        email: reserva?.email || '',
+        fecha: reserva?.fecha || new Date().toISOString().slice(0, 10),
+        hora: reserva?.hora || '13:00',
+        numPersonas: reserva?.numPersonas || 2,
+        notas: reserva?.notas || '',
+        mesaId: reserva?.mesaId || '',
+        estado: reserva?.estado || 'pendiente'
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary focus:border-primary";
+    const selectClass = "w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary";
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800 z-10">
+                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">📅 {reserva ? 'Editar' : 'Nueva'} Reserva</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                    {/* Datos del cliente */}
+                    <div className="space-y-3">
+                        <h4 className="font-medium text-sm text-slate-500 dark:text-slate-400 uppercase">Datos del Cliente</h4>
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Nombre *</label>
+                            <input 
+                                type="text" 
+                                value={formData.nombreCliente} 
+                                onChange={(e) => setFormData({ ...formData, nombreCliente: e.target.value })} 
+                                className={inputClass}
+                                placeholder="Nombre del cliente" 
+                                required 
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Teléfono *</label>
+                                <input 
+                                    type="tel" 
+                                    value={formData.telefono} 
+                                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} 
+                                    className={inputClass}
+                                    placeholder="600 123 456" 
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Email</label>
+                                <input 
+                                    type="email" 
+                                    value={formData.email} 
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                                    className={inputClass}
+                                    placeholder="email@ejemplo.com" 
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Datos de la reserva */}
+                    <div className="space-y-3">
+                        <h4 className="font-medium text-sm text-slate-500 dark:text-slate-400 uppercase">Detalles de la Reserva</h4>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Fecha *</label>
+                                <input 
+                                    type="date" 
+                                    value={formData.fecha} 
+                                    onChange={(e) => setFormData({ ...formData, fecha: e.target.value })} 
+                                    className={inputClass}
+                                    min={new Date().toISOString().slice(0, 10)}
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Hora *</label>
+                                <input 
+                                    type="time" 
+                                    value={formData.hora} 
+                                    onChange={(e) => setFormData({ ...formData, hora: e.target.value })} 
+                                    className={inputClass}
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Personas *</label>
+                                <input 
+                                    type="number" 
+                                    value={formData.numPersonas} 
+                                    onChange={(e) => setFormData({ ...formData, numPersonas: parseInt(e.target.value) })} 
+                                    className={inputClass}
+                                    min="1" 
+                                    max="20"
+                                    required 
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Mesa asignada</label>
+                                <select 
+                                    value={formData.mesaId} 
+                                    onChange={(e) => setFormData({ ...formData, mesaId: e.target.value })} 
+                                    className={selectClass}
+                                >
+                                    <option value="">Sin asignar</option>
+                                    {mesas.filter(m => m.activa).map(m => (
+                                        <option key={m.id} value={m.id}>Mesa {m.numero}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Estado</label>
+                                <select 
+                                    value={formData.estado} 
+                                    onChange={(e) => setFormData({ ...formData, estado: e.target.value })} 
+                                    className={selectClass}
+                                >
+                                    <option value="pendiente">⏳ Pendiente</option>
+                                    <option value="confirmada">✅ Confirmada</option>
+                                    <option value="cancelada">❌ Cancelada</option>
+                                    <option value="completada">🎉 Completada</option>
+                                    <option value="no_show">👻 No se presentó</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Notas</label>
+                            <textarea 
+                                value={formData.notas} 
+                                onChange={(e) => setFormData({ ...formData, notas: e.target.value })} 
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary focus:border-primary resize-none" 
+                                rows="2"
+                                placeholder="Alergias, ocasión especial, etc."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="flex-1 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 text-slate-700">
+                            Cancelar
+                        </button>
+                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                            {loading ? '⏳ Guardando...' : (reserva ? '💾 Actualizar' : '➕ Crear Reserva')}
+                        </button>
                     </div>
                 </form>
             </div>
