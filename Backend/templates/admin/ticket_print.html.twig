@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket #{{ ticket.numero }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 0;
+            padding: 10px;
+            width: 280px;
+            background: white;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .logo {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .info {
+            font-size: 10px;
+            margin-bottom: 3px;
+        }
+        .ticket-info {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+        }
+        .items {
+            margin-bottom: 10px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            padding: 2px 0;
+        }
+        .item-name {
+            flex: 1;
+        }
+        .item-qty {
+            width: 30px;
+            text-align: center;
+        }
+        .item-price {
+            width: 50px;
+            text-align: right;
+        }
+        .total-section {
+            border-top: 1px dashed #000;
+            padding-top: 5px;
+            margin-top: 10px;
+        }
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .total-final {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+            font-size: 10px;
+        }
+        .print-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .print-button:hover {
+            background: #0056b3;
+        }
+        @media print {
+            .print-button {
+                display: none;
+            }
+            body {
+                width: auto;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+    
+    <div class="header">
+        <div class="logo">🍽️ RESTAURANTE</div>
+        <div class="info">Casa Encarni</div>
+        <div class="info">{{ "now"|date("d/m/Y H:i") }}</div>
+    </div>
+
+    <div class="ticket-info">
+        <div style="display: flex; justify-content: space-between;">
+            <span><strong>Ticket:</strong> {{ ticket.numero }}</span>
+            <span><strong>Mesa:</strong> {{ ticket.mesa.numero }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 3px;">
+            <span><strong>Estado:</strong> {{ ticket.estado|upper }}</span>
+            <span><strong>Método:</strong> {{ ticket.metodoPago|upper }}</span>
+        </div>
+        {% if ticket.paidAt %}
+        <div style="margin-top: 3px;">
+            <strong>Pagado:</strong> {{ ticket.paidAt|date("d/m/Y H:i") }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="items">
+        <div style="display: flex; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 5px;">
+            <span style="flex: 1;">PRODUCTO</span>
+            <span style="width: 30px; text-align: center;">CNT</span>
+            <span style="width: 50px; text-align: right;">PRECIO</span>
+        </div>
+        
+        {% for detalle in detalles %}
+        <div class="item">
+            <div class="item-name">{{ detalle.producto }}</div>
+            <div class="item-qty">{{ detalle.cantidad }}</div>
+            <div class="item-price">{{ (detalle.precio * detalle.cantidad)|number_format(2, ',', '.') }}€</div>
+        </div>
+        {% if detalle.notas %}
+        <div style="font-size: 10px; color: #666; margin-left: 10px; margin-bottom: 3px;">
+            * {{ detalle.notas }}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="total-section">
+        <div class="total-line">
+            <span>Base Imponible:</span>
+            <span>{{ ticket.baseImponible|number_format(2, ',', '.') }}€</span>
+        </div>
+        <div class="total-line">
+            <span>IVA (21%):</span>
+            <span>{{ ticket.iva|number_format(2, ',', '.') }}€</span>
+        </div>
+        <div class="total-line total-final">
+            <span>TOTAL:</span>
+            <span>{{ ticket.total|number_format(2, ',', '.') }}€</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>¡Gracias por su visita!</div>
+        <div style="margin-top: 5px;">www.restaurante-digital.com</div>
+        {% if ticket.estado == 'anulado' %}
+        <div style="margin-top: 10px; font-weight: bold; color: red;">
+            ⚠️ TICKET ANULADO ⚠️
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Auto-imprimir al cargar (opcional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

@@ -48,16 +48,18 @@ class BarraController extends AbstractController
             ];
         }, $pedidosEntities);
 
-        // Notificaciones (llamadas y cuenta)
+        // Notificaciones (llamadas y cuenta) - Solo efectivo/tarjeta para barra
         $mesas = $this->mesaRepository->findBy(['activa' => true]);
         $notificaciones = [];
         foreach ($mesas as $mesa) {
-            if ($mesa->isLlamaCamarero() || $mesa->isPideCuenta()) {
+            if ($mesa->isLlamaCamarero() || 
+                ($mesa->isPideCuenta() && in_array($mesa->getMetodoPagoPreferido(), ['efectivo', 'tarjeta']))) {
                 $notificaciones[] = [
                     'mesaId' => $mesa->getId(),
                     'numero' => $mesa->getNumero(),
                     'llamaCamarero' => $mesa->isLlamaCamarero(),
-                    'pideCuenta' => $mesa->isPideCuenta(),
+                    'pideCuenta' => $mesa->isPideCuenta() && in_array($mesa->getMetodoPagoPreferido(), ['efectivo', 'tarjeta']),
+                    'metodoPago' => $mesa->getMetodoPagoPreferido(),
                     'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];
             }

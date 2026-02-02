@@ -121,9 +121,29 @@ class PedidoRepository extends ServiceEntityRepository
 
     /**
      * Elimina todos los pedidos de una mesa (al facturar)
+     * Primero elimina los detalles para evitar violaciones de FK
      */
     public function limpiarPedidosMesa(Mesa $mesa): int
     {
+        // Obtener IDs de los pedidos de la mesa
+        $pedidoIds = $this->createQueryBuilder('p')
+            ->select('p.id')
+            ->andWhere('p.mesa = :mesa')
+            ->setParameter('mesa', $mesa)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        if (empty($pedidoIds)) {
+            return 0;
+        }
+
+        // Primero eliminar los detalles de los pedidos
+        $this->getEntityManager()
+            ->createQuery('DELETE FROM App\\Entity\\DetallePedido d WHERE d.pedido IN (:ids)')
+            ->setParameter('ids', $pedidoIds)
+            ->execute();
+
+        // Luego eliminar los pedidos
         return $this->createQueryBuilder('p')
             ->delete()
             ->andWhere('p.mesa = :mesa')

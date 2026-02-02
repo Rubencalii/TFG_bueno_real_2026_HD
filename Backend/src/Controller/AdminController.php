@@ -123,7 +123,7 @@ class AdminController extends AbstractController
         $usuariosData = array_map(fn(User $u) => [
             'id' => $u->getId(),
             'email' => $u->getEmail(),
-            'rol' => $u->getRol(),
+            'roles' => $u->getRoles(),
         ], $usuarios);
 
         // Alérgenos
@@ -158,7 +158,7 @@ class AdminController extends AbstractController
             ];
         }
 
-        // Notificaciones
+        // Notificaciones (llamadas camarero y pagos online pendientes para admin)
         $notificaciones = [];
         foreach ($mesas as $mesa) {
             if ($mesa->isLlamaCamarero()) {
@@ -169,12 +169,13 @@ class AdminController extends AbstractController
                     'prioridad' => 'alta',
                 ];
             }
-            if ($mesa->isPideCuenta()) {
+            if ($mesa->isPagoOnlinePendiente()) {
                 $notificaciones[] = [
-                    'tipo' => 'cuenta',
-                    'mensaje' => "Mesa {$mesa->getNumero()} pide la cuenta",
+                    'tipo' => 'pago_online',
+                    'mensaje' => "Mesa {$mesa->getNumero()} - Verificar pago online",
                     'mesaId' => $mesa->getId(),
-                    'prioridad' => 'media',
+                    'prioridad' => 'alta',
+                    'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];
             }
         }
@@ -407,7 +408,7 @@ class AdminController extends AbstractController
         $ticket->setNumero($numero);
         $ticket->setMesa($mesa);
         $ticket->setMetodoPago($data['metodoPago'] ?? Ticket::METODO_EFECTIVO);
-        $ticket->setEstado(Ticket::ESTADO_PENDIENTE);
+        $ticket->setEstado(Ticket::ESTADO_PENDIENTE); // Siempre pendiente al crear desde admin
         $ticket->calcularDesgloseIVA($totalMesa);
 
         // Guardar detalle de pedidos (TODOS los facturables)
@@ -427,11 +428,14 @@ class AdminController extends AbstractController
 
         $this->entityManager->persist($ticket);
         
-        // Limpiar pedidos de la mesa y resetear flags
+        // Limpiar pedidos de la mesa al crear el ticket desde admin
         $this->pedidoRepository->limpiarPedidosMesa($mesa);
+        
+        // Resetear flags de la mesa
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
+        $mesa->setPagoOnlinePendiente(false);
         
         $this->entityManager->flush();
 
@@ -440,7 +444,8 @@ class AdminController extends AbstractController
             'id' => $ticket->getId(),
             'numero' => $ticket->getNumero(),
             'total' => $ticket->getTotal(),
-            'mensaje' => 'Ticket creado correctamente'
+            'metodoPago' => $ticket->getMetodoPago(),
+            'mensaje' => 'Ticket creado - Mesa liberada'
         ]);
     }
 
@@ -465,16 +470,8 @@ class AdminController extends AbstractController
         $ticket->setEstado(Ticket::ESTADO_PAGADO);
         $ticket->setPaidAt(new \DateTime());
 
-        // Cerrar mesa: marcar pedidos como entregados
-        $mesa = $ticket->getMesa();
-        $pedidos = $this->pedidoRepository->findActivosByMesa($mesa);
-        foreach ($pedidos as $pedido) {
-            $pedido->setEstado('entregado');
-        }
-        $mesa->setLlamaCamarero(false);
-        $mesa->setPideCuenta(false);
-        $mesa->setMetodoPagoPreferido(null);
-
+        // La mesa ya fue limpiada cuando se creó el ticket
+        // Solo actualizamos el estado del ticket
         $this->entityManager->flush();
 
         return $this->json([
@@ -524,6 +521,28 @@ class AdminController extends AbstractController
         ]);
     }
 
+    #[Route('/api/ticket/{id}', name: 'admin_api_eliminar_ticket', methods: ['DELETE'])]
+    public function eliminarTicket(int $id): JsonResponse
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            return $this->json(['error' => 'Ticket no encontrado'], 404);
+        }
+
+        // Solo permitir eliminar tickets anulados (para limpiar datos de ejemplo)
+        if ($ticket->getEstado() !== Ticket::ESTADO_ANULADO) {
+            return $this->json(['error' => 'Solo se pueden eliminar tickets anulados'], 400);
+        }
+
+        $this->entityManager->remove($ticket);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Ticket eliminado correctamente'
+        ]);
+    }
+
     #[Route('/api/ticket/{id}', name: 'admin_api_ver_ticket', methods: ['GET'])]
     public function verTicket(int $id): JsonResponse
     {
@@ -545,6 +564,22 @@ class AdminController extends AbstractController
             'paidAt' => $ticket->getPaidAt()?->format('d/m/Y H:i'),
             'detalles' => json_decode($ticket->getDetalleJson() ?? '[]', true),
             'ticketRectificadoId' => $ticket->getTicketRectificadoId(),
+        ]);
+    }
+
+    #[Route('/api/ticket/{id}/imprimir', name: 'admin_api_imprimir_ticket', methods: ['GET'])]
+    public function imprimirTicket(int $id): Response
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            throw $this->createNotFoundException('Ticket no encontrado');
+        }
+
+        $detalles = json_decode($ticket->getDetalleJson() ?? '[]', true);
+
+        return $this->render('admin/ticket_print.html.twig', [
+            'ticket' => $ticket,
+            'detalles' => $detalles,
         ]);
     }
 
@@ -571,6 +606,8 @@ class AdminController extends AbstractController
             'tickets' => $ticketsData,
         ]);
     }
+
+
 
     // ============ API REPORTES Y ESTADÍSTICAS ============
 
@@ -646,7 +683,6 @@ class AdminController extends AbstractController
         return $this->json(array_map(fn(User $u) => [
             'id' => $u->getId(),
             'email' => $u->getEmail(),
-            'rol' => $u->getRol(),
             'roles' => $u->getRoles(),
         ], $usuarios));
     }
@@ -658,7 +694,6 @@ class AdminController extends AbstractController
 
         $user = new User();
         $user->setEmail($data['email'] ?? '');
-        $user->setRol($data['rol'] ?? 'camarero');
         
         $roles = match($data['rol'] ?? 'camarero') {
             'admin' => ['ROLE_ADMIN'],
@@ -1098,6 +1133,26 @@ class AdminController extends AbstractController
         ]);
     }
 
+    // ============ API NOTIFICACIONES ============
+
+    #[Route('/api/mesa/{id}/limpiar-alertas', name: 'admin_api_limpiar_alertas', methods: ['POST'])]
+    public function limpiarAlertas(int $id): JsonResponse
+    {
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $mesa->setLlamaCamarero(false);
+        $mesa->setPideCuenta(false);
+        $mesa->setMetodoPagoPreferido(null);
+        $mesa->setPagoOnlinePendiente(false);
+        
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true, 'mensaje' => 'Alertas eliminadas']);
+    }
+
     // ============ API CONFIGURACIÓN ============
 
     #[Route('/api/config', name: 'admin_api_config', methods: ['GET'])]
@@ -1155,12 +1210,25 @@ class AdminController extends AbstractController
             return $this->json(['error' => 'Faltan campos obligatorios'], 400);
         }
 
+        // Validar formato de hora
+        $hora = \DateTime::createFromFormat('H:i', $data['hora']);
+        if (!$hora) {
+            return $this->json(['error' => 'Formato de hora inválido. Use HH:MM'], 400);
+        }
+
+        // Validar fecha futura
+        $fecha = new \DateTime($data['fecha']);
+        $hoy = new \DateTime('today');
+        if ($fecha < $hoy) {
+            return $this->json(['error' => 'No se pueden crear reservas para fechas pasadas'], 400);
+        }
+
         $reserva = new Reserva();
         $reserva->setNombreCliente($data['nombreCliente']);
         $reserva->setTelefono($data['telefono']);
         $reserva->setEmail($data['email'] ?? null);
-        $reserva->setFecha(new \DateTime($data['fecha']));
-        $reserva->setHora(new \DateTime($data['hora']));
+        $reserva->setFecha($fecha);
+        $reserva->setHora($hora);
         $reserva->setNumPersonas((int)$data['numPersonas']);
         $reserva->setNotas($data['notas'] ?? null);
         $reserva->setEstado($data['estado'] ?? Reserva::ESTADO_PENDIENTE);
@@ -1221,7 +1289,13 @@ class AdminController extends AbstractController
         if (isset($data['telefono'])) $reserva->setTelefono($data['telefono']);
         if (isset($data['email'])) $reserva->setEmail($data['email']);
         if (isset($data['fecha'])) $reserva->setFecha(new \DateTime($data['fecha']));
-        if (isset($data['hora'])) $reserva->setHora(new \DateTime($data['hora']));
+        if (isset($data['hora'])) {
+            $hora = \DateTime::createFromFormat('H:i', $data['hora']);
+            if (!$hora) {
+                return $this->json(['error' => 'Formato de hora inválido. Use HH:MM'], 400);
+            }
+            $reserva->setHora($hora);
+        }
         if (isset($data['numPersonas'])) $reserva->setNumPersonas((int)$data['numPersonas']);
         if (isset($data['notas'])) $reserva->setNotas($data['notas']);
         if (isset($data['estado'])) $reserva->setEstado($data['estado']);

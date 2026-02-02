@@ -72,9 +72,20 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ metodoPago: metodoPago || 'efectivo' })
             });
+            
             if (response.ok) {
+                const data = await response.json();
                 setNotificaciones(prev => prev.filter(n => n.mesaId !== mesaId));
                 refreshData();
+                
+                // Mostrar opciones de impresión si se generó un ticket
+                if (data.ticket) {
+                    const imprimir = confirm(`Mesa cerrada con éxito.\nTicket #${data.ticket} generado.\n\n¿Desea imprimir el ticket?`);
+                    if (imprimir) {
+                        // Abrir ticket en nueva ventana para imprimir
+                        window.open(`/admin/api/ticket/${data.ticketId}/imprimir`, '_blank', 'width=300,height=600');
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al cerrar mesa:', error);

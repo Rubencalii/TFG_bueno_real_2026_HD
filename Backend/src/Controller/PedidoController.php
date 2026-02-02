@@ -274,6 +274,11 @@ class PedidoController extends AbstractController
         $mesa->setPideCuenta(true);
         if ($metodoPago) {
             $mesa->setMetodoPagoPreferido($metodoPago);
+            
+            // Si es pago online, marcar como pendiente para admin
+            if ($metodoPago === 'online') {
+                $mesa->setPagoOnlinePendiente(true);
+            }
         }
         $this->entityManager->flush();
 
@@ -372,7 +377,7 @@ class PedidoController extends AbstractController
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
         
         if ((float)$totalMesa > 0) {
-            // Crear ticket
+            // Crear ticket automáticamente
             $ticketRepo = $this->entityManager->getRepository(\App\Entity\Ticket::class);
             $ultimoId = $ticketRepo->getUltimoIdDelAño();
             $numero = \App\Entity\Ticket::generarNumero($ultimoId);
@@ -416,7 +421,9 @@ class PedidoController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'mensaje' => 'Mesa cerrada y ticket generado',
+            'mensaje' => 'Mesa cerrada y ticket generado automáticamente',
+            'ticket' => isset($ticket) ? $ticket->getNumero() : null,
+            'ticketId' => isset($ticket) ? $ticket->getId() : null,
             'total' => $totalMesa ?? 0
         ]);
     }

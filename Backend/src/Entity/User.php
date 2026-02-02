@@ -31,9 +31,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 30)]
-    private ?string $rol = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -107,17 +104,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
 
         return $data;
-    }
-
-    public function getRol(): ?string
-    {
-        return $this->rol;
-    }
-
-    public function setRol(string $rol): static
-    {
-        $this->rol = $rol;
-
-        return $this;
     }
 }
