@@ -1,190 +1,26 @@
-<!DOCTYPE html>
-<html class="light" lang="es">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Panel Admin - Comanda Digital</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#2463eb",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#111621",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"]
-                    },
-                },
-            },
-        }
-        // Check and apply saved theme
-        if (localStorage.getItem('darkMode') === 'true' || 
-            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    </style>
-</head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen font-display transition-colors duration-200">
+{% extends 'base.html.twig' %}
 
-<!-- Header -->
-<header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined">admin_panel_settings</span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Panel de Administración</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Gestión del sistema</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="/logout" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">logout</span>
-                    Cerrar sesión
-                </a>
-            </div>
+{% block title %}Panel de Administración - Comanda Digital{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block theme_toggle %}{% endblock %}
+
+{% block body %}
+<div id="admin-app" {{ react_component('admin/AdminPage', {
+    productos: productos,
+    categorias: categorias,
+    mesas: mesas
+}) }}>
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p class="text-gray-600">Cargando panel de administración...</p>
         </div>
     </div>
-</header>
-
-<main class="max-w-7xl mx-auto px-6 py-8">
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <span class="material-symbols-outlined">table_restaurant</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">15</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Mesas activas</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                    <span class="material-symbols-outlined">receipt_long</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Pedidos hoy</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <span class="material-symbols-outlined">restaurant_menu</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">35</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Productos</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400">
-                    <span class="material-symbols-outlined">payments</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€0.00</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Ventas hoy</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Accesos rápidos</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="/cocina" class="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                <span class="material-symbols-outlined text-3xl text-orange-500">skillet</span>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Cocina</span>
-            </a>
-            <a href="/barra" class="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                <span class="material-symbols-outlined text-3xl text-amber-500">hail</span>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Camarero</span>
-            </a>
-            <a href="/mesa/928c6d3b" class="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                <span class="material-symbols-outlined text-3xl text-emerald-500">menu_book</span>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Ver Menú</span>
-            </a>
-            <a href="#" class="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                <span class="material-symbols-outlined text-3xl text-purple-500">settings</span>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Configuración</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- Info Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Información del sistema</h2>
-        <div class="space-y-3">
-            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
-                <span class="text-gray-600 dark:text-gray-400">Versión</span>
-                <span class="font-medium text-gray-900 dark:text-white">v2.4.0</span>
-            </div>
-            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
-                <span class="text-gray-600 dark:text-gray-400">Estado del servidor</span>
-                <span class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium">
-                    <span class="size-2 bg-emerald-500 rounded-full"></span>
-                    Operativo
-                </span>
-            </div>
-            <div class="flex justify-between items-center py-2">
-                <span class="text-gray-600 dark:text-gray-400">Última actualización</span>
-                <span class="font-medium text-gray-900 dark:text-white">{{ "now"|date("d/m/Y H:i") }}</span>
-            </div>
-        </div>
-    </div>
-</main>
-
-<!-- Theme Toggle -->
-<div class="fixed bottom-6 right-6 z-50">
-    <button 
-        onclick="toggleDarkMode()"
-        class="size-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-yellow-400 hover:scale-110 transition-transform"
-        title="Cambiar tema"
-    >
-        <span class="material-symbols-outlined">contrast</span>
-    </button>
 </div>
-
-<script>
-    function toggleDarkMode() {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-        
-        if (isDark) {
-            html.classList.remove('dark');
-            html.classList.add('light');
-            localStorage.setItem('darkMode', 'false');
-        } else {
-            html.classList.add('dark');
-            html.classList.remove('light');
-            localStorage.setItem('darkMode', 'true');
-        }
-    }
-</script>
-
-</body>
-</html>
+{% endblock %}
