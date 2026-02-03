@@ -1,6 +1,7 @@
 import React from 'react';
+import { translateCategory } from './translations';
 
-export default function CategoryNav({ categorias, activeCategory, onCategoryChange }) {
+export default function CategoryNav({ categorias, activeCategory, onCategoryChange, currentLang = 'es', t }) {
     if (!categorias || categorias.length === 0) return null;
 
     return (
@@ -8,6 +9,8 @@ export default function CategoryNav({ categorias, activeCategory, onCategoryChan
             <div className="flex gap-6 sm:gap-10 overflow-x-auto no-scrollbar">
                 {categorias.map(categoria => {
                     const isActive = activeCategory?.id === categoria.id;
+                    // Usar traducción si está disponible, sino usar el nombre de la BD que ya puede estar traducido
+                    const displayName = translateCategory(categoria.nombre, currentLang);
                     
                     return (
                         <button
@@ -20,7 +23,7 @@ export default function CategoryNav({ categorias, activeCategory, onCategoryChan
                             }`}
                         >
                             <p className="text-xs sm:text-sm font-black uppercase tracking-widest">
-                                {categoria.nombre}
+                                {displayName}
                             </p>
                         </button>
                     );

@@ -18,12 +18,15 @@ class ProductoRepository extends ServiceEntityRepository
     }
 
     /**
-     * Devuelve todos los productos activos
+     * Devuelve todos los productos activos con sus traducciones
      * @return Producto[]
      */
     public function findActivos(): array
     {
         return $this->createQueryBuilder('p')
+            ->leftJoin('p.traducciones', 't')
+            ->leftJoin('t.idioma', 'i')
+            ->addSelect('t', 'i')
             ->andWhere('p.activo = :activo')
             ->setParameter('activo', true)
             ->join('p.categoria', 'c')

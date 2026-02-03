@@ -1,15 +1,18 @@
 import React from 'react';
+import { translateAllergen } from './translations';
 
 const ALLERGEN_ICONS = {
-    'gluten': { icon: 'grain', label: 'Sin Gluten' },
-    'huevo': { icon: 'egg', label: 'Sin Huevo' },
-    'lactosa': { icon: 'water_drop', label: 'Sin Lactosa' },
-    'vegano': { icon: 'eco', label: 'Vegano' },
-    'frutos_secos': { icon: 'nutrition', label: 'Sin Frutos Secos' },
-    'marisco': { icon: 'set_meal', label: 'Sin Marisco' },
+    'gluten': { icon: 'grain' },
+    'huevo': { icon: 'egg' },
+    'lactosa': { icon: 'water_drop' },
+    'vegano': { icon: 'eco' },
+    'frutos_secos': { icon: 'nutrition' },
+    'marisco': { icon: 'set_meal' },
+    'pescado': { icon: 'restaurant' },
+    'soja': { icon: 'grass' },
 };
 
-export default function SearchBar({ searchTerm, onSearchChange, activeFilters, onToggleFilter, alergenos }) {
+export default function SearchBar({ searchTerm, onSearchChange, activeFilters, onToggleFilter, alergenos, currentLang = 'es', t }) {
     const allergenList = alergenos || Object.keys(ALLERGEN_ICONS);
 
     return (
@@ -23,7 +26,7 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                     <input
                         type="text"
                         className="block w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-3 sm:py-4 bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-slate-600 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base sm:text-lg"
-                        placeholder="Buscar platos..."
+                        placeholder={t('buscarPlatos')}
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
@@ -37,8 +40,9 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                     <div className="flex gap-2">
                         {allergenList.map(alergeno => {
                             const key = alergeno.toLowerCase();
-                            const info = ALLERGEN_ICONS[key] || { icon: 'warning', label: alergeno };
+                            const info = ALLERGEN_ICONS[key] || { icon: 'warning' };
                             const isActive = activeFilters.includes(key);
+                            const translatedLabel = translateAllergen(alergeno, currentLang);
                             
                             return (
                                 <button
@@ -51,7 +55,7 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                                     }`}
                                 >
                                     <span className="material-symbols-outlined text-[16px] sm:text-[18px]">{info.icon}</span>
-                                    <span className="hidden sm:inline">{info.label}</span>
+                                    <span className="hidden sm:inline">{translatedLabel}</span>
                                 </button>
                             );
                         })}

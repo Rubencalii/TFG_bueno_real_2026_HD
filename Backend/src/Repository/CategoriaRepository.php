@@ -17,12 +17,15 @@ class CategoriaRepository extends ServiceEntityRepository
     }
 
     /**
-     * Devuelve todas las categorías activas ordenadas
+     * Devuelve todas las categorías activas ordenadas con sus traducciones
      * @return Categoria[]
      */
     public function findAllActivas(): array
     {
         return $this->createQueryBuilder('c')
+            ->leftJoin('c.traducciones', 't')
+            ->leftJoin('t.idioma', 'i')
+            ->addSelect('t', 'i')
             ->andWhere('c.activa = :activa')
             ->setParameter('activa', true)
             ->orderBy('c.orden', 'ASC')

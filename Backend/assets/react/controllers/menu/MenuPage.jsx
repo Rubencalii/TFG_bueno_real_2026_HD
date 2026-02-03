@@ -5,8 +5,11 @@ import CategoryNav from './CategoryNav';
 import ProductGrid from './ProductGrid';
 import CartFloat from './CartFloat';
 import MyOrdersSection from './MyOrdersSection';
+import LanguageSelector from './LanguageSelector';
+import { useTranslations, translateAllergen, translateCategory } from './translations';
 
-export default function MenuPage({ mesa, productos, categorias, alergenos }) {
+export default function MenuPage({ mesa, productos, categorias, alergenos, idiomas, idiomaActual }) {
+    const { t } = useTranslations(idiomaActual?.codigo || 'es');
     const [cart, setCart] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState([]);
@@ -87,6 +90,13 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
     const cartTotal = cart.reduce((sum, item) => sum + (parseFloat(item.precio) * item.cantidad), 0);
     const cartCount = cart.reduce((sum, item) => sum + item.cantidad, 0);
 
+    // Función para cambiar idioma
+    const handleLanguageChange = (idioma) => {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('lang', idioma.codigo);
+        window.location.href = currentUrl.toString();
+    };
+
     return (
         <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-display min-h-screen selection:bg-primary selection:text-white transition-colors">
             <MenuHeader 
@@ -107,13 +117,24 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                         </h1>
                         <div className="flex items-center gap-3 flex-wrap">
                             <span className="px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-black rounded-full border border-primary/20 uppercase tracking-widest">
-                                LIVE SESSION
+                                {t('liveSession')}
                             </span>
                             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
-                                Comanda Digital
+                                {t('comandaDigital')}
                             </p>
                         </div>
                     </div>
+                    
+                    {/* Selector de idioma */}
+                    {idiomas && idiomas.length > 1 && (
+                        <div className="flex-shrink-0">
+                            <LanguageSelector
+                                idiomas={idiomas}
+                                idiomaActual={idiomaActual}
+                                onLanguageChange={handleLanguageChange}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Search and Filters */}
@@ -123,6 +144,8 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                     activeFilters={activeFilters}
                     onToggleFilter={toggleFilter}
                     alergenos={alergenos}
+                    currentLang={idiomaActual?.codigo || 'es'}
+                    t={t}
                 />
 
                 {/* Category Navigation */}
@@ -130,6 +153,8 @@ export default function MenuPage({ mesa, productos, categorias, alergenos }) {
                     categorias={categorias}
                     activeCategory={activeCategory}
                     onCategoryChange={setActiveCategory}
+                    currentLang={idiomaActual?.codigo || 'es'}
+                    t={t}
                 />
 
                 {/* Products Grid */}

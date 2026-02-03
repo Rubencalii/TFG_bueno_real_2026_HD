@@ -37,6 +37,21 @@ Espera ~30 segundos y todo estará listo:
 | **Barra**     | `http://localhost:8001/barra/`       |
 | **Admin**     | `http://localhost:8001/admin/`       |
 
+### 🔐 Credenciales de Acceso
+
+**Por razones de seguridad, las credenciales están configuradas en archivos de entorno.**
+
+Los usuarios de demostración incluyen:
+- **ADMINISTRADOR:** Acceso completo al panel de administración
+- **GERENTE:** Administración y reportes  
+- **STAFF (COCINA):** Panel de cocina para gestión de pedidos
+- **STAFF (BARRA):** Panel de barra para bebidas
+- **CAMARERO:** Funciones básicas de servicio
+
+> 🔒 **Desarrollo:** Consulta `Backend/.env` para las credenciales de desarrollo
+> 
+> ⚠️ **Producción:** SIEMPRE cambiar las contraseñas por defecto antes del despliegue
+
 > 💡 Los tokens de las mesas se muestran automáticamente en los logs al arrancar.
 > Ejecuta `docker logs symfony_app` para verlos.
 
@@ -77,6 +92,27 @@ Una vez instalado, estos son los comandos que más usarás dentro de la carpeta 
 | **Ver logs**                  | `docker logs -f symfony_app`                           |
 | **Compilar cambios visuales** | `npm run dev-server`                                   |
 | **Entrar a la BBDD**          | `docker exec -it backend-database-1 mariadb -u app -p` |
+
+---
+
+## 🔒 Configuración de Seguridad
+
+### Archivos de Entorno
+
+- **`.env`**: Configuración de desarrollo (no se sube a Git)
+- **`.env.example`**: Plantilla de configuración sin credenciales reales
+- **`.env.local`**: Overrides locales opcionales
+
+### Primeros pasos después del clone
+
+1. Copia el archivo de ejemplo:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edita `.env` con tus credenciales locales (opcional para desarrollo)
+
+3. **IMPORTANTE**: Nunca subas archivos `.env` con credenciales reales al repositorio
 
 ---
 

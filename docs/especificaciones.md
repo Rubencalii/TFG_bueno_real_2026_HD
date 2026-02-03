@@ -51,30 +51,32 @@ La hostelería ha sufrido una transformación digital acelerada. Sin embargo, la
 | RF-02 | Navegación Single Page | Carta completa en una vista con scroll suave entre categorías |
 | RF-03 | Filtro de Alérgenos | Panel con iconos de alérgenos que oculta productos no aptos |
 | RF-04 | Añadido Rápido | Botón `[+]` para añadir productos sin abrir modales |
-| RF-05 | Carrito Flotante | Barra inferior persistente con total y acceso a confirmar |
+| RF-05 | Selector de Idioma | Banderas ES/FR/EN con traducción completa de carta y productos |
+| RF-06 | Carrito Flotante | Barra inferior persistente con total y acceso a confirmar |
 
-### 2.2 Módulo Cocina y Barra (RF-06 a RF-10)
-
-| ID | Requisito | Descripción |
-|----|-----------|-------------|
-| RF-06 | Tablero Kanban | Columnas: Pendiente, En Preparación, Listo, Entregado |
-| RF-07 | Interacción Táctil | Cambio de estado con un solo toque |
-| RF-08 | Sistema Semáforo | 🟢 Verde (0-5min), 🟡 Amarillo (5-10min), 🔴 Rojo (+10min) |
-| RF-09 | Alertas Críticas | Resaltado para notas de alergia ("CELIACO", "SIN GLUTEN") |
-| RF-10 | Cierre de Mesa | Botón para generar ticket con cálculo automático |
-
-### 2.3 Módulo Administración (RF-11 a RF-18)
+### 2.2 Módulo Cocina y Barra (RF-07 a RF-11)
 
 | ID | Requisito | Descripción |
 |----|-----------|-------------|
-| RF-11 | CRUD Productos | Alta, baja, modificación con asignación de alérgenos |
-| RF-12 | CRUD Categorías | Gestión de categorías con tipo (cocina/barra) |
-| RF-13 | Gestión de Mesas | Crear, editar, eliminar mesas con regeneración de QR |
-| RF-14 | Gestión de Usuarios | CRUD de usuarios con roles (admin, gerente, camarero, cocinero, barman) |
-| RF-15 | Sistema de Tickets | Creación, cobro, anulación y rectificación de tickets |
-| RF-16 | Reportes de Ventas | Estadísticas por período, método de pago, categoría |
-| RF-17 | Exportación | Exportar tickets a CSV/Excel |
-| RF-18 | Gestión de Reservas | CRUD completo con estados y asignación a mesas |
+| RF-07 | Tablero Kanban | Columnas: Pendiente, En Preparación, Listo, Entregado |
+| RF-08 | Interacción Táctil | Cambio de estado con un solo toque |
+| RF-09 | Sistema Semáforo | 🟢 Verde (0-5min), 🟡 Amarillo (5-10min), 🔴 Rojo (+10min) |
+| RF-10 | Alertas Críticas | Resaltado para notas de alergia ("CELIACO", "SIN GLUTEN") |
+| RF-11 | Cierre de Mesa | Botón para generar ticket con cálculo automático |
+
+### 2.3 Módulo Administración (RF-12 a RF-20)
+
+| ID | Requisito | Descripción |
+|----|-----------|-------------|
+| RF-12 | CRUD Productos | Alta, baja, modificación con asignación de alérgenos |
+| RF-13 | CRUD Categorías | Gestión de categorías con tipo (cocina/barra) |
+| RF-14 | Gestión de Mesas | Crear, editar, eliminar mesas con regeneración de QR |
+| RF-15 | Gestión de Usuarios | CRUD de usuarios con roles (admin, gerente, camarero, cocinero, barman) |
+| RF-16 | Sistema de Tickets | Creación, cobro, anulación y rectificación de tickets |
+| RF-17 | Reportes de Ventas | Estadísticas por período, método de pago, categoría |
+| RF-18 | Exportación | Exportar tickets a CSV/Excel |
+| RF-19 | Gestión de Reservas | CRUD completo con estados y asignación a mesas |
+| RF-20 | Gestión de Traducciones | CRUD de traducciones para productos y categorías en ES/FR/EN |
 
 ### 2.4 Requisitos No Funcionales
 
@@ -171,6 +173,9 @@ services:
 | **DetallePedido** | Líneas de pedido | id, pedido_id, producto_id, cantidad, notas, precioUnitario |
 | **Ticket** | Tickets/Facturas | id, numero, mesa_id, baseImponible, iva, total, metodoPago, estado, createdAt, paidAt, detalleJson, ticketRectificadoId |
 | **Reserva** | Reservas de mesas | id, nombreCliente, telefono, email, fecha, hora, numPersonas, notas, estado, mesa_id, createdAt, updatedAt |
+| **Idioma** | Idiomas disponibles | id, codigo (es/fr/en), nombre, bandera, activo |
+| **ProductoTraduccion** | Traducciones de productos | id, producto_id, idioma_id, nombre, descripcion |
+| **CategoriaTraduccion** | Traducciones de categorías | id, categoria_id, idioma_id, nombre |
 
 ### 5.2 Diagrama Entidad-Relación
 
@@ -288,6 +293,8 @@ efectivo | tarjeta | tpv
 | POST | `/api/mesa/{token}/llamar` | Llama al camarero |
 | POST | `/api/mesa/{token}/pagar` | Solicita la cuenta |
 | POST | `/api/mesa/{token}/pagar-online` | Indica pago online |
+| GET | `/api/idiomas` | Lista idiomas disponibles |
+| GET | `/mesa/{token}?lang={codigo}` | Obtiene carta traducida al idioma especificado |
 
 ### 6.2 Endpoints Cocina/Barra
 
@@ -343,6 +350,12 @@ efectivo | tarjeta | tpv
 | | GET | `/admin/api/exportar/tickets` | Exportar tickets |
 | **Pedidos** | GET | `/admin/api/pedidos/activos` | Pedidos activos |
 | | POST | `/admin/api/pedido/{id}/estado` | Cambiar estado |
+| **Traducciones** | GET | `/admin/api/traducciones` | Listar traducciones |
+| | POST | `/admin/api/producto/{id}/traduccion` | Crear traducción de producto |
+| | PUT | `/admin/api/producto-traduccion/{id}` | Editar traducción de producto |
+| | DELETE | `/admin/api/producto-traduccion/{id}` | Eliminar traducción |
+| | POST | `/admin/api/categoria/{id}/traduccion` | Crear traducción de categoría |
+| | GET | `/admin/api/idiomas` | Gestionar idiomas disponibles |
 | **Config** | GET | `/admin/api/config` | Configuración |
 | | GET | `/admin/api/notificaciones` | Notificaciones |
 
@@ -400,6 +413,29 @@ efectivo | tarjeta | tpv
 5. Consulta reportes
    └── GET /admin/api/reportes/ventas
        └── Estadísticas por período, método de pago, categoría
+```
+
+### 7.3 Flujo Sistema Multiidioma
+
+```
+1. Cliente escanea QR y carga página
+   └── Detección automática de idioma del navegador
+       └── Fallback al idioma por defecto (ES) si no soportado
+
+2. Cliente selecciona idioma preferido
+   └── Clic en bandera (ES 🇪🇸 | FR 🇫🇷 | EN 🇬🇧)
+       └── Recarga contenido traducido via GET /mesa/{token}?lang=xx
+
+3. Sistema carga traducciones
+   ├── Productos traducidos desde ProductoTraduccion
+   ├── Categorías traducidas desde CategoriaTraduccion  
+   └── Textos de interfaz desde archivo de traducción
+
+4. Admin gestiona traducciones
+   └── Panel de traducciones en administración
+       ├── Crear/editar traducciones de productos
+       ├── Crear/editar traducciones de categorías
+       └── Validar completitud de traducciones
 ```
 
 ---
@@ -501,6 +537,7 @@ php bin/console doctrine:schema:validate
 ✅ Control de acceso por roles  
 ✅ Arquitectura Docker para despliegue  
 ✅ Modo oscuro en interfaz  
+✅ Sistema multiidioma (ES/FR/EN) con banderas  
 
 ### 10.2 Líneas Futuras
 
@@ -545,7 +582,7 @@ npm run build
 Backend/
 ├── src/
 │   ├── Controller/     # Controladores (Admin, Barra, Cocina, Mesa, Pedido, Security)
-│   ├── Entity/         # Entidades Doctrine (9 entidades)
+│   ├── Entity/         # Entidades Doctrine (12 entidades: +Idioma, +ProductoTraduccion, +CategoriaTraduccion)
 │   ├── Repository/     # Repositorios con queries personalizadas
 │   └── Security/       # Autenticador personalizado
 ├── templates/          # Plantillas Twig

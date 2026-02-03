@@ -43,9 +43,13 @@ class Producto
     #[ORM\ManyToMany(targetEntity: Alergeno::class, inversedBy: 'productos')]
     private Collection $alergenos;
 
+    #[ORM\OneToMany(mappedBy: 'producto', targetEntity: ProductoTraduccion::class, cascade: ['persist', 'remove'])]
+    private Collection $traducciones;
+
     public function __construct()
     {
         $this->alergenos = new ArrayCollection();
+        $this->traducciones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -161,5 +165,71 @@ class Producto
     {
         $this->alergenos->removeElement($alergeno);
         return $this;
+    }
+
+    /**
+     * @return Collection<int, ProductoTraduccion>
+     */
+    public function getTraducciones(): Collection
+    {
+        return $this->traducciones;
+    }
+
+    public function addTraduccion(ProductoTraduccion $traduccion): self
+    {
+        if (!$this->traducciones->contains($traduccion)) {
+            $this->traducciones->add($traduccion);
+            $traduccion->setProducto($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTraduccion(ProductoTraduccion $traduccion): self
+    {
+        if ($this->traducciones->removeElement($traduccion)) {
+            // set the owning side to null (unless already changed)
+            if ($traduccion->getProducto() === $this) {
+                $traduccion->setProducto(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Obtiene la traducción para un idioma específico o el nombre original si no existe
+     */
+    public function getNombreTraducido(?Idioma $idioma = null): string
+    {
+        if ($idioma === null || $idioma->getCodigo() === 'es') {
+            return $this->nombre;
+        }
+
+        foreach ($this->traducciones as $traduccion) {
+            if ($traduccion->getIdioma()->getCodigo() === $idioma->getCodigo()) {
+                return $traduccion->getNombre();
+            }
+        }
+
+        return $this->nombre; // Fallback al original
+    }
+
+    /**
+     * Obtiene la descripción traducida para un idioma específico o la original si no existe
+     */
+    public function getDescripcionTraducida(?Idioma $idioma = null): ?string
+    {
+        if ($idioma === null || $idioma->getCodigo() === 'es') {
+            return $this->descripcion;
+        }
+
+        foreach ($this->traducciones as $traduccion) {
+            if ($traduccion->getIdioma()->getCodigo() === $idioma->getCodigo()) {
+                return $traduccion->getDescripcion();
+            }
+        }
+
+        return $this->descripcion; // Fallback al original
     }
 }
