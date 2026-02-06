@@ -23,9 +23,6 @@ class CategoriaRepository extends ServiceEntityRepository
     public function findAllActivas(): array
     {
         return $this->createQueryBuilder('c')
-            ->leftJoin('c.traducciones', 't')
-            ->leftJoin('t.idioma', 'i')
-            ->addSelect('t', 'i')
             ->andWhere('c.activa = :activa')
             ->setParameter('activa', true)
             ->orderBy('c.orden', 'ASC')

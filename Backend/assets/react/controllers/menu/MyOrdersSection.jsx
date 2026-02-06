@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function MyOrdersSection({ mesa }) {
+export default function MyOrdersSection({ mesa, t }) {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ export default function MyOrdersSection({ mesa }) {
         switch (estado) {
             case 'pendiente':
                 return { 
-                    label: 'Pendiente', 
+                    label: t('Pendiente') || 'Pendiente', 
                     icon: 'schedule', 
                     color: 'text-amber-500', 
                     bg: 'bg-amber-50 dark:bg-amber-900/30',
@@ -37,7 +37,7 @@ export default function MyOrdersSection({ mesa }) {
                 };
             case 'en_preparacion':
                 return { 
-                    label: 'En Preparación', 
+                    label: t('En Preparación') || 'En Preparación', 
                     icon: 'skillet', 
                     color: 'text-blue-500', 
                     bg: 'bg-blue-50 dark:bg-blue-900/30',
@@ -46,7 +46,7 @@ export default function MyOrdersSection({ mesa }) {
                 };
             case 'listo':
                 return { 
-                    label: '¡Listo para servir!', 
+                    label: t('¡Listo para servir!') || '¡Listo para servir!', 
                     icon: 'check_circle', 
                     color: 'text-emerald-500', 
                     bg: 'bg-emerald-50 dark:bg-emerald-900/30',
@@ -69,7 +69,7 @@ export default function MyOrdersSection({ mesa }) {
         return (
             <div className="py-20 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-gray-500 dark:text-gray-400 font-bold">Cargando tus pedidos...</p>
+                <p className="text-gray-500 dark:text-gray-400 font-bold">{t('Cargando tus pedidos...') || 'Cargando tus pedidos...'}</p>
             </div>
         );
     }
@@ -80,8 +80,8 @@ export default function MyOrdersSection({ mesa }) {
                 <div className="size-20 bg-gray-50 dark:bg-slate-700 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 mx-auto mb-6">
                     <span className="material-symbols-outlined text-5xl">receipt_long</span>
                 </div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">No tienes pedidos activos</h3>
-                <p className="text-gray-500 dark:text-gray-400">Cuando realices un pedido, aparecerá aquí para que puedas seguir su estado.</p>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">{t('No tienes pedidos activos') || 'No tienes pedidos activos'}</h3>
+                <p className="text-gray-500 dark:text-gray-400">{t('Cuando realices un pedido, aparecerá aquí para que puedas seguir su estado.') || 'Cuando realices un pedido, aparecerá aquí para que puedas seguir su estado.'}</p>
             </div>
         );
     }
@@ -89,9 +89,9 @@ export default function MyOrdersSection({ mesa }) {
     return (
         <div className="space-y-6 max-w-[600px] mx-auto">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white">Mis Pedidos</h2>
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white">{t('Mis Pedidos') || 'Mis Pedidos'}</h2>
                 <span className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-full uppercase tracking-widest">
-                    {pedidos.length} {pedidos.length === 1 ? 'Pedido' : 'Pedidos'}
+                    {pedidos.length} {pedidos.length === 1 ? (t('Pedido') || 'Pedido') : (t('Pedidos') || 'Pedidos')}
                 </span>
             </div>
 
@@ -110,7 +110,7 @@ export default function MyOrdersSection({ mesa }) {
                                 </span>
                             </div>
                             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                                Pedido #{pedido.id} • {pedido.createdAt}
+                                {(t('Pedido #') || 'Pedido #') + pedido.id} • {pedido.createdAt}
                             </span>
                         </div>
 
@@ -150,7 +150,7 @@ export default function MyOrdersSection({ mesa }) {
 
                         {/* Footer Info */}
                         <div className="px-6 py-4 bg-gray-50/50 dark:bg-slate-700/50 border-t border-gray-50 dark:border-slate-700 flex justify-between items-center">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Total del pedido</span>
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{t('Total del pedido') || 'Total del pedido'}</span>
                             <span className="font-black text-gray-900 dark:text-white">{parseFloat(pedido.total).toFixed(2)}€</span>
                         </div>
                     </div>
@@ -158,9 +158,9 @@ export default function MyOrdersSection({ mesa }) {
             })}
 
             <div className="p-6 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 dark:border-primary/20">
-                <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-1">Nota</p>
+                <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-1">{t('Nota') || 'Nota'}</p>
                 <p className="text-xs text-gray-900 dark:text-gray-200 font-medium leading-relaxed">
-                    Si necesitas cancelar algo o tienes alguna duda, por favor avisa a un camarero.
+                    {t('Si necesitas cancelar algo o tienes alguna duda, por favor avisa a un camarero.') || 'Si necesitas cancelar algo o tienes alguna duda, por favor avisa a un camarero.'}
                 </p>
             </div>
         </div>

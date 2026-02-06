@@ -2,30 +2,29 @@
 
 namespace App\Controller;
 
-use App\Entity\Idioma;
-use App\Entity\ProductoTraduccion;
-use App\Entity\CategoriaTraduccion;
 use App\Repository\MesaRepository;
 use App\Repository\CategoriaRepository;
 use App\Repository\ProductoRepository;
-use App\Repository\IdiomaRepository;
-use App\Repository\ProductoTraduccionRepository;
-use App\Repository\CategoriaTraduccionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MesaController extends AbstractController
 {
+    private array $idiomasDisponibles = [
+        ['codigo' => 'es', 'nombre' => 'Español', 'bandera' => '🇪🇸'],
+        ['codigo' => 'en', 'nombre' => 'English', 'bandera' => '🇬🇧'],
+        ['codigo' => 'fr', 'nombre' => 'Français', 'bandera' => '🇫🇷'],
+    ];
+
     public function __construct(
         private MesaRepository $mesaRepository,
         private CategoriaRepository $categoriaRepository,
         private ProductoRepository $productoRepository,
-        private IdiomaRepository $idiomaRepository,
-        private ProductoTraduccionRepository $productoTraduccionRepository,
-        private CategoriaTraduccionRepository $categoriaTraduccionRepository
+        private TranslatorInterface $translator
     ) {}
 
     #[Route('/mesa/{token}', name: 'menu_mesa')]
@@ -37,34 +36,32 @@ class MesaController extends AbstractController
             throw $this->createNotFoundException('Mesa no encontrada o no activa');
         }
 
-        // Obtener idioma seleccionado o detectar automáticamente
-        $idiomaSeleccionado = $request->query->get('lang', 'es');
-        $idioma = $this->idiomaRepository->findOneBy(['codigo' => $idiomaSeleccionado, 'activo' => true]) 
-                ?? $this->idiomaRepository->findOneBy(['codigo' => 'es', 'activo' => true]);
+        // Obtener idioma seleccionado
+        $locale = $request->query->get('lang', 'es');
+        if (!in_array($locale, ['es', 'en', 'fr'])) {
+            $locale = 'es';
+        }
 
-        // Obtener todos los idiomas disponibles
-        $idiomasDisponibles = $this->idiomaRepository->findAllActivos();
-
-        // Obtener categorías activas ordenadas
+        // Obtener categorías activas
         $categoriasEntities = $this->categoriaRepository->findAllActivas();
         
         // Obtener productos activos
         $productosEntities = $this->productoRepository->findActivos();
 
-        // Serializar categorías para React con traducciones
-        $categorias = array_map(function($cat) use ($idioma) {
+        // Serializar categorías con traducciones
+        $categorias = array_map(function($cat) use ($locale) {
             return [
                 'id' => $cat->getId(),
-                'nombre' => $cat->getNombreTraducido($idioma),
+                'nombre' => $this->translator->trans($cat->getNombre(), [], 'messages', $locale),
             ];
         }, $categoriasEntities);
 
-        // Serializar productos para React con traducciones
-        $productos = array_map(function($prod) use ($idioma) {
+        // Serializar productos con traducciones
+        $productos = array_map(function($prod) use ($locale) {
             return [
                 'id' => $prod->getId(),
-                'nombre' => $prod->getNombreTraducido($idioma),
-                'descripcion' => $prod->getDescripcionTraducida($idioma),
+                'nombre' => $this->translator->trans($prod->getNombre(), [], 'messages', $locale),
+                'descripcion' => $prod->getDescripcion() ? $this->translator->trans($prod->getDescripcion(), [], 'messages', $locale) : null,
                 'precio' => $prod->getPrecio(),
                 'imagen' => $prod->getImagen(),
                 'categoriaId' => $prod->getCategoria()->getId(),
@@ -74,17 +71,31 @@ class MesaController extends AbstractController
             ];
         }, $productosEntities);
 
-        // Serializar idiomas disponibles
-        $idiomas = array_map(function($idioma) {
-            return [
-                'codigo' => $idioma->getCodigo(),
-                'nombre' => $idioma->getNombre(),
-                'bandera' => $idioma->getBandera(),
-            ];
-        }, $idiomasDisponibles);
+        // Idioma actual
+        $idiomaActual = current(array_filter($this->idiomasDisponibles, fn($i) => $i['codigo'] === $locale));
 
-        // Lista de alérgenos para el filtro
+        // Lista de alérgenos para el filtro (traducibles si fuera necesario)
         $alergenos = ['gluten', 'huevo', 'lactosa', 'frutos secos', 'marisco', 'pescado', 'soja'];
+
+        // Obtener todas las traducciones del dominio messages para el frontend
+        $ui = [];
+        if ($this->translator instanceof \Symfony\Component\Translation\TranslatorBagInterface) {
+            $ui = $this->translator->getCatalogue($locale)->all('messages');
+        }
+
+        // Asegurar que las claves críticas de la UI estén presentes (por si el catálogo no las pilló automáticamente)
+        $uiKeys = [
+            'Menú', 'Mis Pedidos', 'Llamar camarero', 'Pedir cuenta', 'Cambiar tema',
+            'Pedir la cuenta', '¿Cómo deseas pagar?', 'Efectivo', 'Tarjeta (Datáfono)', 'Pagar ahora',
+            'Cancelar', 'Añadir', 'Pagar', 'Volver', 'Total', 'Mi Carrito', 'Tu carrito está vacío',
+            'comandaDigital', 'liveSession', 'buscarPlatos', 'Filtros', 'opciones'
+        ];
+
+        foreach ($uiKeys as $key) {
+            if (!isset($ui[$key])) {
+                $ui[$key] = $this->translator->trans($key, [], 'messages', $locale);
+            }
+        }
 
         return $this->render('mesa/menu.html.twig', [
             'mesa' => [
@@ -95,29 +106,16 @@ class MesaController extends AbstractController
             'categorias' => $categorias,
             'productos' => $productos,
             'alergenos' => $alergenos,
-            'idiomas' => $idiomas,
-            'idiomaActual' => [
-                'codigo' => $idioma->getCodigo(),
-                'nombre' => $idioma->getNombre(),
-                'bandera' => $idioma->getBandera(),
-            ],
+            'idiomas' => $this->idiomasDisponibles,
+            'idiomaActual' => $idiomaActual,
+            'ui' => $ui
         ]);
     }
 
     #[Route('/api/idiomas', name: 'api_idiomas', methods: ['GET'])]
     public function getIdiomas(): JsonResponse
     {
-        $idiomas = $this->idiomaRepository->findAllActivos();
-        
-        $data = array_map(function($idioma) {
-            return [
-                'codigo' => $idioma->getCodigo(),
-                'nombre' => $idioma->getNombre(),
-                'bandera' => $idioma->getBandera(),
-            ];
-        }, $idiomas);
-
-        return $this->json($data);
+        return $this->json($this->idiomasDisponibles);
     }
 
     #[Route('/pedido/mesa/{identificador}', name: 'pedido_mesa')]

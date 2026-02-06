@@ -1170,25 +1170,55 @@ function QuickAction({ onClick, icon, label, color }) {
 
 function ProductoModal({ producto, categorias, onSave, onClose, loading }) {
     const [formData, setFormData] = useState({ nombre: producto?.nombre || '', descripcion: producto?.descripcion || '', precio: producto?.precio || '', imagen: producto?.imagen || '', categoriaId: producto?.categoriaId || categorias[0]?.id || '', activo: producto?.activo ?? true, destacado: producto?.destacado ?? false });
+    
+    const inputClass = "w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400 text-slate-900 focus:ring-2 focus:ring-primary outline-none";
+    
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md">
-                <div className="p-4 border-b"><h3 className="font-bold">{producto ? 'Editar' : 'Nuevo'} Producto</h3></div>
-                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-3">
-                    <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="Nombre" required />
-                    <textarea value={formData.descripcion} onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="Descripción" rows="2" />
+            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
+                <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white">{producto ? 'Editar' : 'Nuevo'} Producto</h3>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Nombre</label>
+                        <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className={inputClass} placeholder="Ej: Hamburguesa Especial" required />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Descripción</label>
+                        <textarea value={formData.descripcion} onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })} className={inputClass} placeholder="Breve detalle del producto..." rows="2" />
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
-                        <input type="number" step="0.01" value={formData.precio} onChange={(e) => setFormData({ ...formData, precio: e.target.value })} className="px-3 py-2 border rounded-lg" placeholder="Precio" required />
-                        <select value={formData.categoriaId} onChange={(e) => setFormData({ ...formData, categoriaId: parseInt(e.target.value) })} className="px-3 py-2 border rounded-lg">{categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Precio (€)</label>
+                            <input type="number" step="0.01" value={formData.precio} onChange={(e) => setFormData({ ...formData, precio: e.target.value })} className={inputClass} placeholder="0.00" required />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Categoría</label>
+                            <select value={formData.categoriaId} onChange={(e) => setFormData({ ...formData, categoriaId: parseInt(e.target.value) })} className={inputClass}>
+                                {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    <input type="url" value={formData.imagen} onChange={(e) => setFormData({ ...formData, imagen: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="URL Imagen" />
-                    <div className="flex gap-4">
-                        <label className="flex items-center gap-2"><input type="checkbox" checked={formData.activo} onChange={(e) => setFormData({ ...formData, activo: e.target.checked })} />Activo</label>
-                        <label className="flex items-center gap-2"><input type="checkbox" checked={formData.destacado} onChange={(e) => setFormData({ ...formData, destacado: e.target.checked })} />Destacado</label>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">URL Imagen</label>
+                        <input type="url" value={formData.imagen} onChange={(e) => setFormData({ ...formData, imagen: e.target.value })} className={inputClass} placeholder="https://..." />
                     </div>
-                    <div className="flex gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg">{loading ? '...' : 'Guardar'}</button>
+                    <div className="flex gap-6 py-1">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" checked={formData.activo} onChange={(e) => setFormData({ ...formData, activo: e.target.checked })} className="size-4 rounded text-primary focus:ring-primary" />
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">Activo</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" checked={formData.destacado} onChange={(e) => setFormData({ ...formData, destacado: e.target.checked })} className="size-4 rounded text-primary focus:ring-primary" />
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">Destacado</span>
+                        </label>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+                        <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50">
+                            {loading ? '...' : 'Guardar Producto'}
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1198,19 +1228,29 @@ function ProductoModal({ producto, categorias, onSave, onClose, loading }) {
 
 function CategoriaModal({ categoria, onSave, onClose, loading }) {
     const [formData, setFormData] = useState({ nombre: categoria?.nombre || '', tipo: categoria?.tipo || 'cocina', orden: categoria?.orden || 0 });
+    const inputClass = "w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400 text-slate-900 focus:ring-2 focus:ring-primary outline-none";
+    
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-sm">
-                <div className="p-4 border-b"><h3 className="font-bold">{categoria ? 'Editar' : 'Nueva'} Categoría</h3></div>
-                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-3">
-                    <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="Nombre" required />
-                    <select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-                        <option value="cocina">🍳 Cocina</option>
-                        <option value="barra">🍺 Barra</option>
-                    </select>
-                    <div className="flex gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg">{loading ? '...' : 'Guardar'}</button>
+            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-sm shadow-2xl">
+                <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white">{categoria ? 'Editar' : 'Nueva'} Categoría</h3>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Nombre</label>
+                        <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className={inputClass} placeholder="Ej: Bebidas" required />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Tipo de Servicio</label>
+                        <select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} className={inputClass}>
+                            <option value="cocina">🍳 Cocina</option>
+                            <option value="barra">🍺 Barra</option>
+                        </select>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={onClose} className="flex-1 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">{loading ? '...' : 'Guardar'}</button>
                     </div>
                 </form>
             </div>
@@ -1331,23 +1371,36 @@ function TicketDetailModal({ ticket, onClose }) {
 
 function UsuarioModal({ usuario, onSave, onClose, loading }) {
     const [formData, setFormData] = useState({ email: usuario?.email || '', rol: usuario?.rol || 'camarero', password: '' });
+    const inputClass = "w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400 text-slate-900 focus:ring-2 focus:ring-primary outline-none";
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-sm">
-                <div className="p-4 border-b dark:border-slate-700"><h3 className="font-bold dark:text-white">{usuario ? 'Editar' : 'Nuevo'} Usuario</h3></div>
-                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-3">
-                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400" placeholder="Email" required />
-                    <select value={formData.rol} onChange={(e) => setFormData({ ...formData, rol: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                        <option value="camarero">🧑‍🍳 Camarero</option>
-                        <option value="cocinero">👨‍🍳 Cocinero</option>
-                        <option value="barman">🍸 Barman</option>
-                        <option value="gerente">👔 Gerente</option>
-                        <option value="admin">👑 Admin</option>
-                    </select>
-                    <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400" placeholder={usuario ? 'Nueva contraseña (opcional)' : 'Contraseña'} {...(!usuario && { required: true })} />
-                    <div className="flex gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg dark:border-slate-600 dark:text-white">Cancelar</button>
-                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg">{loading ? '...' : 'Guardar'}</button>
+            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden">
+                <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white">{usuario ? 'Editar' : 'Nuevo'} Usuario</h3>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email</label>
+                        <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={inputClass} placeholder="email@ejemplo.com" required />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Rol</label>
+                        <select value={formData.rol} onChange={(e) => setFormData({ ...formData, rol: e.target.value })} className={inputClass}>
+                            <option value="camarero">🧑‍🍳 Camarero</option>
+                            <option value="cocinero">👨‍🍳 Cocinero</option>
+                            <option value="barman">🍸 Barman</option>
+                            <option value="gerente">👔 Gerente</option>
+                            <option value="admin">👑 Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">{usuario ? 'Cambiar Contraseña' : 'Contraseña'}</label>
+                        <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className={inputClass} placeholder={usuario ? 'Dejar vacío para no cambiar' : '********'} {...(!usuario && { required: true })} />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={onClose} className="flex-1 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">{loading ? '...' : 'Guardar'}</button>
                     </div>
                 </form>
             </div>
@@ -1375,16 +1428,26 @@ function AlergenoModal({ onSave, onClose, loading }) {
 
 function MesaModal({ mesa, onSave, onClose, loading }) {
     const [formData, setFormData] = useState({ numero: mesa?.numero || '', activa: mesa?.activa ?? true });
+    const inputClass = "w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400 text-slate-900 focus:ring-2 focus:ring-primary outline-none";
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-xs">
-                <div className="p-4 border-b"><h3 className="font-bold">{mesa ? 'Editar' : 'Nueva'} Mesa</h3></div>
-                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-3">
-                    <input type="number" value={formData.numero} onChange={(e) => setFormData({ ...formData, numero: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-lg" placeholder="Número de mesa" required />
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={formData.activa} onChange={(e) => setFormData({ ...formData, activa: e.target.checked })} />Mesa activa</label>
-                    <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg">Cancelar</button>
-                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-lg">{loading ? '...' : 'Guardar'}</button>
+            <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-xs shadow-2xl overflow-hidden">
+                <div className="p-4 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white">{mesa ? 'Editar' : 'Nueva'} Mesa</h3>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Número</label>
+                        <input type="number" value={formData.numero} onChange={(e) => setFormData({ ...formData, numero: parseInt(e.target.value) })} className={inputClass} placeholder="Ej: 5" required />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer group py-1">
+                        <input type="checkbox" checked={formData.activa} onChange={(e) => setFormData({ ...formData, activa: e.target.checked })} className="size-4 rounded text-primary focus:ring-primary" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">Mesa activa</span>
+                    </label>
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={onClose} className="flex-1 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancelar</button>
+                        <button type="submit" disabled={loading} className="flex-1 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">{loading ? '...' : 'Guardar'}</button>
                     </div>
                 </form>
             </div>

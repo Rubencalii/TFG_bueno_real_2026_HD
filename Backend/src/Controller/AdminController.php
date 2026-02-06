@@ -683,6 +683,7 @@ class AdminController extends AbstractController
         return $this->json(array_map(fn(User $u) => [
             'id' => $u->getId(),
             'email' => $u->getEmail(),
+            'rol' => $u->getRol(),
             'roles' => $u->getRoles(),
         ], $usuarios));
     }
@@ -695,7 +696,10 @@ class AdminController extends AbstractController
         $user = new User();
         $user->setEmail($data['email'] ?? '');
         
-        $roles = match($data['rol'] ?? 'camarero') {
+        $rol = $data['rol'] ?? 'camarero';
+        $user->setRol($rol);
+        
+        $roles = match($rol) {
             'admin' => ['ROLE_ADMIN'],
             'gerente' => ['ROLE_GERENTE'],
             'cocinero' => ['ROLE_COCINA'],

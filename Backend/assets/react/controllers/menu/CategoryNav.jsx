@@ -1,5 +1,4 @@
 import React from 'react';
-import { translateCategory } from './translations';
 
 export default function CategoryNav({ categorias, activeCategory, onCategoryChange, currentLang = 'es', t }) {
     if (!categorias || categorias.length === 0) return null;
@@ -9,8 +8,8 @@ export default function CategoryNav({ categorias, activeCategory, onCategoryChan
             <div className="flex gap-6 sm:gap-10 overflow-x-auto no-scrollbar">
                 {categorias.map(categoria => {
                     const isActive = activeCategory?.id === categoria.id;
-                    // Usar traducción si está disponible, sino usar el nombre de la BD que ya puede estar traducido
-                    const displayName = translateCategory(categoria.nombre, currentLang);
+                    // El nombre ya viene traducido desde el backend
+                    const displayName = categoria.nombre;
                     
                     return (
                         <button

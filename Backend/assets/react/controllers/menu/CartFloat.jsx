@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function CartFloat({ items, total, count, onRemove, mesa, onOrderSuccess }) {
+export default function CartFloat({ items, total, count, onRemove, mesa, onOrderSuccess, t, ui }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,7 +48,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-black text-gray-900 dark:text-white">Tu Pedido</h3>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white">{ui?.tuCarrito || t('Mi Carrito')}</h3>
                             <button onClick={() => setIsOpen(false)} className="text-gray-500 dark:text-gray-400">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
@@ -83,7 +83,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                         {/* Total and Submit */}
                         <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
                             <div className="flex justify-between mb-4">
-                                <span className="font-bold text-gray-900 dark:text-white">Total</span>
+                                <span className="font-bold text-gray-900 dark:text-white">{ui?.total || t('Total')}</span>
                                 <span className="text-xl font-black text-primary">{total.toFixed(2)}€</span>
                             </div>
                             <button 
@@ -91,7 +91,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                                 disabled={isSubmitting}
                                 className="w-full py-4 bg-primary text-white font-black rounded-2xl neon-glow disabled:opacity-50"
                             >
-                                {isSubmitting ? 'Enviando...' : 'Confirmar Pedido'}
+                                {isSubmitting ? (t('Enviando...') || 'Enviando...') : (ui?.confirmarPedido || t('Pedir'))}
                             </button>
                         </div>
                     </div>
@@ -115,7 +115,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                             </div>
                             <div className="text-left">
                                 <p className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
-                                    {count} artículo{count !== 1 ? 's' : ''} • <span className="text-primary">{total.toFixed(2)} €</span>
+                                    {count} {count !== 1 ? (t('artículos') || 'artículos') : (t('artículo') || 'artículo')} • <span className="text-primary">{total.toFixed(2)} €</span>
                                 </p>
                                 <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
                                     IVA e impuestos incluidos
@@ -130,7 +130,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                                 disabled={isSubmitting}
                                 className="flex items-center gap-2 sm:gap-3 px-6 sm:px-10 py-3 sm:py-4 bg-primary text-white font-black rounded-xl sm:rounded-2xl transition-all hover:bg-primary/90 active:scale-95 neon-glow uppercase tracking-tighter text-sm sm:text-base disabled:opacity-50"
                             >
-                                <span>{isSubmitting ? 'Enviando...' : 'Confirmar'}</span>
+                                <span>{isSubmitting ? (t('Enviando...') || 'Enviando...') : (t('Pedir'))}</span>
                                 <span className="material-symbols-outlined font-bold text-lg sm:text-xl">rocket_launch</span>
                             </button>
                         </div>

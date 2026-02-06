@@ -8,8 +8,10 @@ import MyOrdersSection from './MyOrdersSection';
 import LanguageSelector from './LanguageSelector';
 import { useTranslations, translateAllergen, translateCategory } from './translations';
 
-export default function MenuPage({ mesa, productos, categorias, alergenos, idiomas, idiomaActual }) {
-    const { t } = useTranslations(idiomaActual?.codigo || 'es');
+export default function MenuPage({ mesa, productos, categorias, alergenos, idiomas, idiomaActual, ui }) {
+    console.log('🌍 UI Object received:', ui);
+    console.log('🌍 Current locale:', idiomaActual?.codigo);
+    const { t } = useTranslations(idiomaActual?.codigo || 'es', ui);
     const [cart, setCart] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState([]);
@@ -56,7 +58,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
             }
             return [...prev, { ...producto, cantidad: 1, notas }];
         });
-        showToast(`${producto.nombre} añadido`);
+        showToast(`${producto.nombre} ${t('añadido') || 'añadido'}`);
     };
 
     const getItemQuantity = (productoId) => {
@@ -104,6 +106,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 activeView={activeView} 
                 onViewChange={setActiveView} 
                 onToast={showToast}
+                t={t}
             />
             
             <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-40">
@@ -113,14 +116,14 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-10">
                     <div className="space-y-2">
                         <h1 className="text-gray-900 dark:text-white text-4xl sm:text-6xl font-black leading-tight tracking-tighter">
-                            MESA {mesa?.numero || '?'}
+                            {t('MESA') || 'MESA'} {mesa?.numero || '?'}
                         </h1>
                         <div className="flex items-center gap-3 flex-wrap">
                             <span className="px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-black rounded-full border border-primary/20 uppercase tracking-widest">
-                                {t('liveSession')}
+                                {ui?.liveSession || t('liveSession')}
                             </span>
                             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
-                                {t('comandaDigital')}
+                                {ui?.comandaDigital || t('comandaDigital')}
                             </p>
                         </div>
                     </div>
@@ -164,10 +167,11 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                         onAddToCart={addToCart}
                         onRemoveFromCart={removeFromCart}
                         cartItems={cart}
+                        t={t}
                     />
                 </>
                 ) : (
-                    <MyOrdersSection mesa={mesa} />
+                    <MyOrdersSection mesa={mesa} t={t} />
                 )}
             </main>
 
@@ -188,10 +192,12 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 count={cartCount}
                 onRemove={removeFromCart}
                 mesa={mesa}
+                t={t}
+                ui={ui}
                 onOrderSuccess={() => {
                     setCart([]);
                     setActiveView('orders');
-                    showToast('¡Pedido enviado!');
+                    showToast(t('¡Pedido enviado!') || '¡Pedido enviado!');
                 }}
             />
         </div>

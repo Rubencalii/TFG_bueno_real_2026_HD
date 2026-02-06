@@ -19,8 +19,8 @@ final class Version20260202130000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // Agregar columna rol a user
-        $this->addSql('ALTER TABLE user ADD rol VARCHAR(50) DEFAULT \'camarero\' NOT NULL');
+        // Modificar columna rol a user (ya existe creada en Version20260128112107)
+        $this->addSql('ALTER TABLE user MODIFY rol VARCHAR(50) DEFAULT \'camarero\' NOT NULL');
         
         // Eliminar tablas no usadas si existen
         $this->addSql('DROP TABLE IF EXISTS bebida');

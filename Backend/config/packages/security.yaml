@@ -1,7 +1,7 @@
 security:
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
@@ -20,6 +20,10 @@ security:
             lazy: true
             provider: app_user_provider
             custom_authenticator: App\Security\AppCustomAuthenticator
+            entry_point: App\Security\AppCustomAuthenticator
+            logout:
+                path: logout
+                target: login
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -27,11 +31,35 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_GERENTE, ROLE_COCINA, ROLE_BARRA, ROLE_CAMARERO]
+        ROLE_GERENTE: [ROLE_COCINA, ROLE_BARRA, ROLE_CAMARERO]
+
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_GERENTE] }
-        - { path: ^/cocina, roles: [ROLE_COCINA, ROLE_ADMIN, ROLE_GERENTE] }
-        - { path: ^/barra, roles: [ROLE_BARRA, ROLE_ADMIN, ROLE_GERENTE] }
+        - {
+              path: ^/cocina,
+              roles:
+                  [
+                      ROLE_COCINA,
+                      ROLE_BARRA,
+                      ROLE_CAMARERO,
+                      ROLE_ADMIN,
+                      ROLE_GERENTE,
+                  ],
+          }
+        - {
+              path: ^/barra,
+              roles:
+                  [
+                      ROLE_BARRA,
+                      ROLE_COCINA,
+                      ROLE_CAMARERO,
+                      ROLE_ADMIN,
+                      ROLE_GERENTE,
+                  ],
+          }
 
 when@test:
     security:

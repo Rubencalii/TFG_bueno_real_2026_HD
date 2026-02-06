@@ -1,5 +1,4 @@
 import React from 'react';
-import { translateAllergen } from './translations';
 
 const ALLERGEN_ICONS = {
     'gluten': { icon: 'grain' },
@@ -26,7 +25,7 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                     <input
                         type="text"
                         className="block w-full pl-12 sm:pl-14 pr-4 sm:pr-6 py-3 sm:py-4 bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-slate-600 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base sm:text-lg"
-                        placeholder={t('buscarPlatos')}
+                        placeholder={t('buscarPlatos') || t('Buscar platos...')}
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
@@ -35,14 +34,14 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                 {/* Allergen Filters */}
                 <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-1">
                     <span className="text-[10px] sm:text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap shrink-0">
-                        Filtros:
+                        {t('Filtros') || 'Filtros'}:
                     </span>
                     <div className="flex gap-2">
                         {allergenList.map(alergeno => {
                             const key = alergeno.toLowerCase();
                             const info = ALLERGEN_ICONS[key] || { icon: 'warning' };
                             const isActive = activeFilters.includes(key);
-                            const translatedLabel = translateAllergen(alergeno, currentLang);
+                            const translatedLabel = t(alergeno) || alergeno;
                             
                             return (
                                 <button

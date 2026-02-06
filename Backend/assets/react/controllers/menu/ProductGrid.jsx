@@ -1,13 +1,13 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid({ productos, activeCategory, onAddToCart, onRemoveFromCart, cartItems }) {
+export default function ProductGrid({ productos, activeCategory, onAddToCart, onRemoveFromCart, cartItems, t }) {
     if (!productos || productos.length === 0) {
         return (
             <div className="text-center py-12">
                 <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
-                <p className="text-gray-500 dark:text-gray-400 text-lg">No se encontraron productos</p>
-                <p className="text-gray-400 dark:text-gray-500 text-sm">Prueba a cambiar los filtros</p>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">{t('No se encontraron productos') || 'No se encontraron productos'}</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm">{t('Prueba a cambiar los filtros') || 'Prueba a cambiar los filtros'}</p>
             </div>
         );
     }
@@ -26,7 +26,7 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
                         {activeCategory.nombre.toUpperCase()}
                     </h3>
                     <span className="px-2 sm:px-3 py-1 bg-gray-100 dark:bg-slate-700 rounded-lg text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border border-gray-200 dark:border-slate-600">
-                        {productos.length} opciones
+                        {productos.length} {t('opciones') || 'opciones'}
                     </span>
                 </div>
             )}
@@ -40,6 +40,7 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
                         onAddToCart={onAddToCart}
                         onRemoveFromCart={onRemoveFromCart}
                         quantity={getItemQuantity(producto.id)}
+                        t={t}
                     />
                 ))}
             </div>

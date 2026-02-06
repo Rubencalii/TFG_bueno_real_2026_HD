@@ -401,6 +401,38 @@ class AppFixtures extends Fixture
             $manager->persist($mesa);
         }
 
+        // ========== PEDIDOS DE PRUEBA ==========
+        $mesa1 = $manager->getRepository(Mesa::class)->findOneBy(['numero' => 1]);
+        $mesa2 = $manager->getRepository(Mesa::class)->findOneBy(['numero' => 2]);
+
+        if ($mesa1 && $mesa2) {
+            // Pedido 1: Para Cocina
+            $pedido1 = new \App\Entity\Pedido();
+            $pedido1->setMesa($mesa1);
+            $pedido1->setEstado(\App\Entity\Pedido::ESTADO_PENDIENTE);
+            $manager->persist($pedido1);
+
+            $detalle1 = new \App\Entity\DetallePedido();
+            $detalle1->setPedido($pedido1);
+            $detalle1->setProducto($categorias['Platos Principales']->getProductos()->first());
+            $detalle1->setCantidad(1);
+            $detalle1->setPrecioUnitario($detalle1->getProducto()->getPrecio());
+            $manager->persist($detalle1);
+
+            // Pedido 2: Para Barra
+            $pedido2 = new \App\Entity\Pedido();
+            $pedido2->setMesa($mesa2);
+            $pedido2->setEstado(\App\Entity\Pedido::ESTADO_PENDIENTE);
+            $manager->persist($pedido2);
+
+            $detalle2 = new \App\Entity\DetallePedido();
+            $detalle2->setPedido($pedido2);
+            $detalle2->setProducto($categorias['Bebidas']->getProductos()->first());
+            $detalle2->setCantidad(2);
+            $detalle2->setPrecioUnitario($detalle2->getProducto()->getPrecio());
+            $manager->persist($detalle2);
+        }
+
         $manager->flush();
     }
 }

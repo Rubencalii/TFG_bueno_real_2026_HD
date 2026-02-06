@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity }) {
+export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, t }) {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [notes, setNotes] = useState('');
 
@@ -28,14 +28,14 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                     {producto.destacado && (
                         <div className="p-3 sm:p-4 relative">
                             <span className="bg-secondary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white orange-glow">
-                                TOP SELLER
+                                {t('TOP SELLER') || 'TOP SELLER'}
                             </span>
                         </div>
                     )}
                     {producto.vegetariano && (
                         <div className="p-3 sm:p-4 relative">
                             <span className="bg-primary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white neon-glow">
-                                VEGETARIANA
+                                {t('VEGETARIANA') || 'VEGETARIANA'}
                             </span>
                         </div>
                     )}
@@ -66,7 +66,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                                     key={alergeno}
                                     className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-gray-50 dark:bg-slate-700 text-[8px] sm:text-[9px] text-gray-500 dark:text-gray-400 font-black uppercase border border-gray-100 dark:border-slate-600"
                                 >
-                                    {alergeno}
+                                    {t(alergeno) || alergeno}
                                 </span>
                             ))}
                         </div>
@@ -76,7 +76,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                             <button 
                                 onClick={() => setShowNotesModal(true)}
                                 className="size-11 sm:size-12 bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 rounded-2xl flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors border border-gray-200 dark:border-slate-600"
-                                title="Añadir con nota"
+                                title={t('Añadir con nota') || 'Añadir con nota'}
                             >
                                 <span className="material-symbols-outlined text-xl">edit_note</span>
                             </button>
@@ -105,7 +105,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                                                 {quantity}
                                             </span>
                                             <span className="text-[8px] font-bold text-primary uppercase tracking-tighter">
-                                                en carrito
+                                                {t('en carrito') || 'en carrito'}
                                             </span>
                                         </div>
                                         
@@ -127,11 +127,11 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
             {showNotesModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowNotesModal(false)}>
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Añadir nota al pedido</h3>
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{t('Añadir nota al pedido') || 'Añadir nota al pedido'}</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{producto.nombre}</p>
                         <textarea
                             className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl mb-4 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400"
-                            placeholder="Ej: Sin cebolla, poco hecho..."
+                            placeholder={t('Ej: Sin cebolla, poco hecho...') || 'Ej: Sin cebolla, poco hecho...'}
                             rows={3}
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
@@ -142,13 +142,13 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                                 onClick={() => setShowNotesModal(false)}
                                 className="flex-1 py-3 border border-gray-200 dark:border-slate-600 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                             >
-                                Cancelar
+                                {t('Cancelar') || 'Cancelar'}
                             </button>
                             <button 
                                 onClick={handleAdd}
                                 className="flex-1 py-3 bg-primary text-white rounded-xl font-bold neon-glow"
                             >
-                                Añadir
+                                {t('Añadir') || 'Añadir'}
                             </button>
                         </div>
                     </div>

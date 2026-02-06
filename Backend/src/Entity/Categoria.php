@@ -30,13 +30,9 @@ class Categoria
     #[ORM\OneToMany(mappedBy: 'categoria', targetEntity: Producto::class)]
     private Collection $productos;
 
-    #[ORM\OneToMany(mappedBy: 'categoria', targetEntity: CategoriaTraduccion::class, cascade: ['persist', 'remove'])]
-    private Collection $traducciones;
-
     public function __construct()
     {
         $this->productos = new ArrayCollection();
-        $this->traducciones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -94,53 +90,5 @@ class Categoria
     public function getProductos(): Collection
     {
         return $this->productos;
-    }
-
-    /**
-     * @return Collection<int, CategoriaTraduccion>
-     */
-    public function getTraducciones(): Collection
-    {
-        return $this->traducciones;
-    }
-
-    public function addTraduccion(CategoriaTraduccion $traduccion): self
-    {
-        if (!$this->traducciones->contains($traduccion)) {
-            $this->traducciones->add($traduccion);
-            $traduccion->setCategoria($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTraduccion(CategoriaTraduccion $traduccion): self
-    {
-        if ($this->traducciones->removeElement($traduccion)) {
-            // set the owning side to null (unless already changed)
-            if ($traduccion->getCategoria() === $this) {
-                $traduccion->setCategoria(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Obtiene la traducción para un idioma específico o el nombre original si no existe
-     */
-    public function getNombreTraducido(?Idioma $idioma = null): string
-    {
-        if ($idioma === null || $idioma->getCodigo() === 'es') {
-            return $this->nombre;
-        }
-
-        foreach ($this->traducciones as $traduccion) {
-            if ($traduccion->getIdioma()->getCodigo() === $idioma->getCodigo()) {
-                return $traduccion->getNombre();
-            }
-        }
-
-        return $this->nombre; // Fallback al original
     }
 }

@@ -89,7 +89,8 @@ php -r "
         }
         echo \"     ... y más mesas disponibles\n\";
     } catch (Exception \$e) {
-        echo \"     (ejecuta 'docker exec backend-database-1 mariadb -u app -p app -e \"SELECT numero, token_qr FROM mesa\"' para ver tokens)\n\";
+        // Corregido el escape de comillas para evitar error de parseo
+        echo \"     (ejecuta 'docker exec backend-database-1 mariadb -u app -p app -e \\\"SELECT numero, token_qr FROM mesa\\\"' para ver tokens)\n\";
     }
 " 2>/dev/null || true
 

@@ -14,8 +14,9 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 
-class AppCustomAuthenticator extends AbstractAuthenticator
+class AppCustomAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
     public function __construct(
         private UrlGeneratorInterface $urlGenerator
@@ -49,9 +50,10 @@ class AppCustomAuthenticator extends AbstractAuthenticator
 
         // Redirigir según el rol del usuario
         $targetRoute = match($rol) {
-            'gerente' => 'admin_panel',
-            'staff' => 'cocina_panel', // Staff empieza en cocina, puede navegar a barra
-            default => 'cocina_panel',
+            'admin', 'gerente' => 'admin_panel',
+            'cocinero' => 'cocina_panel',
+            'barman', 'camarero' => 'barra_panel',
+            default => 'home',
         };
 
         return new RedirectResponse($this->urlGenerator->generate($targetRoute));
@@ -60,6 +62,11 @@ class AppCustomAuthenticator extends AbstractAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $request->getSession()->set('_security.last_error', $exception);
+        return new RedirectResponse($this->urlGenerator->generate('login'));
+    }
+
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
+    {
         return new RedirectResponse($this->urlGenerator->generate('login'));
     }
 }
