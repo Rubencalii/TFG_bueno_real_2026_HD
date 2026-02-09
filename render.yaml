@@ -1,0 +1,24 @@
+services:
+    # Tu aplicación Symfony
+    - type: web
+      name: comanda-digital
+      env: docker
+      plan: free
+      dockerFilePath: ./Dockerfile
+      healthCheckPath: /
+      envVars:
+          - key: APP_ENV
+            value: prod
+          - key: APP_SECRET
+            generateValue: true
+          - key: DATABASE_URL
+            fromDatabase:
+                name: comanda-db
+                property: connectionString
+
+databases:
+    # Base de datos PostgreSQL gratuita
+    - name: comanda-db
+      plan: free
+      databaseName: app
+      user: app
