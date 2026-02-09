@@ -13,8 +13,12 @@ WORKDIR /app
 # Copiar archivos
 COPY Backend/ .
 
-# Instalar dependencias
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Variables de entorno por defecto
+ENV APP_ENV=prod
+ENV APP_DEBUG=0
+
+# Instalar dependencias (QUITAMOS --no-dev para que funcionen los bundles de debug si se cargan)
+RUN composer install --optimize-autoloader --no-scripts
 
 # Permisos
 RUN mkdir -p var/cache var/log && chmod -R 777 var
