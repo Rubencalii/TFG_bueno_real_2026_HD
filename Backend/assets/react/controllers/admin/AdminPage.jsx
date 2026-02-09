@@ -412,6 +412,57 @@ export default function AdminPage({
         } catch (error) { showToast('Error', 'error'); }
     };
 
+    // Descargar QR como imagen PNG
+    const handleDescargarQR = async (mesa) => {
+        const baseUrl = window.location.origin;
+        const mesaUrl = `${baseUrl}/mesa/${mesa.tokenQr}`;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(mesaUrl)}`;
+        
+        try {
+            showToast('Generando QR...');
+            const response = await fetch(qrApiUrl);
+            const blob = await response.blob();
+            
+            // Crear un canvas para añadir texto
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 450;
+                canvas.height = 520;
+                const ctx = canvas.getContext('2d');
+                
+                // Fondo blanco
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Dibujar QR centrado
+                ctx.drawImage(img, 25, 25, 400, 400);
+                
+                // Añadir texto "Mesa X"
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 36px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Mesa ${mesa.numero}`, canvas.width / 2, 475);
+                
+                // Añadir URL pequeña
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText(mesaUrl, canvas.width / 2, 505);
+                
+                // Descargar
+                const link = document.createElement('a');
+                link.download = `QR_Mesa_${mesa.numero}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast(`✅ QR Mesa ${mesa.numero} descargado`);
+            };
+            img.src = URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Error descargando QR:', error);
+            showToast('Error al generar QR', 'error');
+        }
+    };
+
     const handleDeleteMesa = async (id) => {
         if (!confirm('¿Eliminar?')) return;
         try {
@@ -1011,10 +1062,13 @@ export default function AdminPage({
                                             <code className="text-xs">{m.tokenQr}</code>
                                             <p className="text-xs text-slate-400">/mesa/{m.tokenQr}</p>
                                         </div>
-                                        <div className="flex gap-1">
-                                            <button onClick={() => handleRegenerarQR(m.id)} className="flex-1 bg-blue-100 text-blue-700 py-1.5 rounded text-xs">Regenerar QR</button>
-                                            <button onClick={() => { setEditingItem(m); setShowMesaModal(true); }} className="p-1.5 bg-slate-100 rounded"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                            <button onClick={() => handleDeleteMesa(m.id)} className="p-1.5 bg-red-100 text-red-600 rounded"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                        <div className="flex gap-1 flex-wrap">
+                                            <button onClick={() => handleDescargarQR(m)} className="flex-1 bg-green-100 text-green-700 py-1.5 rounded text-xs flex items-center justify-center gap-1" title="Descargar QR">
+                                                <span className="material-symbols-outlined text-sm">download</span>Descargar QR
+                                            </button>
+                                            <button onClick={() => handleRegenerarQR(m.id)} className="p-1.5 bg-blue-100 text-blue-700 rounded" title="Regenerar QR"><span className="material-symbols-outlined text-sm">refresh</span></button>
+                                            <button onClick={() => { setEditingItem(m); setShowMesaModal(true); }} className="p-1.5 bg-slate-100 rounded" title="Editar"><span className="material-symbols-outlined text-sm">edit</span></button>
+                                            <button onClick={() => handleDeleteMesa(m.id)} className="p-1.5 bg-red-100 text-red-600 rounded" title="Eliminar"><span className="material-symbols-outlined text-sm">delete</span></button>
                                         </div>
                                     </div>
                                 ))}
@@ -1371,6 +1425,16 @@ function TicketDetailModal({ ticket, onClose }) {
 
 function UsuarioModal({ usuario, onSave, onClose, loading }) {
     const [formData, setFormData] = useState({ email: usuario?.email || '', rol: usuario?.rol || 'camarero', password: '' });
+    
+    // Reinicializar cuando cambia el usuario (importante para edición)
+    useEffect(() => {
+        setFormData({ 
+            email: usuario?.email || '', 
+            rol: usuario?.rol || 'camarero', 
+            password: '' 
+        });
+    }, [usuario]);
+    
     const inputClass = "w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-gray-400 text-slate-900 focus:ring-2 focus:ring-primary outline-none";
 
     return (
