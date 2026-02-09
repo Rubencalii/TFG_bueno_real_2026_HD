@@ -131,6 +131,7 @@ class AdminController extends AbstractController
         $usuariosData = array_map(fn(User $u) => [
             'id' => $u->getId(),
             'email' => $u->getEmail(),
+            'rol' => $u->getRol(),
             'roles' => $u->getRoles(),
         ], $usuarios);
 

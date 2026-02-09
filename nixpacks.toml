@@ -1,0 +1,6 @@
+# Deshabilitar Nixpacks y usar Dockerfile
+[phases.build]
+cmds = []
+
+[phases.setup]
+cmds = []
