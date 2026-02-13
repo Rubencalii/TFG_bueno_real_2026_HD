@@ -407,7 +407,7 @@ export default function AdminPage({
         try {
             const response = await fetch(`/admin/api/mesa/${id}/regenerar-qr`, { method: 'POST' });
             const data = await response.json();
-            if (data.success) { setMesas(prev => prev.map(m => m.id === id ? { ...m, tokenQr: data.tokenQr } : m)); showToast('QR regenerado'); }
+            if (data.success) { setMesas(prev => prev.map(m => m.id === id ? { ...m, tokenQr: data.tokenQr, securityPin: data.securityPin } : m)); showToast('QR y PIN regenerados'); }
             else showToast(data.error, 'error');
         } catch (error) { showToast('Error', 'error'); }
     };
@@ -1058,16 +1058,23 @@ export default function AdminPage({
                                             <span className="font-bold">Mesa {m.numero}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded ${m.ocupada ? 'bg-amber-100 text-amber-700' : m.activa ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{m.ocupada ? 'Ocupada' : m.activa ? 'Libre' : 'Inactiva'}</span>
                                         </div>
-                                        <div className="bg-slate-100 dark:bg-slate-700 rounded p-2 text-center mb-2">
-                                            <code className="text-xs">{m.tokenQr}</code>
-                                            <p className="text-xs text-slate-400">/mesa/{m.tokenQr}</p>
+                                        <div className="bg-slate-100 dark:bg-slate-700 rounded p-2 mb-2 flex justify-between items-center">
+                                            <div className="text-left">
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold">QR Token</p>
+                                                <code className="text-xs">{m.tokenQr}</code>
+                                            </div>
+                                            <div className="text-right border-l border-slate-300 dark:border-slate-500 pl-3">
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold flex items-center gap-1 justify-end">
+                                                    <span className="material-symbols-outlined text-[10px]">lock</span> PIN
+                                                </p>
+                                                <span className="text-lg font-black text-slate-700 dark:text-slate-200 tracking-widest">{m.securityPin || '----'}</span>
+                                            </div>
                                         </div>
                                         <div className="flex gap-1 flex-wrap">
                                             <button onClick={() => handleDescargarQR(m)} className="flex-1 bg-green-100 text-green-700 py-1.5 rounded text-xs flex items-center justify-center gap-1" title="Descargar QR">
                                                 <span className="material-symbols-outlined text-sm">download</span>Descargar QR
                                             </button>
-                                            <button onClick={() => handleRegenerarQR(m.id)} className="p-1.5 bg-blue-100 text-blue-700 rounded" title="Regenerar QR"><span className="material-symbols-outlined text-sm">refresh</span></button>
-                                            <button onClick={() => { setEditingItem(m); setShowMesaModal(true); }} className="p-1.5 bg-slate-100 rounded" title="Editar"><span className="material-symbols-outlined text-sm">edit</span></button>
+                                            <button onClick={() => { setEditingItem(m); setShowMesaModal(true); }} className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary rounded" title="Editar"><span className="material-symbols-outlined text-sm">edit</span></button>
                                             <button onClick={() => handleDeleteMesa(m.id)} className="p-1.5 bg-red-100 text-red-600 rounded" title="Eliminar"><span className="material-symbols-outlined text-sm">delete</span></button>
                                         </div>
                                     </div>

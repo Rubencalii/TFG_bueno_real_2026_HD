@@ -94,6 +94,7 @@ class AdminController extends AbstractController
                 'id' => $m->getId(),
                 'numero' => $m->getNumero(),
                 'tokenQr' => $m->getTokenQr(),
+                'securityPin' => $m->getSecurityPin(),
                 'activa' => $m->isActiva(),
                 'ocupada' => count($pedidosFacturables) > 0,
                 'llamaCamarero' => $m->isLlamaCamarero(),

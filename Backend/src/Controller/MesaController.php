@@ -124,4 +124,39 @@ class MesaController extends AbstractController
         // Redirect to new route
         return $this->redirectToRoute('menu_mesa', ['token' => $identificador]);
     }
+
+    #[Route('/api/mesa/{token}/status', name: 'api_mesa_status', methods: ['GET'])]
+    public function checkStatus(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        
+        if (!$mesa) {
+            return $this->json(['active' => false, 'error' => 'Mesa no encontrada'], 404);
+        }
+
+        return $this->json([
+            'active' => $mesa->isActiva(),
+            'id' => $mesa->getId(),
+            'numero' => $mesa->getNumero()
+        ]);
+    }
+
+    #[Route('/api/mesa/{token}/verify-pin', name: 'api_mesa_verify_pin', methods: ['POST'])]
+    public function verifyPin(string $token, Request $request): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
+        
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $pin = $data['pin'] ?? '';
+
+        if ($mesa->getSecurityPin() === $pin) {
+            return $this->json(['success' => true]);
+        }
+
+        return $this->json(['success' => false, 'error' => 'PIN incorrecto'], 401);
+    }
 }

@@ -22,6 +22,9 @@ class Mesa
     #[ORM\Column(type: 'string', length: 12, unique: true)]
     private string $tokenQr;
 
+    #[ORM\Column(type: 'string', length: 4)]
+    private string $securityPin;
+
     #[ORM\Column(type: 'boolean')]
     private bool $activa = true;
 
@@ -45,7 +48,18 @@ class Mesa
     public function __construct()
     {
         $this->pedidos = new ArrayCollection();
+        $this->regenerateToken();
+    }
+
+    public function regenerateToken(): void
+    {
         $this->tokenQr = $this->generateShortToken();
+        $this->securityPin = str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    public function regeneratePin(): void
+    {
+        $this->securityPin = str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     private function generateShortToken(int $length = 8): string
@@ -83,6 +97,11 @@ class Mesa
     {
         $this->tokenQr = $tokenQr;
         return $this;
+    }
+
+    public function getSecurityPin(): string
+    {
+        return $this->securityPin;
     }
 
     public function isActiva(): bool

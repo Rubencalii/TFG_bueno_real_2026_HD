@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import MenuHeader from './MenuHeader';
 import SearchBar from './SearchBar';
 import CategoryNav from './CategoryNav';
@@ -18,6 +18,68 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     const [activeCategory, setActiveCategory] = useState(categorias?.[0] || null);
     const [toast, setToast] = useState(null);
     const [activeView, setActiveView] = useState('menu'); // 'menu' or 'orders'
+    
+    // PIN Authentication State
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [pinInput, setPinInput] = useState('');
+    const [pinError, setPinError] = useState('');
+    const [isLoadingPin, setIsLoadingPin] = useState(false);
+
+    // On load, re-verify stored PIN against server
+    useEffect(() => {
+        const verifyStoredPin = async () => {
+            if (!mesa?.tokenQr) { setIsCheckingAuth(false); return; }
+            
+            const storedPin = localStorage.getItem(`mesa_pin_${mesa.tokenQr}`);
+            if (!storedPin) { setIsCheckingAuth(false); return; }
+
+            try {
+                const response = await fetch(`/api/mesa/${mesa.tokenQr}/verify-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: storedPin })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setIsAuthenticated(true);
+                } else {
+                    localStorage.removeItem(`mesa_pin_${mesa.tokenQr}`);
+                }
+            } catch (error) {
+                console.error('Error verifying PIN:', error);
+            }
+            setIsCheckingAuth(false);
+        };
+        verifyStoredPin();
+    }, [mesa?.tokenQr]);
+
+    const handlePinSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoadingPin(true);
+        setPinError('');
+
+        try {
+            const response = await fetch(`/api/mesa/${mesa.tokenQr}/verify-pin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: pinInput })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                localStorage.setItem(`mesa_pin_${mesa.tokenQr}`, pinInput);
+                setIsAuthenticated(true);
+            } else {
+                setPinError('PIN incorrecto. Pregunta al camarero.');
+            }
+        } catch (error) {
+            setPinError('Error de conexión');
+        } finally {
+            setIsLoadingPin(false);
+        }
+    };
 
     const showToast = (message) => {
         setToast(message);
@@ -98,6 +160,28 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
         currentUrl.searchParams.set('lang', idioma.codigo);
         window.location.href = currentUrl.toString();
     };
+
+    // Auto-refresh si la mesa se cierra
+    React.useEffect(() => {
+        if (!mesa?.tokenQr) return;
+
+        const checkStatus = async () => {
+            try {
+                const response = await fetch(`/api/mesa/${mesa.tokenQr}/status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data.active) {
+                        window.location.reload(); // Recargar para mostrar error/cerrar sesión
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking table status:', error);
+            }
+        };
+
+        const interval = setInterval(checkStatus, 5000);
+        return () => clearInterval(interval);
+    }, [mesa]);
 
     return (
         <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-display min-h-screen selection:bg-primary selection:text-white transition-colors">
@@ -185,7 +269,6 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 </div>
             )}
 
-            {/* Floating Cart */}
             <CartFloat 
                 items={cart}
                 total={cartTotal}
@@ -200,6 +283,48 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                     showToast(t('¡Pedido enviado!') || '¡Pedido enviado!');
                 }}
             />
+
+            {/* PIN LOCK SCREEN */}
+            {!isAuthenticated && !isCheckingAuth && (
+                <div className="fixed inset-0 z-[200] bg-gray-900 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm">
+                        <span className="material-symbols-outlined text-6xl text-primary mb-4">lock</span>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Mesa Protegida</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">Esta mesa tiene un código de seguridad. Pídelo al camarero para continuar.</p>
+                        
+                        <form onSubmit={handlePinSubmit} className="space-y-4">
+                            <input
+                                type="tel"
+                                maxLength="4"
+                                value={pinInput}
+                                onChange={(e) => setPinInput(e.target.value)}
+                                placeholder="0000"
+                                className="w-full text-center text-4xl font-black tracking-[0.5em] py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-primary focus:ring-0 transition-colors"
+                            />
+                            
+                            {pinError && (
+                                <p className="text-red-500 font-bold text-sm bg-red-100 p-2 rounded">{pinError}</p>
+                            )}
+                            
+                            <button 
+                                type="submit" 
+                                disabled={isLoadingPin || pinInput.length < 4}
+                                className="w-full py-4 bg-primary text-white font-black rounded-xl text-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoadingPin ? 'Verificando...' : 'Desbloquear Mesa'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading while checking auth */}
+            {isCheckingAuth && (
+                <div className="fixed inset-0 z-[200] bg-gray-900 flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                    <p className="text-white text-lg">Verificando acceso...</p>
+                </div>
+            )}
         </div>
     );
 }

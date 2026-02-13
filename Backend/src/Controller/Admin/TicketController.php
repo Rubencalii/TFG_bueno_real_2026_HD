@@ -77,6 +77,9 @@ class TicketController extends AbstractController
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
         
+        // Rotar el PIN de seguridad para invalidar sesiones anteriores
+        $mesa->regeneratePin();
+        
         $this->entityManager->flush();
 
         return $this->json([

@@ -40,6 +40,7 @@ class MesaController extends AbstractController
                 'id' => $m->getId(),
                 'numero' => $m->getNumero(),
                 'tokenQr' => $m->getTokenQr(),
+                'securityPin' => $m->getSecurityPin(),
                 'activa' => $m->isActiva(),
                 'ocupada' => count($pedidosFacturables) > 0,
                 'llamaCamarero' => $m->isLlamaCamarero(),
@@ -132,20 +133,16 @@ class MesaController extends AbstractController
             return $this->json(['error' => 'Mesa no encontrada'], 404);
         }
 
-        // Generar nuevo token
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        $token = '';
-        for ($i = 0; $i < 8; $i++) {
-            $token .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        $mesa->setTokenQr($token);
+        // Regenerar token y PIN de seguridad
+        $mesa->regenerateToken();
 
         $this->entityManager->flush();
 
         return $this->json([
             'success' => true,
-            'tokenQr' => $token,
-            'qrUrl' => '/mesa/' . $token,
+            'tokenQr' => $mesa->getTokenQr(),
+            'securityPin' => $mesa->getSecurityPin(),
+            'qrUrl' => '/mesa/' . $mesa->getTokenQr(),
         ]);
     }
 
@@ -217,6 +214,9 @@ class MesaController extends AbstractController
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
+        
+        // Rotar el PIN de seguridad para invalidar sesiones anteriores
+        $mesa->regeneratePin();
         
         $this->entityManager->flush();
 
