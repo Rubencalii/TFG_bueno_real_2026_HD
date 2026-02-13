@@ -41,8 +41,6 @@ class AppFixtures extends Fixture
             ['nombre' => 'Bocadillos y Sándwiches', 'orden' => 4, 'tipo' => 'cocina'],
             ['nombre' => 'Hamburguesas', 'orden' => 5, 'tipo' => 'cocina'],
             ['nombre' => 'Bebidas', 'orden' => 6, 'tipo' => 'barra'],
-            ['nombre' => 'Cócteles', 'orden' => 7, 'tipo' => 'barra'],
-            ['nombre' => 'Cafés e Infusiones', 'orden' => 8, 'tipo' => 'barra'],
         ];
 
         foreach ($categoriasData as $data) {

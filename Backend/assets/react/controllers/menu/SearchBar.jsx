@@ -1,4 +1,5 @@
 import React from 'react';
+import useDraggableScroll from '../../hooks/useDraggableScroll';
 
 const ALLERGEN_ICONS = {
     'gluten': { icon: 'grain' },
@@ -13,6 +14,7 @@ const ALLERGEN_ICONS = {
 
 export default function SearchBar({ searchTerm, onSearchChange, activeFilters, onToggleFilter, alergenos, currentLang = 'es', t }) {
     const allergenList = alergenos || Object.keys(ALLERGEN_ICONS);
+    const scroll = useDraggableScroll();
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 card-shadow border border-gray-100 dark:border-slate-700 mb-8 sm:mb-12 transition-colors">
@@ -32,11 +34,15 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                 </div>
 
                 {/* Allergen Filters */}
-                <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-1">
+                <div className="flex items-center gap-3 sm:gap-4 pb-1">
                     <span className="text-[10px] sm:text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap shrink-0">
                         {t('Filtros') || 'Filtros'}:
                     </span>
-                    <div className="flex gap-2">
+                    <div 
+                        ref={scroll.ref}
+                        {...scroll.events}
+                        className="flex gap-2 overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing"
+                    >
                         {allergenList.map(alergeno => {
                             const key = alergeno.toLowerCase();
                             const info = ALLERGEN_ICONS[key] || { icon: 'warning' };
@@ -47,7 +53,7 @@ export default function SearchBar({ searchTerm, onSearchChange, activeFilters, o
                                 <button
                                     key={alergeno}
                                     onClick={() => onToggleFilter(key)}
-                                    className={`flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-3 sm:px-4 text-[10px] sm:text-xs font-bold transition-all uppercase tracking-wider whitespace-nowrap ${
+                                    className={`flex h-9 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-3 sm:px-4 text-[10px] sm:text-xs font-bold transition-all uppercase tracking-wider whitespace-nowrap shrink-0 ${
                                         isActive 
                                             ? 'bg-primary text-white border-primary neon-glow' 
                                             : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-500 dark:text-gray-400 hover:bg-primary hover:text-white hover:border-primary'
