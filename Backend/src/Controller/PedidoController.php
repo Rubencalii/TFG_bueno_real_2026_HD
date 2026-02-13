@@ -25,7 +25,10 @@ class PedidoController extends AbstractController
     ) {}
 
     /**
-     * Crear un nuevo pedido desde el carrito del cliente
+     * Crear un nuevo pedido desde el carrito del cliente.
+     * Los items se separan automáticamente en pedidos independientes
+     * por tipo de categoría (cocina / barra) para que cada panel
+     * gestione su estado de forma independiente.
      */
     #[Route('/pedido', name: 'api_crear_pedido', methods: ['POST'])]
     public function crearPedido(Request $request): JsonResponse
@@ -48,38 +51,52 @@ class PedidoController extends AbstractController
                 return $this->json(['error' => 'Mesa no encontrada'], Response::HTTP_NOT_FOUND);
             }
 
-            // Crear el pedido
-            $pedido = new Pedido();
-            $pedido->setMesa($mesa);
-            $pedido->setEstado(Pedido::ESTADO_PENDIENTE);
-
-            // Añadir los detalles
+            // Agrupar items por tipo de categoría (cocina / barra)
+            $grupos = []; // clave = tipo ('cocina' o 'barra'), valor = array de items
             foreach ($data['items'] as $item) {
                 $producto = $this->productoRepository->find($item['productoId']);
-                
                 if (!$producto) {
-                    continue; // Saltar productos no encontrados
+                    continue;
                 }
 
-                $detalle = new DetallePedido();
-                $detalle->setProducto($producto);
-                $detalle->setCantidad($item['cantidad'] ?? 1);
-                $detalle->setNotas($item['notas'] ?? null);
-                
-                $pedido->addDetalle($detalle);
+                $tipo = $producto->getCategoria()?->getTipo() ?? 'cocina';
+                $grupos[$tipo][] = [
+                    'producto' => $producto,
+                    'cantidad' => $item['cantidad'] ?? 1,
+                    'notas'    => $item['notas'] ?? null,
+                ];
             }
 
-            // Calcular total
-            $pedido->calcularTotal();
+            // Crear un Pedido independiente por cada grupo
+            $pedidoIds = [];
+            $totalGeneral = 0;
 
-            // Persistir
-            $this->entityManager->persist($pedido);
+            foreach ($grupos as $tipo => $items) {
+                $pedido = new Pedido();
+                $pedido->setMesa($mesa);
+                $pedido->setEstado(Pedido::ESTADO_PENDIENTE);
+
+                foreach ($items as $item) {
+                    $detalle = new DetallePedido();
+                    $detalle->setProducto($item['producto']);
+                    $detalle->setCantidad($item['cantidad']);
+                    $detalle->setNotas($item['notas']);
+                    $pedido->addDetalle($detalle);
+                }
+
+                $pedido->calcularTotal();
+                $totalGeneral += (float) $pedido->getTotalCalculado();
+
+                $this->entityManager->persist($pedido);
+                $pedidoIds[] = $pedido->getId();
+            }
+
             $this->entityManager->flush();
 
             return $this->json([
                 'success' => true,
-                'pedidoId' => $pedido->getId(),
-                'total' => $pedido->getTotalCalculado(),
+                'pedidoIds' => $pedidoIds,
+                'total' => number_format($totalGeneral, 2, '.', ''),
                 'message' => '¡Pedido recibido correctamente!'
             ], Response::HTTP_CREATED);
 
@@ -342,8 +359,9 @@ class PedidoController extends AbstractController
         $notificaciones = [];
 
         foreach ($mesas as $mesa) {
-            // Solo mostrar si llama al camarero O (pide cuenta Y NO es pago online pendiente)
+            // Solo mostrar si llama, pide cuenta, o solicita PIN
             $mostrar = $mesa->isLlamaCamarero() || 
+                       $mesa->isSolicitaPin() ||
                        ($mesa->isPideCuenta() && !$mesa->isPagoOnlinePendiente());
             
             if ($mostrar) {
@@ -352,6 +370,8 @@ class PedidoController extends AbstractController
                     'numero' => $mesa->getNumero(),
                     'llamaCamarero' => $mesa->isLlamaCamarero(),
                     'pideCuenta' => $mesa->isPideCuenta(),
+                    'solicitaPin' => $mesa->isSolicitaPin(),
+                    'securityPin' => $mesa->getSecurityPin(),
                     'metodoPago' => $mesa->getMetodoPagoPreferido(),
                     'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];
@@ -416,6 +436,8 @@ class PedidoController extends AbstractController
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
+        $mesa->setSolicitaPin(false);
+        $mesa->regeneratePin();
 
         $this->entityManager->flush();
 

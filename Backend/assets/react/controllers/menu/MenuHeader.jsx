@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t }) {
+export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t, isAuthenticated }) {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentRequested, setPaymentRequested] = useState(false);
     const [paymentStep, setPaymentStep] = useState('select'); // 'select', 'online', 'processing', 'success'
@@ -180,6 +180,8 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t 
                         
                         {/* Acciones de mesa */}
                         <div className="flex items-center gap-2 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-gray-100 dark:border-slate-700">
+                            {isAuthenticated && (
+                            <>
                             <button 
                                 onClick={() => handleMesaAction('llamar', 'Camarero avisado')}
                                 className="size-8 sm:size-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors group relative"
@@ -203,6 +205,8 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t 
                                     {paymentRequested ? (t('Cuenta solicitada') || 'Cuenta solicitada') : (t('Pedir Cuenta') || 'Pedir cuenta')}
                                 </span>
                             </button>
+                            </>
+                            )}
                             {/* Dark mode toggle */}
                             <button 
                                 onClick={toggleDarkMode}

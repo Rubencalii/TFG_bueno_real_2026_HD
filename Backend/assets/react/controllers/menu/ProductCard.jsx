@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, t }) {
+export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, t, isAuthenticated }) {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [notes, setNotes] = useState('');
 
@@ -71,6 +71,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                             ))}
                         </div>
                         
+                        {isAuthenticated && (
                         <div className="flex items-center gap-2">
                             {/* Notes button - secondary but visible */}
                             <button 
@@ -119,6 +120,7 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
                                 )}
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             </div>

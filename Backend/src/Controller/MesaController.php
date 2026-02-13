@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 class MesaController extends AbstractController
 {
@@ -24,14 +25,18 @@ class MesaController extends AbstractController
         private MesaRepository $mesaRepository,
         private CategoriaRepository $categoriaRepository,
         private ProductoRepository $productoRepository,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
+        private EntityManagerInterface $entityManager
     ) {}
 
     #[Route('/mesa/{token}', name: 'menu_mesa')]
     public function menuMesa(string $token, Request $request): Response
     {
+
         $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token, 'activa' => true]);
         
+
+
         if (!$mesa) {
             throw $this->createNotFoundException('Mesa no encontrada o no activa');
         }
@@ -154,9 +159,29 @@ class MesaController extends AbstractController
         $pin = $data['pin'] ?? '';
 
         if ($mesa->getSecurityPin() === $pin) {
+            // Auto-clear the PIN request notification when successfully verified
+            if ($mesa->isSolicitaPin()) {
+                $mesa->setSolicitaPin(false);
+                $this->entityManager->flush();
+            }
             return $this->json(['success' => true]);
         }
 
         return $this->json(['success' => false, 'error' => 'PIN incorrecto'], 401);
+    }
+
+    #[Route('/api/mesa/{token}/solicitar-pin', name: 'api_mesa_solicitar_pin', methods: ['POST'])]
+    public function solicitarPin(string $token): JsonResponse
+    {
+        $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token, 'activa' => true]);
+        
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $mesa->setSolicitaPin(true);
+        $this->entityManager->flush();
+
+        return $this->json(['success' => true, 'message' => 'PIN solicitado, el camarero vendrá enseguida']);
     }
 }

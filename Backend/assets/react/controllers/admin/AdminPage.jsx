@@ -1067,7 +1067,7 @@ export default function AdminPage({
                                                 <p className="text-[10px] text-slate-400 uppercase font-bold flex items-center gap-1 justify-end">
                                                     <span className="material-symbols-outlined text-[10px]">lock</span> PIN
                                                 </p>
-                                                <span className="text-lg font-black text-slate-700 dark:text-slate-200 tracking-widest">{m.securityPin || '----'}</span>
+                                                <span className="text-base font-black text-slate-700 dark:text-slate-200 tracking-wider">{m.securityPin || '--------'}</span>
                                             </div>
                                         </div>
                                         <div className="flex gap-1 flex-wrap">

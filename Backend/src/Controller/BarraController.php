@@ -53,12 +53,15 @@ class BarraController extends AbstractController
         $notificaciones = [];
         foreach ($mesas as $mesa) {
             if ($mesa->isLlamaCamarero() || 
+                $mesa->isSolicitaPin() ||
                 ($mesa->isPideCuenta() && in_array($mesa->getMetodoPagoPreferido(), ['efectivo', 'tarjeta']))) {
                 $notificaciones[] = [
                     'mesaId' => $mesa->getId(),
                     'numero' => $mesa->getNumero(),
                     'llamaCamarero' => $mesa->isLlamaCamarero(),
                     'pideCuenta' => $mesa->isPideCuenta() && in_array($mesa->getMetodoPagoPreferido(), ['efectivo', 'tarjeta']),
+                    'solicitaPin' => $mesa->isSolicitaPin(),
+                    'securityPin' => $mesa->getSecurityPin(),
                     'metodoPago' => $mesa->getMetodoPagoPreferido(),
                     'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];

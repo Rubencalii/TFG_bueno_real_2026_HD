@@ -22,7 +22,7 @@ class Mesa
     #[ORM\Column(type: 'string', length: 12, unique: true)]
     private string $tokenQr;
 
-    #[ORM\Column(type: 'string', length: 4)]
+    #[ORM\Column(type: 'string', length: 10)]
     private string $securityPin;
 
     #[ORM\Column(type: 'boolean')]
@@ -40,6 +40,9 @@ class Mesa
     #[ORM\Column(type: 'boolean')]
     private bool $pagoOnlinePendiente = false;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $solicitaPin = false;
+
     #[ORM\OneToMany(mappedBy: 'mesa', targetEntity: Pedido::class)]
     private Collection $pedidos;
 
@@ -54,12 +57,12 @@ class Mesa
     public function regenerateToken(): void
     {
         $this->tokenQr = $this->generateShortToken();
-        $this->securityPin = str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        $this->securityPin = str_pad((string)random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
     }
 
     public function regeneratePin(): void
     {
-        $this->securityPin = str_pad((string)random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        $this->securityPin = str_pad((string)random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
     }
 
     private function generateShortToken(int $length = 8): string
@@ -156,6 +159,17 @@ class Mesa
     public function setPagoOnlinePendiente(bool $pagoOnlinePendiente): self
     {
         $this->pagoOnlinePendiente = $pagoOnlinePendiente;
+        return $this;
+    }
+
+    public function isSolicitaPin(): bool
+    {
+        return $this->solicitaPin;
+    }
+
+    public function setSolicitaPin(bool $solicitaPin): self
+    {
+        $this->solicitaPin = $solicitaPin;
         return $this;
     }
 

@@ -25,6 +25,8 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     const [pinInput, setPinInput] = useState('');
     const [pinError, setPinError] = useState('');
     const [isLoadingPin, setIsLoadingPin] = useState(false);
+    const [pinRequested, setPinRequested] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
 
     // On load, re-verify stored PIN against server
     useEffect(() => {
@@ -54,6 +56,37 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
         verifyStoredPin();
     }, [mesa?.tokenQr]);
 
+    // Polling: auto-lock if table is closed (PIN rotated by admin)
+    useEffect(() => {
+        if (!isAuthenticated || !mesa?.tokenQr) return;
+
+        const intervalId = setInterval(async () => {
+            const storedPin = localStorage.getItem(`mesa_pin_${mesa.tokenQr}`);
+            if (!storedPin) { setIsAuthenticated(false); return; }
+
+            try {
+                const response = await fetch(`/api/mesa/${mesa.tokenQr}/verify-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: storedPin })
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    localStorage.removeItem(`mesa_pin_${mesa.tokenQr}`);
+                    setIsAuthenticated(false);
+                    setPinInput('');
+                    setCart([]);
+                    setPinRequested(false);
+                    setShowPinModal(false);
+                }
+            } catch (error) {
+                console.error('Auth polling error:', error);
+            }
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [isAuthenticated, mesa?.tokenQr]);
+
     const handlePinSubmit = async (e) => {
         e.preventDefault();
         setIsLoadingPin(true);
@@ -78,6 +111,18 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
             setPinError('Error de conexión');
         } finally {
             setIsLoadingPin(false);
+        }
+    };
+
+    const handleSolicitarPin = async () => {
+        try {
+            const response = await fetch(`/api/mesa/${mesa.tokenQr}/solicitar-pin`, { method: 'POST' });
+            if (response.ok) {
+                setPinRequested(true);
+                showToast('¡PIN solicitado! El camarero viene enseguida.');
+            }
+        } catch (error) {
+            console.error('Error solicitando PIN:', error);
         }
     };
 
@@ -191,6 +236,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 onViewChange={setActiveView} 
                 onToast={showToast}
                 t={t}
+                isAuthenticated={isAuthenticated}
             />
             
             <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-40">
@@ -252,6 +298,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                         onRemoveFromCart={removeFromCart}
                         cartItems={cart}
                         t={t}
+                        isAuthenticated={isAuthenticated}
                     />
                 </>
                 ) : (
@@ -269,37 +316,40 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 </div>
             )}
 
-            <CartFloat 
-                items={cart}
-                total={cartTotal}
-                count={cartCount}
-                onRemove={removeFromCart}
-                mesa={mesa}
-                t={t}
-                ui={ui}
-                onOrderSuccess={() => {
-                    setCart([]);
-                    setActiveView('orders');
-                    showToast(t('¡Pedido enviado!') || '¡Pedido enviado!');
-                }}
-            />
+            {isAuthenticated && (
+                <CartFloat 
+                    items={cart}
+                    total={cartTotal}
+                    count={cartCount}
+                    onRemove={removeFromCart}
+                    mesa={mesa}
+                    t={t}
+                    ui={ui}
+                    onOrderSuccess={() => {
+                        setCart([]);
+                        setActiveView('orders');
+                        showToast(t('¡Pedido enviado!') || '¡Pedido enviado!');
+                    }}
+                />
+            )}
 
-            {/* PIN LOCK SCREEN */}
-            {!isAuthenticated && !isCheckingAuth && (
-                <div className="fixed inset-0 z-[200] bg-gray-900 flex flex-col items-center justify-center p-6 text-center">
+            {/* PIN MODAL — triggered from floating bar */}
+            {showPinModal && !isAuthenticated && (
+                <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
                     <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-                        <span className="material-symbols-outlined text-6xl text-primary mb-4">lock</span>
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Mesa Protegida</h2>
-                        <p className="text-gray-500 dark:text-gray-400 mb-6">Esta mesa tiene un código de seguridad. Pídelo al camarero para continuar.</p>
+                        <span className="material-symbols-outlined text-6xl text-primary mb-4 block text-center">lock_open</span>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2 text-center">Introduce tu PIN</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6 text-center text-sm">Pídelo al camarero si no lo tienes</p>
                         
                         <form onSubmit={handlePinSubmit} className="space-y-4">
                             <input
                                 type="tel"
-                                maxLength="4"
+                                maxLength="8"
                                 value={pinInput}
                                 onChange={(e) => setPinInput(e.target.value)}
-                                placeholder="0000"
-                                className="w-full text-center text-4xl font-black tracking-[0.5em] py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-primary focus:ring-0 transition-colors"
+                                placeholder="00000000"
+                                className="w-full text-center text-3xl font-black tracking-[0.2em] py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-primary focus:ring-0 transition-colors"
+                                autoFocus
                             />
                             
                             {pinError && (
@@ -308,12 +358,59 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                             
                             <button 
                                 type="submit" 
-                                disabled={isLoadingPin || pinInput.length < 4}
+                                disabled={isLoadingPin || pinInput.length < 8}
                                 className="w-full py-4 bg-primary text-white font-black rounded-xl text-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoadingPin ? 'Verificando...' : 'Desbloquear Mesa'}
                             </button>
                         </form>
+                        
+                        <button 
+                            onClick={() => setShowPinModal(false)}
+                            className="w-full mt-3 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* FLOATING AUTH BAR — shown when not authenticated */}
+            {!isAuthenticated && !isCheckingAuth && !showPinModal && (
+                <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-t-2 border-primary/30 shadow-[0_-10px_40px_rgba(0,0,0,0.15)]">
+                    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-primary text-xl">lock</span>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-900 dark:text-white text-sm">Modo solo lectura</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Introduce el PIN para poder hacer pedidos</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <button 
+                                    onClick={() => setShowPinModal(true)}
+                                    className="flex-1 sm:flex-none px-6 py-3 bg-primary text-white font-black rounded-xl text-sm uppercase tracking-wider hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/30"
+                                >
+                                    <span className="material-symbols-outlined text-lg">lock_open</span>
+                                    Tengo el PIN
+                                </button>
+                                <button 
+                                    onClick={handleSolicitarPin}
+                                    disabled={pinRequested}
+                                    className={`flex-1 sm:flex-none px-6 py-3 font-black rounded-xl text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                                        pinRequested 
+                                            ? 'bg-emerald-500 text-white cursor-not-allowed' 
+                                            : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-lg">{pinRequested ? 'check_circle' : 'hail'}</span>
+                                    {pinRequested ? 'Solicitado ✓' : 'Solicitar PIN'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -140,6 +140,29 @@ export default function BarraPage({ pedidos: initialPedidos, notificaciones: ini
                                             <span className="text-xs font-bold uppercase tracking-tight">Llama al camarero</span>
                                         </div>
                                     )}
+                                    {notif.solicitaPin && (
+                                        <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
+                                            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-2">
+                                                <span className="material-symbols-outlined text-sm">lock</span>
+                                                <span className="text-xs font-bold uppercase tracking-tight">Solicita PIN de acceso</span>
+                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    const pinEl = e.currentTarget.nextElementSibling;
+                                                    pinEl.classList.toggle('hidden');
+                                                    e.currentTarget.textContent = pinEl.classList.contains('hidden') ? '👁 Ver PIN' : '🙈 Ocultar PIN';
+                                                }}
+                                                className="w-full py-1.5 bg-purple-600 text-white text-xs font-black rounded-lg hover:bg-purple-700 transition-colors"
+                                            >
+                                                👁 Ver PIN
+                                            </button>
+                                            <div className="hidden mt-2 text-center">
+                                                <p className="text-2xl font-black text-purple-700 dark:text-purple-300 tracking-[0.3em] bg-white dark:bg-slate-800 py-2 rounded-lg border-2 border-purple-200 dark:border-purple-700">
+                                                    {notif.securityPin || '--------'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                     {notif.pideCuenta && (
                                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                                             <span className="material-symbols-outlined text-sm">payments</span>
