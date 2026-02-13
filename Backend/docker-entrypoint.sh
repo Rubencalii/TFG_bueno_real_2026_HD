@@ -10,14 +10,19 @@ wait_for_db() {
     attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        if php -r "
+        if php -r '
             try {
-                \$pdo = new PDO('mysql:host=database;port=3306', 'app', '!ChangeMe!');
+                $host = getenv("DB_HOST") ?: "database";
+                $port = getenv("DB_PORT") ?: "3306";
+                $user = getenv("DB_USER") ?: "app";
+                $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+                $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass);
                 exit(0);
-            } catch (Exception \$e) {
+            } catch (Exception $e) {
+                echo "PDO Error: " . $e->getMessage() . "\n";
                 exit(1);
             }
-        " 2>/dev/null; then
+        ' 2>/dev/null; then
             echo "✅ Base de datos disponible!"
             return 0
         fi
@@ -33,18 +38,23 @@ wait_for_db() {
 
 # Función para verificar si hay datos en la BD
 check_if_empty() {
-    php -r "
+    php -r '
         try {
-            \$pdo = new PDO('mysql:host=database;port=3306;dbname=app', 'app', '!ChangeMe!');
-            \$result = \$pdo->query('SELECT COUNT(*) FROM mesa');
-            if (\$result && \$result->fetchColumn() > 0) {
+            $host = getenv("DB_HOST") ?: "database";
+            $port = getenv("DB_PORT") ?: "3306";
+            $user = getenv("DB_USER") ?: "app";
+            $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+            $dbname = getenv("DB_NAME") ?: "app";
+            $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $user, $pass);
+            $result = $pdo->query("SELECT COUNT(*) FROM mesa");
+            if ($result && $result->fetchColumn() > 0) {
                 exit(1); // Hay datos
             }
             exit(0); // Vacía
-        } catch (Exception \$e) {
+        } catch (Exception $e) {
             exit(0); // La tabla no existe = vacía
         }
-    " 2>/dev/null
+    ' 2>/dev/null
     return $?
 }
 
@@ -79,20 +89,26 @@ echo ""
 echo "  📱 Mesas (escanear QR):"
 
 # Obtener tokens de las mesas
-php -r "
-    require 'vendor/autoload.php';
+php -r '
+    require "vendor/autoload.php";
     try {
-        \$pdo = new PDO('mysql:host=database;port=3306;dbname=app', 'app', '!ChangeMe!');
-        \$result = \$pdo->query('SELECT numero, token_qr FROM mesa ORDER BY numero LIMIT 5');
-        while (\$row = \$result->fetch()) {
-            echo \"     Mesa \" . \$row['numero'] . \": http://localhost:8001/mesa/\" . \$row['token_qr'] . \"\n\";
+        $host = getenv("DB_HOST") ?: "database";
+        $port = getenv("DB_PORT") ?: "3306";
+        $user = getenv("DB_USER") ?: "app";
+        $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+        $dbname = getenv("DB_NAME") ?: "app";
+        $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $user, $pass);
+        $result = $pdo->query("SELECT numero, token_qr FROM mesa ORDER BY numero LIMIT 5");
+        while ($row = $result->fetch()) {
+            echo "     Mesa " . $row["numero"] . ": http://localhost:8001/mesa/" . $row["token_qr"] . "\n";
         }
-        echo \"     ... y más mesas disponibles\n\";
-    } catch (Exception \$e) {
-        // Corregido el escape de comillas para evitar error de parseo
-        echo \"     (ejecuta 'docker exec backend-database-1 mariadb -u app -p app -e \\\"SELECT numero, token_qr FROM mesa\\\"' para ver tokens)\n\";
+        echo "     ... y más mesas disponibles\n";
+    } catch (Exception $e) {
+        $user = getenv("DB_USER") ?: "app";
+        $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+        echo "     (ejecuta \"docker exec backend-database-1 mariadb -u $user -p $pass -e \"SELECT numero, token_qr FROM mesa\"\" para ver tokens)\n";
     }
-" 2>/dev/null || true
+' 2>/dev/null || true
 
 echo ""
 echo "  👨‍🍳 Cocina:  http://localhost:8001/cocina/"
