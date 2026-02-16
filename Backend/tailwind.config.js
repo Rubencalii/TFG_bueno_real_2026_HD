@@ -49,14 +49,15 @@ module.exports = {
         },
 
         // Textos y fondos
-        "background-light": "#F9FAFB",
-        "background-dark": "#1F2937",
+        "background-light": "#f6f6f8",
+        "background-dark": "#111621",
         "card-bg": "#FFFFFF",
-        "text-main": "#1F2937",
+        "text-main": "#1f2937",
         "text-muted": "#6B7280",
       },
       fontFamily: {
-        "display": ["Space Grotesk", "sans-serif"]
+        "display": ["Space Grotesk", "sans-serif"],
+        "inter": ["Inter", "sans-serif"]
       },
       borderRadius: {
         "DEFAULT": "0.5rem",

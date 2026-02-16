@@ -1,32 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Panel de Administración - Comanda Digital{% endblock %}
+{% block title %}Panel de Administración - Comanda Digital
+{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+	{{ parent() }}
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block theme_toggle %}{% endblock %}
 
 {% block body %}
-<div id="admin-app" {{ react_component('admin/AdminPage', {
-    productos: productos,
-    categorias: categorias,
-    mesas: mesas,
-    tickets: tickets,
-    resumenCaja: resumenCaja,
-    usuarios: usuarios,
-    alergenos: alergenos,
-    pedidosActivos: pedidosActivos,
-    notificaciones: notificaciones
-}) }}>
-    <div class="flex items-center justify-center min-h-screen bg-gray-100">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p class="text-gray-600">Cargando panel de administración...</p>
-        </div>
-    </div>
-</div>
+	<div id="admin-app" {{ react_component('admin/AdminPage', { productos: productos, categorias: categorias, mesas: mesas, tickets: tickets, resumenCaja: resumenCaja, usuarios: usuarios, alergenos: alergenos, pedidosActivos: pedidosActivos, notificaciones: notificaciones } ) }}></div>
 {% endblock %}

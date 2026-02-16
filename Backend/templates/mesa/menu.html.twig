@@ -1,30 +1,18 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mesa {{ mesa.numero }} - Comanda Digital{% endblock %}
+{% block title %}Mesa
+	{{ mesa.numero }}
+	- Comanda Digital
+{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+	{{ parent() }}
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block theme_toggle %}{% endblock %}
 
 {% block body %}
-<div id="menu-app" {{ react_component('menu/MenuPage', {
-    mesa: mesa,
-    productos: productos,
-    categorias: categorias,
-    alergenos: alergenos,
-    idiomas: idiomas,
-    idiomaActual: idiomaActual,
-    ui: ui
-}) }}>
-    <div class="flex items-center justify-center min-h-screen bg-gray-100">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p class="text-gray-500">Cargando menú...</p>
-        </div>
-    </div>
-</div>
+	<div id="menu-app" {{ react_component('menu/MenuPage', { mesa: mesa, productos: productos, categorias: categorias, alergenos: alergenos, idiomas: idiomas, idiomaActual: idiomaActual, ui: ui } ) }}></div>
 {% endblock %}

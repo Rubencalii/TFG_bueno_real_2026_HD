@@ -1652,7 +1652,7 @@ video {
 
 .bg-background-light {
   --tw-bg-opacity: 1;
-  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+  background-color: rgb(246 246 248 / var(--tw-bg-opacity, 1));
 }
 
 .bg-black\/20 {
@@ -3708,7 +3708,7 @@ button:focus, a:focus, input:focus {
 
   .dark\:bg-background-dark {
     --tw-bg-opacity: 1;
-    background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
+    background-color: rgb(17 22 33 / var(--tw-bg-opacity, 1));
   }
 
   .dark\:bg-blue-900\/20 {
