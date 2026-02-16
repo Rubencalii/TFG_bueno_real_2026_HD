@@ -155,6 +155,7 @@ class MesaController extends AbstractController
         }
 
         $mesa->setLlamaCamarero(false);
+        $mesa->setSolicitaPin(false);
         $this->entityManager->flush();
 
         return $this->json(['success' => true]);
@@ -241,6 +242,8 @@ class MesaController extends AbstractController
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
+        $mesa->setSolicitaPin(false);
+        $mesa->regeneratePin();
         
         $this->entityManager->flush();
 
