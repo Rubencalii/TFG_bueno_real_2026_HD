@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function CartFloat({ items, total, count, onRemove, mesa, onOrderSuccess, t, ui }) {
+export default function CartFloat({ items, total, count, onRemove, mesa, onOrderSuccess, t, ui, pin }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -14,6 +14,7 @@ export default function CartFloat({ items, total, count, onRemove, mesa, onOrder
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mesaId: mesa?.id,
+                    pin: pin,
                     items: items.map(item => ({
                         productoId: item.id,
                         cantidad: item.cantidad,

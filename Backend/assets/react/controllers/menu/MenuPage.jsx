@@ -13,6 +13,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     console.log('🌍 Current locale:', idiomaActual?.codigo);
     const { t } = useTranslations(idiomaActual?.codigo || 'es', ui);
     const [cart, setCart] = useState([]);
+    const [mesaPin, setMesaPin] = useState(localStorage.getItem(`mesa_pin_${mesa?.tokenQr}`) || '');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState([]);
     const [activeCategory, setActiveCategory] = useState(categorias?.[0] || null);
@@ -103,6 +104,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
 
             if (data.success) {
                 localStorage.setItem(`mesa_pin_${mesa.tokenQr}`, pinInput);
+                setMesaPin(pinInput);
                 setIsAuthenticated(true);
             } else {
                 setPinError('PIN incorrecto. Pregunta al camarero.');
@@ -323,6 +325,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                     count={cartCount}
                     onRemove={removeFromCart}
                     mesa={mesa}
+                    pin={mesaPin}
                     t={t}
                     ui={ui}
                     onOrderSuccess={() => {

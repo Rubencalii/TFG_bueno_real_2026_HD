@@ -51,6 +51,15 @@ class PedidoController extends AbstractController
                 return $this->json(['error' => 'Mesa no encontrada'], Response::HTTP_NOT_FOUND);
             }
 
+            // SEGURIDAD: Validar PIN de la mesa
+            $pinProporcionado = $data['pin'] ?? '';
+            if ($mesa->getSecurityPin() !== $pinProporcionado) {
+                return $this->json([
+                    'error' => 'Sesión no autorizada o PIN incorrecto. Por favor, vuelve a escanear el QR o pide el PIN al camarero.',
+                    'security_issue' => true
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
             // Agrupar items por tipo de categoría (cocina / barra)
             $grupos = []; // clave = tipo ('cocina' o 'barra'), valor = array de items
             foreach ($data['items'] as $item) {
