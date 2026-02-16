@@ -1,8 +1,8 @@
-FROM php:8.4-cli
+FROM php:8.4-fpm
 
 # Instalar extensiones necesarias para Symfony y MariaDB
 RUN apt-get update \
-    && apt-get install -y git unzip libicu-dev libzip-dev libpng-dev libonig-dev libxml2-dev \
+    && apt-get install -y git unzip libicu-dev libzip-dev libpng-dev libonig-dev libxml2-dev libssl-dev \
     && docker-php-ext-install intl pdo pdo_mysql zip opcache
 
 # Instalar Composer

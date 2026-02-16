@@ -176,7 +176,28 @@ class AdminController extends AbstractController
                     'tipo' => 'camarero',
                     'mensaje' => "Mesa {$mesa->getNumero()} llama al camarero",
                     'mesaId' => $mesa->getId(),
+                    'mesaNumero' => $mesa->getNumero(),
                     'prioridad' => 'alta',
+                ];
+            }
+            if ($mesa->isSolicitaPin()) {
+                $notificaciones[] = [
+                    'tipo' => 'pin',
+                    'mensaje' => "Mesa {$mesa->getNumero()} solicita PIN de acceso",
+                    'mesaId' => $mesa->getId(),
+                    'mesaNumero' => $mesa->getNumero(),
+                    'prioridad' => 'media',
+                    'extra' => $mesa->getSecurityPin()
+                ];
+            }
+            if ($mesa->isPideCuenta()) {
+                $notificaciones[] = [
+                    'tipo' => 'cuenta',
+                    'mensaje' => "Mesa {$mesa->getNumero()} pide la cuenta",
+                    'mesaId' => $mesa->getId(),
+                    'mesaNumero' => $mesa->getNumero(),
+                    'prioridad' => 'alta',
+                    'extra' => $mesa->getMetodoPagoPreferido() === 'tarjeta' ? '💳 Tarjeta' : '💵 Efectivo'
                 ];
             }
             if ($mesa->isPagoOnlinePendiente()) {

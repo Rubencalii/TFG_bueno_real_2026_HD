@@ -693,27 +693,100 @@ export default function AdminPage({
                                 <StatCard icon="notifications" label="Alertas" value={stats.alertas} color={stats.alertas > 0 ? 'red' : 'green'} />
                             </div>
 
-                            {notificaciones.length > 0 && (
-                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-                                    <h3 className="font-bold text-red-700 dark:text-red-400 mb-2">🔔 Alertas Activas</h3>
-                                    <div className="space-y-2">
-                                        {notificaciones.slice(0, 5).map((n, i) => (
-                                            <div key={i} className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-lg p-2 text-sm">
-                                                <span>{n.mensaje}</span>
-                                                <div className="flex gap-2">
-                                                    {n.tipo === 'camarero' && <button onClick={() => handleAtenderMesa(n.mesaId)} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Atender</button>}
-                                                    {n.tipo === 'cuenta' && (
-                                                        <button onClick={() => { 
-                                                            const mesa = mesas.find(m => m.id === n.mesaId);
-                                                            if (mesa) { setEditingItem(mesa); setShowTicketModal(true); }
-                                                        }} className="bg-primary text-white px-2 py-1 rounded text-xs">💳 Cobrar</button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                            {/* TABLA DE NOTIFICACIONES PROFESIONAL */}
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
+                                    <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">notifications_active</span>
+                                        Alertas y Notificaciones
+                                    </h3>
+                                    {notificaciones.length > 0 && (
+                                        <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                                            {notificaciones.length} ACTIVAS
+                                        </span>
+                                    )}
                                 </div>
-                            )}
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                                                <th className="px-4 py-3">Mesa</th>
+                                                <th className="px-4 py-3">Tipo de Alerta</th>
+                                                <th className="px-4 py-3">Detalles</th>
+                                                <th className="px-4 py-3 text-right">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                            {notificaciones.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4" className="px-4 py-8 text-center text-slate-400 italic">
+                                                        <span className="material-symbols-outlined text-4xl mb-2 block text-slate-200 dark:text-slate-700">check_circle</span>
+                                                        No hay alertas pendientes en este momento
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                notificaciones.map((n, i) => (
+                                                    <tr key={i} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${n.prioridad === 'alta' ? 'bg-red-50/30 dark:bg-red-900/10' : ''}`}>
+                                                        <td className="px-4 py-3">
+                                                            <span className="font-black text-slate-900 dark:text-white">Mesa {n.mesaNumero}</span>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`material-symbols-outlined text-lg ${
+                                                                    n.tipo === 'camarero' ? 'text-amber-500' : 
+                                                                    n.tipo === 'cuenta' ? 'text-emerald-500' : 
+                                                                    n.tipo === 'pago_online' ? 'text-purple-500' : 'text-blue-500'
+                                                                }`}>
+                                                                    {n.tipo === 'camarero' ? 'hail' : 
+                                                                     n.tipo === 'cuenta' ? 'payments' : 
+                                                                     n.tipo === 'pago_online' ? 'phone_iphone' : 'info'}
+                                                                </span>
+                                                                <span className="font-bold capitalize">{n.tipo.replace('_', ' ')}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="max-w-xs truncate text-slate-600 dark:text-slate-400 text-xs">
+                                                                {n.mensaje}
+                                                                {n.extra && <span className="block font-bold text-primary mt-0.5">{n.extra}</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <div className="flex gap-2 justify-end">
+                                                                {n.tipo === 'camarero' && (
+                                                                    <button onClick={() => handleAtenderMesa(n.mesaId)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                                                        Atender
+                                                                    </button>
+                                                                )}
+                                                                {(n.tipo === 'cuenta' || n.tipo === 'pago_online') && (
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (n.tipo === 'pago_online') {
+                                                                                handleConfirmarPagoOnline(n.mesaId);
+                                                                            } else {
+                                                                                const mesa = mesas.find(m => m.id === n.mesaId);
+                                                                                if (mesa) { setEditingItem(mesa); setShowTicketModal(true); }
+                                                                            }
+                                                                        }} 
+                                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm"
+                                                                    >
+                                                                        {n.tipo === 'pago_online' ? 'Confirmar Pago' : '💸 Cobrar'}
+                                                                    </button>
+                                                                )}
+                                                                {n.tipo === 'pin' && (
+                                                                    <button onClick={() => handleAtenderMesa(n.mesaId)} className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                                                        Hecho
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <QuickAction onClick={() => setActiveSection('facturacion')} icon="receipt_long" label="Facturación" color="green" />

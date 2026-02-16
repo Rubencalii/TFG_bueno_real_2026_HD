@@ -80,44 +80,9 @@ else
     echo "ℹ️ La base de datos ya tiene datos, omitiendo fixtures."
 fi
 
-# 5. Mostrar URLs de acceso
-echo ""
-echo "═══════════════════════════════════════════════════════"
-echo "  🎉 ¡Comanda Digital está lista!"
-echo "═══════════════════════════════════════════════════════"
-echo ""
-echo "  📱 Mesas (escanear QR):"
+# 5. Mostrar información de acceso (Resumida)
+echo "✅ Backend listo."
 
-# Obtener tokens de las mesas
-php -r '
-    require "vendor/autoload.php";
-    try {
-        $host = getenv("DB_HOST") ?: "database";
-        $port = getenv("DB_PORT") ?: "3306";
-        $user = getenv("DB_USER") ?: "app";
-        $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
-        $dbname = getenv("DB_NAME") ?: "app";
-        $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $user, $pass);
-        $result = $pdo->query("SELECT numero, token_qr FROM mesa ORDER BY numero LIMIT 5");
-        while ($row = $result->fetch()) {
-            echo "     Mesa " . $row["numero"] . ": http://localhost:8001/mesa/" . $row["token_qr"] . "\n";
-        }
-        echo "     ... y más mesas disponibles\n";
-    } catch (Exception $e) {
-        $user = getenv("DB_USER") ?: "app";
-        $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
-        echo "     (ejecuta \"docker exec backend-database-1 mariadb -u $user -p $pass -e \"SELECT numero, token_qr FROM mesa\"\" para ver tokens)\n";
-    }
-' 2>/dev/null || true
-
-echo ""
-echo "  👨‍🍳 Cocina:  http://localhost:8001/cocina/"
-echo "  🍺 Barra:   http://localhost:8001/barra/"
-echo "  ⚙️ Admin:   http://localhost:8001/admin/"
-echo ""
-echo "═══════════════════════════════════════════════════════"
-echo ""
-
-# 6. Iniciar servidor PHP
-echo "🌐 Iniciando servidor web..."
-exec php -S 0.0.0.0:8000 -t public
+# 6. Iniciar PHP-FPM
+echo "🌐 Iniciando PHP-FPM..."
+exec php-fpm
