@@ -1,7 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid({ productos, activeCategory, onAddToCart, onRemoveFromCart, cartItems, t, isAuthenticated }) {
+export default function ProductGrid({ productos, activeCategory, onAddToCart, onRemoveFromCart, cartItems, t, isAuthenticated, onShowDetails }) {
     if (!productos || productos.length === 0) {
         return (
             <div className="text-center py-12">
@@ -42,6 +42,7 @@ export default function ProductGrid({ productos, activeCategory, onAddToCart, on
                         quantity={getItemQuantity(producto.id)}
                         t={t}
                         isAuthenticated={isAuthenticated}
+                        onShowDetails={onShowDetails}
                     />
                 ))}
             </div>

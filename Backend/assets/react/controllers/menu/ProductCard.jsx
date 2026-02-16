@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, t, isAuthenticated }) {
+export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, quantity, t, isAuthenticated, onShowDetails }) {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [notes, setNotes] = useState('');
 
@@ -18,28 +18,35 @@ export default function ProductCard({ producto, onAddToCart, onRemoveFromCart, q
         <>
             <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden card-shadow hover:translate-y-[-4px] transition-all group border border-gray-100 dark:border-slate-700">
                 {/* Image */}
-                <div 
-                    className="h-40 sm:h-56 bg-cover bg-center overflow-hidden relative"
+                <button 
+                    onClick={() => onShowDetails(producto)}
+                    className="w-full h-40 sm:h-56 bg-cover bg-center overflow-hidden relative cursor-pointer group/img block"
                     style={{ backgroundImage: `url("${producto.imagen || '/placeholder-food.jpg'}")` }}
+                    title={t('Ver detalles') || 'Ver detalles'}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent group-hover/img:from-black/60 transition-all duration-300"></div>
                     
+                    {/* Zoom Icon on Hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-300">
+                        <div className="size-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 shadow-xl">
+                            <span className="material-symbols-outlined text-3xl">zoom_in</span>
+                        </div>
+                    </div>
+
                     {/* Tags */}
-                    {producto.destacado && (
-                        <div className="p-3 sm:p-4 relative">
-                            <span className="bg-secondary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white orange-glow">
+                    <div className="absolute top-0 left-0 p-3 sm:p-4 flex flex-col gap-2">
+                        {producto.destacado && (
+                            <span className="bg-secondary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white orange-glow w-fit">
                                 {t('TOP SELLER') || 'TOP SELLER'}
                             </span>
-                        </div>
-                    )}
-                    {producto.vegetariano && (
-                        <div className="p-3 sm:p-4 relative">
-                            <span className="bg-primary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white neon-glow">
+                        )}
+                        {producto.vegetariano && (
+                            <span className="bg-primary px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white neon-glow w-fit">
                                 {t('VEGETARIANA') || 'VEGETARIANA'}
                             </span>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                </button>
 
                 {/* Content */}
                 <div className="p-4 sm:p-6 pt-4 sm:pt-6 flex flex-col h-full relative">

@@ -3,6 +3,7 @@ import MenuHeader from './MenuHeader';
 import SearchBar from './SearchBar';
 import CategoryNav from './CategoryNav';
 import ProductGrid from './ProductGrid';
+import ProductDetailsModal from './ProductDetailsModal';
 import CartFloat from './CartFloat';
 import MyOrdersSection from './MyOrdersSection';
 import LanguageSelector from './LanguageSelector';
@@ -28,6 +29,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     const [isLoadingPin, setIsLoadingPin] = useState(false);
     const [pinRequested, setPinRequested] = useState(false);
     const [showPinModal, setShowPinModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     // On load, re-verify stored PIN against server
     useEffect(() => {
@@ -230,6 +232,14 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
         return () => clearInterval(interval);
     }, [mesa]);
 
+    const handleShowDetails = (producto) => {
+        setSelectedProduct(producto);
+    };
+
+    const handleCloseDetails = () => {
+        setSelectedProduct(null);
+    };
+
     return (
         <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-display min-h-screen selection:bg-primary selection:text-white transition-colors">
             <MenuHeader 
@@ -301,6 +311,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                         cartItems={cart}
                         t={t}
                         isAuthenticated={isAuthenticated}
+                        onShowDetails={handleShowDetails}
                     />
                 </>
                 ) : (
@@ -417,6 +428,18 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                     </div>
                 </div>
             )}
+
+            {/* Product Details Modal */}
+            <ProductDetailsModal 
+                producto={selectedProduct}
+                isOpen={!!selectedProduct}
+                onClose={handleCloseDetails}
+                onAddToCart={addToCart}
+                onRemoveFromCart={removeFromCart}
+                quantity={selectedProduct ? getItemQuantity(selectedProduct.id) : 0}
+                t={t}
+                isAuthenticated={isAuthenticated}
+            />
 
             {/* Loading while checking auth */}
             {isCheckingAuth && (
