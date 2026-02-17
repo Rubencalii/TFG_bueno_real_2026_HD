@@ -97,7 +97,8 @@ The central entity for client interaction. It stores session states (`llama_cama
 
 You can find the raw DBML code for [dbdiagram.io](https://dbdiagram.io) here:
 
-- [dbdiagram.dbml](file:///home/usua5pc2/Escritorio/TFG_bueno_real_2026_HD/docs/dbdiagram.dbml)
+- [dbdiagram.dbml](file:///home/usua5pc2/Escritorio/TFG_bueno_real_2026_HD/docs/dbdiagram.dbml) (Versión Básica)
+- [dbdiagram_pro.dbml](file:///home/usua5pc2/Escritorio/TFG_bueno_real_2026_HD/docs/dbdiagram_pro.dbml) (Versión Pro - Notificaciones/Pagos/Gestión)
 
 ### 2. Pedido & DetallePedido (Order)
 
