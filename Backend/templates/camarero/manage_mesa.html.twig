@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestionar Mesa {{ mesa.numero }} - Panel Camarero{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block theme_toggle %}{% endblock %}
+
+{% block body %}
+    <!-- Staff Management Header -->
+    <div class="bg-slate-900 text-white py-3 px-4 shadow-lg flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+             <a href="{{ path('app_waiter_dashboard') }}" class="text-white hover:bg-slate-800 p-2 rounded-full transition">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="font-bold">Mesa {{ mesa.numero }}</h1>
+                <p class="text-[10px] uppercase tracking-widest text-slate-400">Modo Gestión Camarero</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+             <a href="{{ path('admin_panel') }}?mesa={{ mesa.id }}" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition">
+                <span class="material-symbols-outlined text-sm">payments</span>
+                Cobrar
+            </a>
+        </div>
+    </div>
+
+	<div id="menu-app" {{ react_component('menu/MenuPage', { 
+        mesa: mesa, 
+        productos: productos, 
+        categorias: categorias, 
+        alergenos: alergenos, 
+        idiomas: idiomas, 
+        idiomaActual: idiomaActual, 
+        ui: ui,
+        isStaff: true
+    } ) }}></div>
+{% endblock %}

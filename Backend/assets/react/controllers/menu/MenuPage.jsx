@@ -9,7 +9,7 @@ import MyOrdersSection from './MyOrdersSection';
 import LanguageSelector from './LanguageSelector';
 import { useTranslations, translateAllergen, translateCategory } from './translations';
 
-export default function MenuPage({ mesa, productos, categorias, alergenos, idiomas, idiomaActual, ui }) {
+export default function MenuPage({ mesa, productos, categorias, alergenos, idiomas, idiomaActual, ui, isStaff = false }) {
     console.log('🌍 UI Object received:', ui);
     console.log('🌍 Current locale:', idiomaActual?.codigo);
     const { t } = useTranslations(idiomaActual?.codigo || 'es', ui);
@@ -22,8 +22,8 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     const [activeView, setActiveView] = useState('menu'); // 'menu' or 'orders'
     
     // PIN Authentication State
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(isStaff);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(!isStaff);
     const [pinInput, setPinInput] = useState('');
     const [pinError, setPinError] = useState('');
     const [isLoadingPin, setIsLoadingPin] = useState(false);
@@ -31,8 +31,10 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
     const [showPinModal, setShowPinModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
-    // On load, re-verify stored PIN against server
+    // On load, re-verify stored PIN against server (if not staff)
     useEffect(() => {
+        if (isStaff) return;
+        
         const verifyStoredPin = async () => {
             if (!mesa?.tokenQr) { setIsCheckingAuth(false); return; }
             
@@ -61,7 +63,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
 
     // Polling: auto-lock if table is closed (PIN rotated by admin)
     useEffect(() => {
-        if (!isAuthenticated || !mesa?.tokenQr) return;
+        if (isStaff || !isAuthenticated || !mesa?.tokenQr) return;
 
         const intervalId = setInterval(async () => {
             const storedPin = localStorage.getItem(`mesa_pin_${mesa.tokenQr}`);
@@ -249,6 +251,7 @@ export default function MenuPage({ mesa, productos, categorias, alergenos, idiom
                 onToast={showToast}
                 t={t}
                 isAuthenticated={isAuthenticated}
+                isStaff={isStaff}
             />
             
             <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-40">

@@ -34,6 +34,9 @@ class Pedido
     #[ORM\Column(type: 'decimal', precision: 8, scale: 2, nullable: true)]
     private ?string $totalCalculado = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $impreso = false;
+
     #[ORM\OneToMany(mappedBy: 'pedido', targetEntity: DetallePedido::class, cascade: ['persist', 'remove'])]
     private Collection $detalles;
 
@@ -95,6 +98,17 @@ class Pedido
     public function setTotalCalculado(?string $totalCalculado): self
     {
         $this->totalCalculado = $totalCalculado;
+        return $this;
+    }
+
+    public function isImpreso(): bool
+    {
+        return $this->impreso;
+    }
+
+    public function setImpreso(bool $impreso): self
+    {
+        $this->impreso = $impreso;
         return $this;
     }
 

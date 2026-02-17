@@ -56,9 +56,13 @@ class Ticket
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $ticketRectificadoId = null;
 
+    #[ORM\OneToMany(mappedBy: 'ticket', targetEntity: Pago::class, cascade: ['persist', 'remove'])]
+    private $pagos;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->pagos = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -194,6 +198,33 @@ class Ticket
     public function setTicketRectificadoId(?int $ticketRectificadoId): self
     {
         $this->ticketRectificadoId = $ticketRectificadoId;
+        return $this;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection<int, Pago>
+     */
+    public function getPagos(): \Doctrine\Common\Collections\Collection
+    {
+        return $this->pagos;
+    }
+
+    public function addPago(Pago $pago): self
+    {
+        if (!$this->pagos->contains($pago)) {
+            $this->pagos[] = $pago;
+            $pago->setTicket($this);
+        }
+        return $this;
+    }
+
+    public function removePago(Pago $pago): self
+    {
+        if ($this->pagos->removeElement($pago)) {
+            if ($pago->getTicket() === $this) {
+                $pago->setTicket(null);
+            }
+        }
         return $this;
     }
 

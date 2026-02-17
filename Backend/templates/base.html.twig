@@ -3,12 +3,10 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>
-			{% block title %}Comanda Digital
-			{% endblock %}
+			{% block title %}Comanda Digital{% endblock %}
 		</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<link
-		rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🍽️</text></svg>">
+		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🍽️</text></svg>">
 
 		<!-- Google Fonts -->
 		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,10 +14,10 @@
 
 		<script>
 			// Check and apply saved theme
-if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-document.documentElement.classList.add('dark');
-document.documentElement.classList.remove('light');
-}
+			if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+				document.documentElement.classList.add('dark');
+				document.documentElement.classList.remove('light');
+			}
 		</script>
 
 		{% block stylesheets %}
@@ -39,7 +37,38 @@ document.documentElement.classList.remove('light');
 			}
 		</style>
 	</head>
-	<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 transition-colors duration-200"> {% block body %}{% endblock %}
+	<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 transition-colors duration-200">
+		
+		{% block body %}{% endblock %}
+
+		{% block waiter_panel_access %}
+			{% if app.user and (is_granted('ROLE_CAMARERO') or is_granted('ROLE_ADMIN')) %}
+				<!-- Waiter Panel Floating Button: Only show on staff routes, NOT on the customer menu -->
+				{% set currentRoute = app.request.attributes.get('_route') %}
+				{% set isStaffRoute = currentRoute in ['app_waiter_dashboard', 'app_waiter_manage_mesa', 'admin_panel', 'barra_panel', 'cocina_panel'] %}
+				
+				{% if isStaffRoute %}
+					<div class="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
+						{% if currentRoute == 'app_waiter_manage_mesa' %}
+							<!-- Quick Action: Cobrar if on management mesa page -->
+							<a href="{{ path('admin_panel') }}?mesa={{ mesa.id|default('') }}" 
+							   class="size-14 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform" 
+							   title="Cobrar Mesa">
+								<span class="material-symbols-outlined text-3xl">payments</span>
+							</a>
+						{% endif %}
+
+						{% if currentRoute != 'app_waiter_dashboard' %}
+							<a href="{{ path('app_waiter_dashboard') }}" 
+							   class="size-12 rounded-full bg-blue-600 dark:bg-blue-500 shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform" 
+							   title="Volver al Panel de Camarero">
+								<span class="material-symbols-outlined">dashboard</span>
+							</a>
+						{% endif %}
+					</div>
+				{% endif %}
+			{% endif %}
+		{% endblock %}
 
 		{% block theme_toggle %}
 			<!-- Theme Toggle Button -->
@@ -52,19 +81,19 @@ document.documentElement.classList.remove('light');
 
 		<script>
 			function toggleDarkMode() {
-const html = document.documentElement;
-const isDark = html.classList.contains('dark');
+				const html = document.documentElement;
+				const isDark = html.classList.contains('dark');
 
-if (isDark) {
-html.classList.remove('dark');
-html.classList.add('light');
-localStorage.setItem('darkMode', 'false');
-} else {
-html.classList.add('dark');
-html.classList.remove('light');
-localStorage.setItem('darkMode', 'true');
-}
-}
+				if (isDark) {
+					html.classList.remove('dark');
+					html.classList.add('light');
+					localStorage.setItem('darkMode', 'false');
+				} else {
+					html.classList.add('dark');
+					html.classList.remove('light');
+					localStorage.setItem('darkMode', 'true');
+				}
+			}
 		</script>
 	</body>
 </html>

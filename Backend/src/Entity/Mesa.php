@@ -43,6 +43,10 @@ class Mesa
     #[ORM\Column(type: 'boolean')]
     private bool $solicitaPin = false;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $camareroAsignado = null;
+
     #[ORM\OneToMany(mappedBy: 'mesa', targetEntity: Pedido::class)]
     private Collection $pedidos;
 
@@ -170,6 +174,17 @@ class Mesa
     public function setSolicitaPin(bool $solicitaPin): self
     {
         $this->solicitaPin = $solicitaPin;
+        return $this;
+    }
+
+    public function getCamareroAsignado(): ?User
+    {
+        return $this->camareroAsignado;
+    }
+
+    public function setCamareroAsignado(?User $camareroAsignado): self
+    {
+        $this->camareroAsignado = $camareroAsignado;
         return $this;
     }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t, isAuthenticated }) {
+export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t, isAuthenticated, isStaff = false }) {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentRequested, setPaymentRequested] = useState(false);
     const [paymentStep, setPaymentStep] = useState('select'); // 'select', 'online', 'processing', 'success'
@@ -59,44 +59,38 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
     };
 
     const handleOnlinePayment = async () => {
-        // Validación básica
-        if (!cardData.numero || !cardData.expiry || !cardData.cvv || !cardData.nombre) {
-            onToast(t('Por favor completa todos los campos') || 'Por favor completa todos los campos');
-            return;
-        }
-        
+        // ... (existing code)
+    };
+
+    const handleStaffPayment = async (metodoPago) => {
         setProcessingPayment(true);
         setPaymentStep('processing');
         
         try {
-            // Simular procesamiento de pago (en producción sería Stripe/Redsys)
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Enviar confirmación de pago al servidor
-            const response = await fetch(`/api/mesa/${mesa.tokenQr}/pagar-online`, {
+            const response = await fetch(`/admin/api/mesa/${mesa.id}/cobrar-staff`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    metodoPago: 'online',
-                    // En producción, aquí iría el token de Stripe, no los datos de la tarjeta
-                    pagado: true
-                })
+                body: JSON.stringify({ metodoPago })
             });
             
             if (response.ok) {
                 setPaymentStep('success');
                 setTimeout(() => {
                     setShowPaymentModal(false);
-                    setPaymentRequested(true);
                     setPaymentStep('select');
-                    setCardData({ numero: '', expiry: '', cvv: '', nombre: '' });
-                    onToast(t('¡Pago completado! Gracias por tu visita') || '¡Pago completado! Gracias por tu visita');
+                    onToast(t('Mesa cobrada y cerrada') || 'Mesa cobrada y cerrada');
+                    // Recargar para limpiar el estado de la mesa gestionada
+                    window.location.reload();
                 }, 2000);
+            } else {
+                const errorData = await response.json();
+                onToast(errorData.error || 'Error al procesar el cobro');
+                setPaymentStep('select');
             }
         } catch (error) {
-            console.error('Error processing payment:', error);
+            console.error('Error staff payment:', error);
             onToast(t('Error al procesar el pago') || 'Error al procesar el pago');
-            setPaymentStep('online');
+            setPaymentStep('select');
         } finally {
             setProcessingPayment(false);
         }
@@ -180,32 +174,45 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
                         
                         {/* Acciones de mesa */}
                         <div className="flex items-center gap-2 ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-gray-100 dark:border-slate-700">
-                            {isAuthenticated && (
-                            <>
-                            <button 
-                                onClick={() => handleMesaAction('llamar', 'Camarero avisado')}
-                                className="size-8 sm:size-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors group relative"
-                                title={t('Llamar camarero') || 'Llamar camarero'}
-                            >
-                                <span className="material-symbols-outlined text-xl">hail</span>
-                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">{t('Camarero') || 'Llamar camarero'}</span>
-                            </button>
-                            <button 
-                                onClick={() => setShowPaymentModal(true)}
-                                disabled={paymentRequested}
-                                className={`size-8 sm:size-10 rounded-xl flex items-center justify-center transition-colors group relative ${
-                                    paymentRequested 
-                                        ? 'bg-emerald-500 text-white cursor-not-allowed' 
-                                        : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
-                                }`}
-                                title={t('Pedir cuenta') || 'Pedir cuenta'}
-                            >
-                                <span className="material-symbols-outlined text-xl">{paymentRequested ? 'check_circle' : 'payments'}</span>
-                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                    {paymentRequested ? (t('Cuenta solicitada') || 'Cuenta solicitada') : (t('Pedir Cuenta') || 'Pedir cuenta')}
-                                </span>
-                            </button>
-                            </>
+                            {isStaff ? (
+                                <button 
+                                    onClick={() => setShowPaymentModal(true)}
+                                    className="size-8 sm:size-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-colors group relative"
+                                    title={t('Cobrar Mesa') || 'Cobrar Mesa'}
+                                >
+                                    <span className="material-symbols-outlined text-xl">payments</span>
+                                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        {t('Cobrar / Cerrar') || 'Cobrar / Cerrar'}
+                                    </span>
+                                </button>
+                            ) : (
+                                !isStaff && isAuthenticated && (
+                                    <>
+                                    <button 
+                                        onClick={() => handleMesaAction('llamar', 'Camarero avisado')}
+                                        className="size-8 sm:size-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors group relative"
+                                        title={t('Llamar camarero') || 'Llamar camarero'}
+                                    >
+                                        <span className="material-symbols-outlined text-xl">hail</span>
+                                        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">{t('Camarero') || 'Llamar camarero'}</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowPaymentModal(true)}
+                                        disabled={paymentRequested}
+                                        className={`size-8 sm:size-10 rounded-xl flex items-center justify-center transition-colors group relative ${
+                                            paymentRequested 
+                                                ? 'bg-emerald-500 text-white cursor-not-allowed' 
+                                                : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+                                        }`}
+                                        title={t('Pedir cuenta') || 'Pedir cuenta'}
+                                    >
+                                        <span className="material-symbols-outlined text-xl">{paymentRequested ? 'check_circle' : 'payments'}</span>
+                                        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                            {paymentRequested ? (t('Cuenta solicitada') || 'Cuenta solicitada') : (t('Pedir Cuenta') || 'Pedir cuenta')}
+                                        </span>
+                                    </button>
+                                    </>
+                                )
                             )}
                             {/* Dark mode toggle */}
                             <button 
@@ -259,7 +266,7 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
                                 
                                 <div className="space-y-3">
                                     <button
-                                        onClick={() => handlePaymentRequest('efectivo')}
+                                        onClick={() => isStaff ? handleStaffPayment('efectivo') : handlePaymentRequest('efectivo')}
                                         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border-2 border-transparent hover:border-emerald-500 transition-all group"
                                     >
                                         <div className="size-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -267,13 +274,13 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
                                         </div>
                                         <div className="text-left flex-1">
                                             <p className="font-bold text-gray-900 dark:text-white">{t('Efectivo') || 'Efectivo'}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('El camarero viene a la mesa') || 'El camarero viene a la mesa'}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{isStaff ? t('Cobrar en efectivo') : t('El camarero viene a la mesa')}</p>
                                         </div>
                                         <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500">chevron_right</span>
                                     </button>
                                     
                                     <button
-                                        onClick={() => handlePaymentRequest('tarjeta')}
+                                        onClick={() => isStaff ? handleStaffPayment('tarjeta') : handlePaymentRequest('tarjeta')}
                                         className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border-2 border-transparent hover:border-emerald-500 transition-all group"
                                     >
                                         <div className="size-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -281,24 +288,26 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
                                         </div>
                                         <div className="text-left flex-1">
                                             <p className="font-bold text-gray-900 dark:text-white">{t('Tarjeta (Datáfono)') || 'Tarjeta (Datáfono)'}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('El camarero trae el datáfono') || 'El camarero trae el datáfono'}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{isStaff ? t('Cobrar con datáfono') : t('El camarero trae el datáfono')}</p>
                                         </div>
                                         <span className="material-symbols-outlined text-gray-400 group-hover:text-emerald-500">chevron_right</span>
                                     </button>
                                     
-                                    <button
-                                        onClick={() => handlePaymentRequest('online')}
-                                        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 hover:from-purple-100 hover:to-indigo-100 border-2 border-transparent hover:border-purple-500 transition-all group"
-                                    >
-                                        <div className="size-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-2xl text-white">phone_iphone</span>
-                                        </div>
-                                        <div className="text-left flex-1">
-                                            <p className="font-bold text-gray-900 dark:text-white">{t('Pagar ahora') || 'Pagar ahora'}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('Pago instantáneo con tarjeta') || 'Pago instantáneo con tarjeta'}</p>
-                                        </div>
-                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-purple-500">chevron_right</span>
-                                    </button>
+                                    {!isStaff && (
+                                        <button
+                                            onClick={() => handlePaymentRequest('online')}
+                                            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 hover:from-purple-100 hover:to-indigo-100 border-2 border-transparent hover:border-purple-500 transition-all group"
+                                        >
+                                            <div className="size-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-2xl text-white">phone_iphone</span>
+                                            </div>
+                                            <div className="text-left flex-1">
+                                                <p className="font-bold text-gray-900 dark:text-white">{t('Pagar ahora') || 'Pagar ahora'}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Pago instantáneo con tarjeta') || 'Pago instantáneo con tarjeta'}</p>
+                                            </div>
+                                            <span className="material-symbols-outlined text-gray-400 group-hover:text-purple-500">chevron_right</span>
+                                        </button>
+                                    )}
                                 </div>
                                 
                                 <button

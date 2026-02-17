@@ -51,29 +51,64 @@ class PedidoController extends AbstractController
                 return $this->json(['error' => 'Mesa no encontrada'], Response::HTTP_NOT_FOUND);
             }
 
-            // SEGURIDAD: Validar PIN de la mesa
+            // SEGURIDAD: Validar PIN de la mesa (solo si no es personal/staff)
+            $isStaff = $this->isGranted('ROLE_CAMARERO') || $this->isGranted('ROLE_ADMIN');
             $pinProporcionado = $data['pin'] ?? '';
-            if ($mesa->getSecurityPin() !== $pinProporcionado) {
+            
+            if (!$isStaff && $mesa->getSecurityPin() !== $pinProporcionado) {
                 return $this->json([
                     'error' => 'Sesión no autorizada o PIN incorrecto. Por favor, vuelve a escanear el QR o pide el PIN al camarero.',
                     'security_issue' => true
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
+            // SEGURIDAD: Rate Limiting básico (evitar inundación de pedidos)
+            if (!$isStaff) {
+                $session = $request->getSession();
+                $lastOrderTime = $session->get('last_order_time_mesa_' . $mesa->getId());
+                $now = time();
+                if ($lastOrderTime && ($now - $lastOrderTime) < 10) { // 10 segundos entre pedidos
+                    return $this->json([
+                        'error' => 'Demasiadas peticiones. Por favor, espera 10 segundos antes de realizar otro pedido.'
+                    ], Response::HTTP_TOO_MANY_REQUESTS);
+                }
+                $session->set('last_order_time_mesa_' . $mesa->getId(), $now);
+            }
+
             // Agrupar items por tipo de categoría (cocina / barra)
             $grupos = []; // clave = tipo ('cocina' o 'barra'), valor = array de items
+            $totalItems = 0;
+
             foreach ($data['items'] as $item) {
                 $producto = $this->productoRepository->find($item['productoId']);
                 if (!$producto) {
                     continue;
                 }
 
+                // SEGURIDAD: Validación de volumen (Máximo 20 unidades por producto)
+                $cantidad = (int)($item['cantidad'] ?? 1);
+                if ($cantidad <= 0 || $cantidad > 20) {
+                    return $this->json(['error' => 'Cantidad no permitida para el producto ' . $producto->getNombre() . ' (Máx 20)'], Response::HTTP_BAD_REQUEST);
+                }
+                $totalItems += $cantidad;
+
+                // SEGURIDAD: Saneamiento XSS en notas
+                $notas = $item['notas'] ?? null;
+                if ($notas) {
+                    $notas = htmlspecialchars(strip_tags($notas), ENT_QUOTES, 'UTF-8');
+                }
+
                 $tipo = $producto->getCategoria()?->getTipo() ?? 'cocina';
                 $grupos[$tipo][] = [
                     'producto' => $producto,
-                    'cantidad' => $item['cantidad'] ?? 1,
-                    'notas'    => $item['notas'] ?? null,
+                    'cantidad' => $cantidad,
+                    'notas'    => $notas,
                 ];
+            }
+
+            // SEGURIDAD: Límite total de items en un pedido (evitar pedidos masivos)
+            if ($totalItems > 50) {
+                return $this->json(['error' => 'El pedido supera el límite máximo de artículos (50)'], Response::HTTP_BAD_REQUEST);
             }
 
             // Crear un Pedido independiente por cada grupo

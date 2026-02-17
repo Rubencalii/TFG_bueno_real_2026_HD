@@ -37,7 +37,22 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        - {
+              path: ^/admin/api/mesa/\d+/(cobrar-staff|limpiar-alertas|atender),
+              roles: [ROLE_ADMIN, ROLE_GERENTE, ROLE_CAMARERO],
+          }
         - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_GERENTE] }
+        - {
+              path: ^/camarero,
+              roles:
+                  [
+                      ROLE_CAMARERO,
+                      ROLE_ADMIN,
+                      ROLE_GERENTE,
+                      ROLE_BARRA,
+                      ROLE_COCINA,
+                  ],
+          }
         - {
               path: ^/cocina,
               roles:

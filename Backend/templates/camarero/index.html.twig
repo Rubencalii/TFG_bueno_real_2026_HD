@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Panel de Camarero{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <a href="{{ is_granted('ROLE_ADMIN') ? path('admin_panel') : '/' }}" class="size-10 rounded-full bg-white dark:bg-slate-800 shadow flex items-center justify-center text-gray-600 dark:text-gray-300 hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Panel de Camarero</h1>
+        </div>
+        <div class="hidden md:block text-sm text-gray-500">
+            Sesión: <span class="font-medium text-blue-600">{{ app.user.email }}</span>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for mesa in mesas %}
+            {% set isAssignedToMe = (mesa.camareroAsignado and mesa.camareroAsignado.id == app.user.id) %}
+            <div class="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Mesa</span>
+                            <h2 class="text-3xl font-black text-slate-800 dark:text-white">{{ mesa.numero }}</h2>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full {% if mesa.activa %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                <span class="size-1.5 rounded-full {% if mesa.activa %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
+                                {{ mesa.activa ? 'ACTIVA' : 'INACTIVA' }}
+                            </span>
+                            {% if mesa.llamaCamarero %}
+                                <span class="mt-2 animate-bounce bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">AVISO</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if mesa.camareroAsignado %}
+                        <div class="flex items-center gap-2 mb-6 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                            <span class="material-symbols-outlined text-blue-500 text-sm">person</span>
+                            <span class="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                {{ isAssignedToMe ? 'Atendida por ti' : mesa.camareroAsignado.email }}
+                            </span>
+                        </div>
+
+                        {% if isAssignedToMe or is_granted('ROLE_ADMIN') %}
+                            <div class="space-y-3">
+                                <a href="{{ path('app_waiter_manage_mesa', {token: mesa.tokenQr}) }}" class="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm shadow-blue-200 dark:shadow-none">
+                                    <span class="material-symbols-outlined text-lg">restaurant_menu</span>
+                                    Gestionar Comanda
+                                </a>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <a href="{{ path('admin_panel') }}?mesa={{ mesa.id }}" class="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2.5 px-4 rounded-xl transition border border-emerald-200">
+                                        <span class="material-symbols-outlined text-lg">payments</span>
+                                        Cobrar
+                                    </a>
+                                    <button onclick="unassignTable({{ mesa.id }})" class="flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold py-2.5 px-4 rounded-xl transition border border-slate-200">
+                                        <span class="material-symbols-outlined text-lg">logout</span>
+                                        Soltar
+                                    </button>
+                                </div>
+                            </div>
+                        {% else %}
+                             <div class="opacity-50 pointer-events-none">
+                                <button class="w-full bg-slate-200 text-slate-500 font-bold py-3 px-4 rounded-xl">Ocupada</button>
+                             </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="mb-6 h-9 flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic">
+                            Libre
+                        </div>
+                        <button onclick="assignTable({{ mesa.id }})" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3 px-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition shadow-lg">
+                            Empezar Servicio
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+async function assignTable(id) {
+    try {
+        const res = await fetch(`/camarero/mesa/${id}/asignar`, { method: 'POST' });
+        if (res.ok) location.reload();
+    } catch(e) { console.error(e); }
+}
+
+async function unassignTable(id) {
+    if (!confirm('¿Seguro que quieres soltar esta mesa?')) return;
+    try {
+        const res = await fetch(`/camarero/mesa/${id}/desasignar`, { method: 'POST' });
+        if (res.ok) location.reload();
+    } catch(e) { console.error(e); }
+}
+</script>
+{% endblock %}

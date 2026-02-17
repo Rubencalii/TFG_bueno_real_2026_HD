@@ -52,7 +52,8 @@ class AppCustomAuthenticator extends AbstractAuthenticator implements Authentica
         $targetRoute = match($rol) {
             'admin', 'gerente' => 'admin_panel',
             'cocinero' => 'cocina_panel',
-            'barman', 'camarero' => 'barra_panel',
+            'barman' => 'barra_panel',
+            'camarero' => 'app_waiter_dashboard',
             default => 'home',
         };
 

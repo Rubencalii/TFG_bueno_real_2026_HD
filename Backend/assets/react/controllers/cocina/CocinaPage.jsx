@@ -73,7 +73,7 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
             <header className="mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-black text-gray-800 dark:text-white">
+                        <h1 className="text-3xl font-black text-gray-800 dark:text-white flex items-center gap-3">
                             🍳 Panel de Cocina
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -82,11 +82,20 @@ export default function CocinaPage({ pedidos: initialPedidos }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a 
+                            href="/camarero"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                            title="Ir a Gestión de Mesas"
+                        >
+                            <span className="material-symbols-outlined">grid_view</span>
+                            Mesas
+                        </a>
+                        <a 
                             href="/barra"
                             className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 transition-colors flex items-center gap-2"
+                            title="Ir a Barra"
                         >
-                            <span className="material-symbols-outlined">hail</span>
-                            Ir a Camarero
+                            <span className="material-symbols-outlined">local_bar</span>
+                            Barra
                         </a>
                         <a 
                             href="/logout"

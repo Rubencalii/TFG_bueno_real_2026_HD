@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Ticket;
+use App\Entity\Pago;
 use App\Repository\MesaRepository;
 use App\Repository\PedidoRepository;
 use App\Repository\TicketRepository;
@@ -119,6 +120,47 @@ class TicketController extends AbstractController
             'success' => true,
             'mensaje' => 'Ticket cobrado correctamente',
             'paidAt' => $ticket->getPaidAt()->format('H:i')
+        ]);
+    }
+
+    #[Route('/ticket/{id}/pago', name: 'admin_api_registrar_pago', methods: ['POST'])]
+    public function registrarPago(int $id, Request $request): JsonResponse
+    {
+        $ticket = $this->ticketRepository->find($id);
+        if (!$ticket) {
+            return $this->json(['error' => 'Ticket no encontrado'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        
+        $pago = new Pago();
+        $pago->setTicket($ticket);
+        $pago->setMonto((string)($data['monto'] ?? '0.00'));
+        $pago->setMetodoPago($data['metodoPago'] ?? Pago::METODO_EFECTIVO);
+        $pago->setTransactionId($data['transactionId'] ?? null);
+        
+        $this->entityManager->persist($pago);
+
+        // Sumar pagos totales para ver si está completado
+        $totalPagado = 0.0;
+        foreach ($ticket->getPagos() as $p) {
+            $totalPagado += (float) $p->getMonto();
+        }
+        $totalPagado += (float) $pago->getMonto();
+
+        // Si el total pagado cubre el ticket, marcar como pagado
+        if ($totalPagado >= (float)$ticket->getTotal()) {
+            $ticket->setEstado(Ticket::ESTADO_PAGADO);
+            $ticket->setPaidAt(new \DateTime());
+        }
+
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'mensaje' => 'Pago registrado correctamente',
+            'totalPagado' => number_format($totalPagado, 2, '.', ''),
+            'ticketEstado' => $ticket->getEstado()
         ]);
     }
 

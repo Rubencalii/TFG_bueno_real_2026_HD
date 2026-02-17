@@ -164,14 +164,26 @@ class MesaController extends AbstractController
     #[Route('/mesa/{id}/confirmar-pago-online', name: 'admin_api_confirmar_pago_online', methods: ['POST'])]
     public function confirmarPagoOnline(int $id): JsonResponse
     {
+        // ... (existing code)
+        return $this->json([
+            'success' => true,
+            'id' => $ticket->getId(),
+            'numero' => $ticket->getNumero(),
+            'total' => $ticket->getTotal(),
+            'mensaje' => 'Pago online confirmado - Ticket generado'
+        ]);
+    }
+
+    #[Route('/mesa/{id}/cobrar-staff', name: 'admin_api_cobrar_staff', methods: ['POST'])]
+    public function cobrarStaff(int $id, Request $request): JsonResponse
+    {
         $mesa = $this->mesaRepository->find($id);
         if (!$mesa) {
             return $this->json(['error' => 'Mesa no encontrada'], 404);
         }
 
-        if (!$mesa->isPagoOnlinePendiente()) {
-            return $this->json(['error' => 'Esta mesa no tiene pago online pendiente'], 400);
-        }
+        $data = json_decode($request->getContent(), true);
+        $metodoPago = $data['metodoPago'] ?? 'efectivo';
 
         // Calcular total de la mesa
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
@@ -187,7 +199,7 @@ class MesaController extends AbstractController
         $ticket = new Ticket();
         $ticket->setNumero($numero);
         $ticket->setMesa($mesa);
-        $ticket->setMetodoPago('online');
+        $ticket->setMetodoPago($metodoPago);
         $ticket->setEstado(Ticket::ESTADO_PAGADO);
         $ticket->setPaidAt(new \DateTime());
         $ticket->calcularDesgloseIVA($totalMesa);
@@ -226,7 +238,7 @@ class MesaController extends AbstractController
             'id' => $ticket->getId(),
             'numero' => $ticket->getNumero(),
             'total' => $ticket->getTotal(),
-            'mensaje' => 'Pago online confirmado - Ticket generado'
+            'mensaje' => 'Mesa cobrada correctamente - Ticket generado'
         ]);
     }
 
