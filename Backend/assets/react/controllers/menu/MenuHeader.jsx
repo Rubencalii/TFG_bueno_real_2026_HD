@@ -115,6 +115,22 @@ export default function MenuHeader({ mesa, activeView, onViewChange, onToast, t,
         return v;
     };
 
+    // Theme initialization
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('darkMode');
+        const html = document.documentElement;
+        if (savedTheme === 'true') {
+            html.classList.add('dark');
+            html.classList.remove('light');
+        } else if (savedTheme === 'false') {
+            html.classList.remove('dark');
+            html.classList.add('light');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // Apply system preference if no saved theme
+            html.classList.add('dark');
+        }
+    }, []);
+
     // Toggle dark mode
     const toggleDarkMode = () => {
         const html = document.documentElement;
