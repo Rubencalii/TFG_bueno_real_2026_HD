@@ -93,6 +93,12 @@ erDiagram
 
 The central entity for client interaction. It stores session states (`llama_camarero`, `pide_cuenta`) and security tokens. The `security_pin` is rotated every time a table is closed to ensure session isolation between different customers.
 
+### 📜 DBML Schema
+
+You can find the raw DBML code for [dbdiagram.io](https://dbdiagram.io) here:
+
+- [dbdiagram.dbml](file:///home/usua5pc2/Escritorio/TFG_bueno_real_2026_HD/docs/dbdiagram.dbml)
+
 ### 2. Pedido & DetallePedido (Order)
 
 Orders are split by category type. Each `Pedido` represents a subset of items for either the Kitchen or the Bar. `DetallePedido` stores the snapshot of the price at the moment of ordering.
