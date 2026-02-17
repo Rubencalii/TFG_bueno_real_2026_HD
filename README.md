@@ -1,121 +1,120 @@
-# 🍽️ Comanda Digital - TFG
+# 🍽️ Comanda Digital
 
-¡Bienvenido al sistema de **Comanda Digital**! Este proyecto es una Aplicación Web Progresiva (PWA) diseñada para optimizar la gestión de pedidos en restaurantes, conectando directamente a los clientes con la cocina.
+[![Symfony](https://img.shields.io/badge/Symfony-8.0-black.svg?style=flat-square&logo=symfony)](https://symfony.com/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB.svg?style=flat-square&logo=react)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC.svg?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?style=flat-square&logo=docker)](https://www.docker.com/)
 
-## 🚀 Inicio Rápido
+**Comanda Digital** is a modern Progressive Web App (PWA) designed to revolutionize restaurant order management. It bridges the gap between customers and the kitchen, providing a seamless, real-time experience that replaces static QR menus with an interactive ordering system.
 
-### Requisitos
+---
 
-- **Docker** instalado y funcionando
-- **Git** para clonar el proyecto
+## ✨ Key Features
 
-### Un solo comando para todo
+### 📱 Customer Experience (Mobile-First)
 
-```bash
-# Clonar y ejecutar
-git clone [URL_DEL_REPOSITORIO]
-cd TFG_bueno_real_2026_HD/Backend
+- **Instant QR Access:** Scan and order directly without installing any app.
+- **Interactive Menu:** Smooth navigation with category filtering and real-time search.
+- **Smart Allergen Filter:** Dynamically hide products based on dietary requirements.
+- **Multi-language Support:** Full translation in Spanish, English, and French.
+- **Security PIN:** Protected table sessions to prevent order tampering.
 
-# Levantar todo (contenedores + base de datos + datos de demo)
-docker compose up -d
+### 🍳 Kitchen & Bar Optimization
+
+- **Real-time Kanban:** Automated order dispatching to kitchen or bar stations.
+- **Traffic Light System:** Visual wait-time indicators (Green 🟢, Yellow 🟡, Red 🔴).
+- **Critical Alerts:** Visual highlights for allergens and special notes.
+- **Status Management:** One-tap status updates from "Pending" to "Delivered".
+
+### ⚙️ Management & Administration
+
+- **Complete Dashboard:** Control products, categories, tables, and users.
+- **Reservation System:** Full lifecycle management of table bookings.
+- **automated Billing:** Instant tax-compliant ticket generation (IVA/VAT breakdown).
+- **Sales Analytics:** Detailed reports and data export (CSV/Excel).
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    subgraph Client ["Client Layer (React)"]
+        Menu["Menu (PWA)"]
+        Kitchen["Kitchen Dashboard"]
+        AdminUI["Admin Panel"]
+    end
+
+    subgraph Server ["Backend Layer (Symfony 8)"]
+        API["REST API Controllers"]
+        Auth["Security & JWT/Session"]
+        Business["Business Logic"]
+    end
+
+    subgraph Data ["Data Layer"]
+        DB[(MariaDB 11.3)]
+    end
+
+    Client -->|JSON / Polling| API
+    API -->|Doctrine ORM| DB
+    Auth -->|Authorize| API
 ```
 
-Espera ~30 segundos y todo estará listo:
+---
 
-- ✅ Contenedores arriba
-- ✅ Base de datos configurada
-- ✅ 15 mesas creadas con tokens QR
-- ✅ 35 productos del menú
-- ✅ Servidor funcionando
+## 🚀 Quick Start
 
-### URLs de acceso
+### Prerequisites
 
-| Sección       | URL                                  |
-| ------------- | ------------------------------------ |
-| **Menú mesa** | `http://localhost:8001/mesa/{token (QR de la mesa)}` |
-| **Cocina**    | `http://localhost:8001/cocina/`      |
-| **Barra**     | `http://localhost:8001/barra/`       |
-| **Admin**     | `http://localhost:8001/admin/`       |
+- **Docker** and **Docker Compose**
+- **Git**
 
-### 🔐 Credenciales de Acceso
+### Installation in 1 Step
 
-**Por razones de seguridad, las credenciales están configuradas en archivos de entorno.**
+```bash
+# Clone the repository
+git clone [URL]
+cd TFG_bueno_real_2026_HD
 
-Los usuarios de demostración incluyen:
-- **ADMINISTRADOR:** Acceso completo al panel de administración
-- **GERENTE:** Administración y reportes  
-- **STAFF (COCINA):** Panel de cocina para gestión de pedidos
-- **STAFF (BARRA):** Panel de barra para bebidas
-- **CAMARERO:** Funciones básicas de servicio
+# Start the project automatically
+./Iniciar_proyecto.sh
+```
 
-> 🔒 **Desarrollo:** Consulta `Backend/.env` para las credenciales de desarrollo
-> 
-> ⚠️ **Producción:** SIEMPRE cambiar las contraseñas por defecto antes del despliegue
+The system will be ready in ~30 seconds.
 
-> 💡 Los tokens de las mesas se muestran automáticamente en los logs al arrancar.
-> Ejecuta `docker logs symfony_app` para verlos.
+### 🔗 Access URLs
+
+| Section            | URL                            | Access                      |
+| :----------------- | :----------------------------- | :-------------------------- |
+| **Customer Menu**  | `http://localhost:8001`        | _Scan QR or select a table_ |
+| **Kitchen Panel**  | `http://localhost:8001/cocina` | _Staff credentials_         |
+| **Bar Panel**      | `http://localhost:8001/barra`  | _Staff credentials_         |
+| **Administration** | `http://localhost:8001/admin`  | _Admin credentials_         |
 
 ---
 
-## 🏗️ Arquitectura del Proyecto
+## 🛠️ Development Tools
 
-Este sistema utiliza una arquitectura híbrida moderna:
-
-- **Backend:** Symfony 8 (PHP) gestionando la lógica de negocio, seguridad y base de datos.
-- **Frontend:** React (vía Symfony UX) para una interfaz de usuario fluida y reactiva.
-- **Base de Datos:** MariaDB para el almacenamiento persistente de pedidos, mesas y productos.
-- **Contenedores:** Docker para asegurar que el proyecto funcione igual en cualquier dispositivo.
-
-### ¿Cómo se comunican?
-
-1.  **Carga Inicial:** Symfony UX inyecta los datos directamente en React al abrir el menú (máxima velocidad).
-2.  **Tiempo Real:** React utiliza una **API REST manual** (Endpoints en PHP que devuelven JSON) para enviar pedidos y consultar el estado de la cocina sin recargar la página.
+| Action                 | Command (inside /Backend)                              |
+| :--------------------- | :----------------------------------------------------- |
+| **Rebuild Containers** | `docker compose up -d --build`                         |
+| **View App Logs**      | `docker logs -f symfony_app`                           |
+| **Frontend Assets**    | `npm run watch` (or `dev`)                             |
+| **Database Console**   | `docker exec -it backend-database-1 mariadb -u app -p` |
 
 ---
 
-## 📁 Estructura de Carpetas
+## 📂 Documentation
 
-- `/Backend`: El corazón del proyecto (Symfony + React).
-- `/docs`: Documentación detallada, manuales de diseño y próximos pasos.
-- `/Backend/assets/react/controllers`: Aquí vive toda la lógica visual de React (Menú, Carrito, Cocina).
+Detailed documentation can be found in the `/docs` directory:
 
----
-
-## 🛠️ Comandos Útiles
-
-Una vez instalado, estos son los comandos que más usarás dentro de la carpeta `/Backend`:
-
-| Acción                        | Comando                                                |
-| :---------------------------- | :----------------------------------------------------- |
-| **Arrancar todo**             | `docker compose up -d`                                 |
-| **Parar todo**                | `docker compose down`                                  |
-| **Ver logs**                  | `docker logs -f symfony_app`                           |
-| **Compilar cambios visuales** | `npm run dev-server`                                   |
-| **Entrar a la BBDD**          | `docker exec -it backend-database-1 mariadb -u app -p` |
+- [Technical Specifications](file:///docs/especificaciones.md)
+- [Design System](file:///docs/diseño.md)
+- [API Reference](file:///docs/api_reference.md) _(Coming Soon)_
+- [Database Schema](file:///docs/database_schema.md) _(Coming Soon)_
 
 ---
 
-## 🔒 Configuración de Seguridad
+## 👤 Author
 
-### Archivos de Entorno
-
-- **`.env`**: Configuración de desarrollo (no se sube a Git)
-- **`.env.example`**: Plantilla de configuración sin credenciales reales
-- **`.env.local`**: Overrides locales opcionales
-
-### Primeros pasos después del clone
-
-1. Copia el archivo de ejemplo:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Edita `.env` con tus credenciales locales (opcional para desarrollo)
-
-3. **IMPORTANTE**: Nunca subas archivos `.env` con credenciales reales al repositorio
-
----
-
-## 👤 Autor
-
-**Rubén** - Trabajo de Fin de Grado (TFG) 2026.
+**Rubén** - Final Degree Project (TFG) 2026.
