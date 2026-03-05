@@ -54,11 +54,12 @@ check_if_empty() {
     return $?
 }
 
-# 1. Limpiar cache previa para evitar problemas con volumenes de Windows
-echo "Limpiando cache de Symfony..."
+# 1. Preparar directorios
+echo "Preparando entorno..."
 rm -rf /app/var/cache/*
+mkdir -p /app/var/cache /app/var/log /app/var/share
 
-# 2. Instalar dependencias si no existen (comprobar autoload.php, no solo el directorio)
+# 2. Instalar dependencias si no existen
 if [ ! -f "vendor/autoload.php" ]; then
     echo "Instalando dependencias de PHP..."
     composer install --no-interaction --optimize-autoloader
@@ -71,17 +72,25 @@ wait_for_db
 echo "Sincronizando esquema de base de datos..."
 php bin/console doctrine:schema:update --force --no-interaction
 
-# 5. Cargar fixtures si la BD esta vacia
+# 5. Cargar fixtures si la BD esta vacia (usar dev para que cargue DoctrineFixturesBundle)
 if check_if_empty; then
     echo "Cargando datos de demo..."
-    php bin/console doctrine:fixtures:load --no-interaction
+    APP_ENV=dev php bin/console doctrine:fixtures:load --no-interaction
     echo "Datos de demo cargados!"
+    rm -rf /app/var/cache/dev
 else
     echo "La base de datos ya tiene datos, omitiendo fixtures."
 fi
 
-# 6. Backend listo
+# 6. Calentar cache de produccion
+echo "Calentando cache de produccion..."
+php bin/console cache:warmup --no-interaction
+
+# 7. Fijar permisos para www-data (PHP-FPM)
+chown -R www-data:www-data /app/var
+
+# 8. Backend listo
 echo "Backend listo. Iniciando PHP-FPM..."
 
-# 7. Iniciar PHP-FPM
+# 9. Iniciar PHP-FPM
 exec php-fpm

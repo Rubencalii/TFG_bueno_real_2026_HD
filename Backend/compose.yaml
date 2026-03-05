@@ -27,6 +27,8 @@ services:
       database:
         condition: service_healthy
     environment:
+      APP_ENV: prod
+      APP_SECRET: fb45b26e74b4aa010a18558db640a05f
       DATABASE_URL: "mysql://${MARIADB_USER:-app}:${MARIADB_PASSWORD:-ChangeMe123}@database:3306/${MARIADB_DATABASE:-app}?serverVersion=11.3.0-MariaDB&charset=utf8mb4"
       DB_HOST: database
       DB_PORT: 3306
