@@ -164,7 +164,52 @@ class MesaController extends AbstractController
     #[Route('/mesa/{id}/confirmar-pago-online', name: 'admin_api_confirmar_pago_online', methods: ['POST'])]
     public function confirmarPagoOnline(int $id): JsonResponse
     {
-        // ... (existing code)
+        $mesa = $this->mesaRepository->find($id);
+        if (!$mesa) {
+            return $this->json(['error' => 'Mesa no encontrada'], 404);
+        }
+
+        $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
+        if ((float)$totalMesa <= 0) {
+            return $this->json(['error' => 'La mesa no tiene pedidos para facturar'], 400);
+        }
+
+        $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
+        $numero = Ticket::generarNumero($ultimoId);
+
+        $ticket = new Ticket();
+        $ticket->setNumero($numero);
+        $ticket->setMesa($mesa);
+        $ticket->setMetodoPago('online');
+        $ticket->setEstado(Ticket::ESTADO_PAGADO);
+        $ticket->setPaidAt(new \DateTime());
+        $ticket->calcularDesgloseIVA($totalMesa);
+
+        $pedidos = $this->pedidoRepository->findFacturablesByMesa($mesa);
+        $detalles = [];
+        foreach ($pedidos as $pedido) {
+            foreach ($pedido->getDetalles() as $d) {
+                $detalles[] = [
+                    'producto' => $d->getProducto()->getNombre(),
+                    'cantidad' => $d->getCantidad(),
+                    'precio' => $d->getPrecioUnitario(),
+                    'notas' => $d->getNotas(),
+                ];
+            }
+        }
+        $ticket->setDetalleJson(json_encode($detalles));
+
+        $this->entityManager->persist($ticket);
+
+        $this->pedidoRepository->limpiarPedidosMesa($mesa);
+        $mesa->setLlamaCamarero(false);
+        $mesa->setPideCuenta(false);
+        $mesa->setMetodoPagoPreferido(null);
+        $mesa->setPagoOnlinePendiente(false);
+        $mesa->regeneratePin();
+
+        $this->entityManager->flush();
+
         return $this->json([
             'success' => true,
             'id' => $ticket->getId(),

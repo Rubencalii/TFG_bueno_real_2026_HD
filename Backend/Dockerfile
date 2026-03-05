@@ -1,4 +1,4 @@
-FROM php:8.4-fpm
+﻿FROM php:8.4-fpm
 
 # Instalar extensiones necesarias para Symfony y MariaDB
 RUN apt-get update \
@@ -10,8 +10,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copiar el script de entrada
+# Copiar el script de entrada y convertir CRLF a LF (compatibilidad Windows)
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

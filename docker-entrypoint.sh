@@ -1,87 +1,175 @@
 #!/bin/bash
+
 set -e
 
-echo "Iniciando Comanda Digital..."
 
-# Funcion para esperar a que MariaDB este lista
+
+echo "ðŸš€ Iniciando Comanda Digital..."
+
+
+
+# FunciÃ³n para esperar a que MariaDB estÃ© lista
+
 wait_for_db() {
-    echo "Esperando a que la base de datos este lista..."
+
+    echo "â³ Esperando a que la base de datos estÃ© lista..."
+
     max_attempts=30
+
     attempt=0
+
+    
+
     while [ $attempt -lt $max_attempts ]; do
+
         if php -r '
+
             try {
+
                 $host = getenv("DB_HOST") ?: "database";
+
                 $port = getenv("DB_PORT") ?: "3306";
+
                 $user = getenv("DB_USER") ?: "app";
+
                 $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+
                 $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass);
+
                 exit(0);
+
             } catch (Exception $e) {
+
+                echo "PDO Error: " . $e->getMessage() . "\n";
+
                 exit(1);
+
             }
+
         ' 2>/dev/null; then
-            echo "Base de datos disponible!"
+
+            echo "âœ… Base de datos disponible!"
+
             return 0
+
         fi
+
+        
+
         attempt=$((attempt + 1))
+
         echo "   Intento $attempt/$max_attempts..."
+
         sleep 2
+
     done
-    echo "No se pudo conectar a la base de datos"
+
+    
+
+    echo "âŒ No se pudo conectar a la base de datos"
+
     exit 1
+
 }
 
-# Funcion para verificar si hay datos en la BD
+
+
+# FunciÃ³n para verificar si hay datos en la BD
+
 check_if_empty() {
+
     php -r '
+
         try {
+
             $host = getenv("DB_HOST") ?: "database";
+
             $port = getenv("DB_PORT") ?: "3306";
+
             $user = getenv("DB_USER") ?: "app";
+
             $pass = getenv("DB_PASSWORD") ?: "ChangeMe123";
+
             $dbname = getenv("DB_NAME") ?: "app";
+
             $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $user, $pass);
+
             $result = $pdo->query("SELECT COUNT(*) FROM mesa");
+
             if ($result && $result->fetchColumn() > 0) {
-                exit(1);
+
+                exit(1); // Hay datos
+
             }
-            exit(0);
+
+            exit(0); // VacÃ­a
+
         } catch (Exception $e) {
-            exit(0);
+
+            exit(0); // La tabla no existe = vacÃ­a
+
         }
+
     ' 2>/dev/null
+
     return $?
+
 }
 
-# 1. Limpiar cache previa para evitar problemas con volumenes de Windows
-echo "Limpiando cache de Symfony..."
-rm -rf /app/var/cache/*
 
-# 2. Instalar dependencias si no existen (comprobar autoload.php, no solo el directorio)
-if [ ! -f "vendor/autoload.php" ]; then
-    echo "Instalando dependencias de PHP..."
+
+# 1. Instalar dependencias si no existen
+
+if [ ! -d "vendor" ]; then
+
+    echo "ðŸ“¦ Instalando dependencias de PHP..."
+
     composer install --no-interaction --optimize-autoloader
+
 fi
 
-# 3. Esperar a la base de datos
+
+
+# 2. Esperar a la base de datos
+
 wait_for_db
 
-# 4. Sincronizar esquema de base de datos
-echo "Sincronizando esquema de base de datos..."
-php bin/console doctrine:schema:update --force --no-interaction
 
-# 5. Cargar fixtures si la BD esta vacia
+
+# 3. Ejecutar migraciones
+
+echo "ðŸ—„ï¸ Ejecutando migraciones..."
+
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+
+
+# 4. Cargar fixtures si la BD estÃ¡ vacÃ­a
+
 if check_if_empty; then
-    echo "Cargando datos de demo..."
+
+    echo "ðŸŒ± Cargando datos de demo (mesas, productos, categorÃ­as)..."
+
     php bin/console doctrine:fixtures:load --no-interaction
-    echo "Datos de demo cargados!"
+
+    echo "âœ… Datos de demo cargados!"
+
 else
-    echo "La base de datos ya tiene datos, omitiendo fixtures."
+
+    echo "â„¹ï¸ La base de datos ya tiene datos, omitiendo fixtures."
+
 fi
 
-# 6. Backend listo
-echo "Backend listo. Iniciando PHP-FPM..."
 
-# 7. Iniciar PHP-FPM
+
+# 5. Mostrar informaciÃ³n de acceso (Resumida)
+
+echo "âœ… Backend listo."
+
+
+
+# 6. Iniciar PHP-FPM
+
+echo "ðŸŒ Iniciando PHP-FPM..."
+
 exec php-fpm
