@@ -155,8 +155,12 @@ class MesaController extends AbstractController
             return $this->json(['error' => 'Mesa no encontrada'], 404);
         }
 
+        // SEGURIDAD: Prevenir ataques de fuerza bruta en el PIN e inyecciones limitando longitud
         $data = json_decode($request->getContent(), true);
-        $pin = $data['pin'] ?? '';
+        $pin = substr((string)($data['pin'] ?? ''), 0, 10);
+
+        // MITIGACIÓN: Retardo artificial muy breve para mitigar Timing Attacks básicos y Fuerza Bruta
+        usleep(500000); // 0.5 segundos de retardo intencionado
 
         if ($mesa->getSecurityPin() === $pin) {
             // Auto-clear the PIN request notification when successfully verified

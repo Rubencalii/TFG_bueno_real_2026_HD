@@ -37,44 +37,11 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - {
-              path: ^/admin/api/mesa/\d+/(cobrar-staff|limpiar-alertas|atender),
-              roles: [ROLE_ADMIN, ROLE_GERENTE, ROLE_CAMARERO],
-          }
-        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_GERENTE] }
-        - {
-              path: ^/camarero,
-              roles:
-                  [
-                      ROLE_CAMARERO,
-                      ROLE_ADMIN,
-                      ROLE_GERENTE,
-                      ROLE_BARRA,
-                      ROLE_COCINA,
-                  ],
-          }
-        - {
-              path: ^/cocina,
-              roles:
-                  [
-                      ROLE_COCINA,
-                      ROLE_BARRA,
-                      ROLE_CAMARERO,
-                      ROLE_ADMIN,
-                      ROLE_GERENTE,
-                  ],
-          }
-        - {
-              path: ^/barra,
-              roles:
-                  [
-                      ROLE_BARRA,
-                      ROLE_COCINA,
-                      ROLE_CAMARERO,
-                      ROLE_ADMIN,
-                      ROLE_GERENTE,
-                  ],
-          }
+        - { path: ^/admin/api/mesa/\d+/(cobrar-staff|limpiar-alertas|atender), roles: [ROLE_CAMARERO] }
+        - { path: ^/admin, roles: [ROLE_ADMIN] }
+        - { path: ^/camarero, roles: [ROLE_CAMARERO] }
+        - { path: ^/cocina, roles: [ROLE_COCINA] }
+        - { path: ^/barra, roles: [ROLE_BARRA] }
 
 when@test:
     security:

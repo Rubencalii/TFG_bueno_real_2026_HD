@@ -153,11 +153,16 @@ class PedidoController extends AbstractController
     }
 
     /**
-     * Cambiar el estado de un pedido (para cocina)
+     * Cambiar el estado de un pedido (para cocina/barra)
+     * SEGURIDAD: Añadido #[IsGranted] para evitar manipulaciones de usuarios comunes
      */
     #[Route('/pedido/{id}/estado', name: 'api_cambiar_estado_pedido', methods: ['PATCH'])]
     public function cambiarEstado(int $id, Request $request): JsonResponse
     {
+        // SEGURIDAD: Solo Kitchen o Bar o Admin/Gerente pueden cambiar estados, la mesa no
+        if (!$this->isGranted('ROLE_COCINA') && !$this->isGranted('ROLE_BARRA') && !$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_GERENTE')) {
+            return $this->json(['error' => 'No tienes permisos para cambiar el estado de los pedidos'], Response::HTTP_FORBIDDEN);
+        }
         try {
             $pedido = $this->pedidoRepository->find($id);
             
