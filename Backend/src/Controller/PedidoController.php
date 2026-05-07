@@ -111,6 +111,11 @@ class PedidoController extends AbstractController
                 return $this->json(['error' => 'El pedido supera el límite máximo de artículos (50)'], Response::HTTP_BAD_REQUEST);
             }
 
+            // FUNC-02: Verificar que al menos un item fue válido
+            if (empty($grupos)) {
+                return $this->json(['error' => 'No se encontraron productos válidos en el pedido'], Response::HTTP_BAD_REQUEST);
+            }
+
             // Crear un Pedido independiente por cada grupo
             $pedidoIds = [];
             $totalGeneral = 0;
@@ -314,10 +319,18 @@ class PedidoController extends AbstractController
      * Llamar al camarero
      */
     #[Route('/mesa/{token}/llamar', name: 'api_mesa_llamar', methods: ['POST'])]
-    public function llamarCamarero(string $token): JsonResponse
+    public function llamarCamarero(string $token, Request $request): JsonResponse
     {
         $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
         if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
+
+        // FUNC-04: Rate limit — evitar spam de notificaciones (30s entre llamadas)
+        $session = $request->getSession();
+        $lastCall = $session->get('last_llamar_' . $mesa->getId());
+        if ($lastCall && (time() - $lastCall) < 30) {
+            return $this->json(['success' => true]); // Silencioso para no confundir al cliente
+        }
+        $session->set('last_llamar_' . $mesa->getId(), time());
 
         $mesa->setLlamaCamarero(true);
         $this->entityManager->flush();
@@ -336,11 +349,17 @@ class PedidoController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $metodoPago = $data['metodoPago'] ?? null;
-        
+
+        // FUNC-08: Validar método de pago
+        $metodosValidos = ['efectivo', 'tarjeta', 'online'];
+        if ($metodoPago !== null && !in_array($metodoPago, $metodosValidos)) {
+            return $this->json(['error' => 'Método de pago no válido'], Response::HTTP_BAD_REQUEST);
+        }
+
         $mesa->setPideCuenta(true);
         if ($metodoPago) {
             $mesa->setMetodoPagoPreferido($metodoPago);
-            
+
             // Si es pago online, marcar como pendiente para admin
             if ($metodoPago === 'online') {
                 $mesa->setPagoOnlinePendiente(true);
@@ -376,7 +395,16 @@ class PedidoController extends AbstractController
         if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
 
         $data = json_decode($request->getContent(), true);
-        
+
+        // SEC-04: Verificar PIN (solo clientes, el staff no necesita)
+        $isStaff = $this->isGranted('ROLE_CAMARERO') || $this->isGranted('ROLE_ADMIN');
+        if (!$isStaff) {
+            $pin = $data['pin'] ?? '';
+            if ($mesa->getSecurityPin() !== $pin) {
+                return $this->json(['error' => 'PIN incorrecto. No se puede procesar el pago.'], Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
         // Calcular total
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
         if ((float)$totalMesa <= 0) {
@@ -420,7 +448,7 @@ class PedidoController extends AbstractController
                     'llamaCamarero' => $mesa->isLlamaCamarero(),
                     'pideCuenta' => $mesa->isPideCuenta(),
                     'solicitaPin' => $mesa->isSolicitaPin(),
-                    'securityPin' => $mesa->getSecurityPin(),
+                    // SEC-02: PIN eliminado de respuesta pública — solo visible en panel admin autenticado
                     'metodoPago' => $mesa->getMetodoPagoPreferido(),
                     'totalCuenta' => $this->pedidoRepository->calcularTotalMesa($mesa)
                 ];
@@ -447,12 +475,9 @@ class PedidoController extends AbstractController
         
         if ((float)$totalMesa > 0) {
             // Crear ticket automáticamente
-            $ticketRepo = $this->entityManager->getRepository(\App\Entity\Ticket::class);
-            $ultimoId = $ticketRepo->getUltimoIdDelAño();
-            $numero = \App\Entity\Ticket::generarNumero($ultimoId);
-
+            // FUNC-01: Número generado tras flush usando ID único del ticket (sin race condition)
             $ticket = new \App\Entity\Ticket();
-            $ticket->setNumero($numero);
+            $ticket->setNumero(uniqid('TMP-')); // Placeholder temporal, se sobreescribe
             $ticket->setMesa($mesa);
             $ticket->setMetodoPago($metodoPago);
             $ticket->setEstado(\App\Entity\Ticket::ESTADO_PAGADO);
@@ -475,7 +500,12 @@ class PedidoController extends AbstractController
             $ticket->setDetalleJson(json_encode($detalles));
 
             $this->entityManager->persist($ticket);
-            
+            $this->entityManager->flush(); // Primer flush: obtiene ID único para el ticket
+
+            // FUNC-01: Asignar número correlativo basado en el ID propio del ticket (sin race condition)
+            $year = date('Y');
+            $ticket->setNumero($year . '-' . str_pad((string)$ticket->getId(), 4, '0', STR_PAD_LEFT));
+
             // Limpiar pedidos de la mesa
             $this->pedidoRepository->limpiarPedidosMesa($mesa);
         }
@@ -488,7 +518,7 @@ class PedidoController extends AbstractController
         $mesa->setSolicitaPin(false);
         $mesa->regeneratePin();
 
-        $this->entityManager->flush();
+        $this->entityManager->flush(); // Segundo flush: actualiza número de ticket y flags de mesa
 
         return $this->json([
             'success' => true,

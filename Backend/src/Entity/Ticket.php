@@ -9,6 +9,9 @@ use App\Repository\TicketRepository;
 #[ORM\HasLifecycleCallbacks]
 class Ticket
 {
+    // QA-05: IVA en constante para facilitar cambios futuros (10% restauración en España)
+    public const IVA_RATE = 10;
+
     public const METODO_EFECTIVO = 'efectivo';
     public const METODO_TARJETA = 'tarjeta';
     public const METODO_TPV = 'tpv';
@@ -234,7 +237,8 @@ class Ticket
     public function calcularDesgloseIVA(string $totalConIva): self
     {
         $total = (float) $totalConIva;
-        $base = $total / 1.10;
+        $divisor = 1 + (self::IVA_RATE / 100);
+        $base = $total / $divisor;
         $iva = $total - $base;
 
         $this->total = number_format($total, 2, '.', '');

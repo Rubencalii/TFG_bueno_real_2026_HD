@@ -42,6 +42,11 @@ security:
         - { path: ^/camarero, roles: [ROLE_CAMARERO] }
         - { path: ^/cocina, roles: [ROLE_COCINA] }
         - { path: ^/barra, roles: [ROLE_BARRA] }
+        # SEC-01: Proteger rutas API de cocina y barra (antes accesibles sin auth)
+        - { path: ^/api/cocina, roles: [ROLE_COCINA] }
+        - { path: ^/api/barra/pedidos, roles: [ROLE_BARRA] }
+        - { path: ^/api/barra/notificaciones, roles: [ROLE_BARRA] }
+        - { path: ^/api/barra/mesa, roles: [ROLE_BARRA] }
 
 when@test:
     security:

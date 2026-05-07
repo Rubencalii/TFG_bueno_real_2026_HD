@@ -17,11 +17,13 @@ final class SecurityController extends AbstractController
         if ($this->getUser()) {
             $user = $this->getUser();
             $rol = $user->getRol();
-            
+
+            // QA-06: Redirección correcta según rol específico
             return match($rol) {
-                'gerente' => $this->redirectToRoute('admin_panel'),
-                'staff' => $this->redirectToRoute('cocina_panel'),
-                default => $this->redirectToRoute('cocina_panel'),
+                'admin', 'gerente' => $this->redirectToRoute('admin_panel'),
+                'barman'           => $this->redirectToRoute('barra_panel'),
+                'camarero'         => $this->redirectToRoute('app_waiter_dashboard'),
+                default            => $this->redirectToRoute('cocina_panel'), // cocinero y fallback
             };
         }
 

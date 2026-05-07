@@ -37,9 +37,20 @@ class UsuarioController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        // FUNC-05: Validar email
+        $email = $data['email'] ?? '';
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['error' => 'Email inválido o vacío'], 400);
+        }
+
+        // FUNC-05: Validar longitud mínima de contraseña
+        if (strlen($data['password'] ?? '') < 8) {
+            return $this->json(['error' => 'La contraseña debe tener al menos 8 caracteres'], 400);
+        }
+
         $user = new User();
-        $user->setEmail($data['email'] ?? '');
-        
+        $user->setEmail($email);
+
         $rol = $data['rol'] ?? 'camarero';
         $user->setRol($rol);
         
@@ -75,6 +86,9 @@ class UsuarioController extends AbstractController
         $data = json_decode($request->getContent(), true);
         
         if (isset($data['email'])) {
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                return $this->json(['error' => 'Email inválido'], 400);
+            }
             $user->setEmail($data['email']);
         }
         if (isset($data['rol'])) {

@@ -102,6 +102,12 @@ class MesaController extends AbstractController
             return $this->json(['error' => 'Mesa no encontrada'], 404);
         }
 
+        // FUNC-03: Impedir eliminación si la mesa tiene pedidos activos
+        $pedidosActivos = $this->pedidoRepository->findFacturablesByMesa($mesa);
+        if (!empty($pedidosActivos)) {
+            return $this->json(['error' => 'No se puede eliminar la mesa: tiene pedidos activos. Ciérrala primero.'], 409);
+        }
+
         $this->entityManager->remove($mesa);
         $this->entityManager->flush();
         return $this->json(['success' => true]);
@@ -174,11 +180,9 @@ class MesaController extends AbstractController
             return $this->json(['error' => 'La mesa no tiene pedidos para facturar'], 400);
         }
 
-        $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
-        $numero = Ticket::generarNumero($ultimoId);
-
+        // FUNC-01: Número asignado tras flush para evitar race condition
         $ticket = new Ticket();
-        $ticket->setNumero($numero);
+        $ticket->setNumero(uniqid('TMP-')); // Placeholder temporal
         $ticket->setMesa($mesa);
         $ticket->setMetodoPago('online');
         $ticket->setEstado(Ticket::ESTADO_PAGADO);
@@ -200,6 +204,11 @@ class MesaController extends AbstractController
         $ticket->setDetalleJson(json_encode($detalles));
 
         $this->entityManager->persist($ticket);
+        $this->entityManager->flush(); // Primer flush: obtiene ID único del ticket
+
+        // Asignar número correlativo basado en el ID propio (sin race condition)
+        $year = date('Y');
+        $ticket->setNumero($year . '-' . str_pad((string)$ticket->getId(), 4, '0', STR_PAD_LEFT));
 
         $this->pedidoRepository->limpiarPedidosMesa($mesa);
         $mesa->setLlamaCamarero(false);
@@ -208,7 +217,7 @@ class MesaController extends AbstractController
         $mesa->setPagoOnlinePendiente(false);
         $mesa->regeneratePin();
 
-        $this->entityManager->flush();
+        $this->entityManager->flush(); // Segundo flush: actualiza número y flags
 
         return $this->json([
             'success' => true,
@@ -236,13 +245,9 @@ class MesaController extends AbstractController
             return $this->json(['error' => 'La mesa no tiene pedidos para facturar'], 400);
         }
 
-        // Generar número correlativo
-        $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
-        $numero = Ticket::generarNumero($ultimoId);
-
-        // Crear ticket como PAGADO
+        // FUNC-01: Crear ticket sin número primero — se asigna tras flush para evitar race condition
         $ticket = new Ticket();
-        $ticket->setNumero($numero);
+        $ticket->setNumero(uniqid('TMP-')); // Placeholder temporal
         $ticket->setMesa($mesa);
         $ticket->setMetodoPago($metodoPago);
         $ticket->setEstado(Ticket::ESTADO_PAGADO);
@@ -265,18 +270,23 @@ class MesaController extends AbstractController
         $ticket->setDetalleJson(json_encode($detalles));
 
         $this->entityManager->persist($ticket);
-        
+        $this->entityManager->flush(); // Primer flush: obtiene ID único del ticket
+
+        // Asignar número correlativo basado en el ID propio (sin race condition)
+        $year = date('Y');
+        $ticket->setNumero($year . '-' . str_pad((string)$ticket->getId(), 4, '0', STR_PAD_LEFT));
+
         // Limpiar pedidos de la mesa y resetear flags
         $this->pedidoRepository->limpiarPedidosMesa($mesa);
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
-        
+
         // Rotar el PIN de seguridad para invalidar sesiones anteriores
         $mesa->regeneratePin();
-        
-        $this->entityManager->flush();
+
+        $this->entityManager->flush(); // Segundo flush: actualiza número y flags
 
         return $this->json([
             'success' => true,

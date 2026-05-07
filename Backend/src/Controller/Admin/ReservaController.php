@@ -64,7 +64,11 @@ class ReservaController extends AbstractController
             return $this->json(['error' => 'Formato de hora inválido. Use HH:MM'], 400);
         }
 
-        $fecha = new \DateTime($data['fecha']);
+        // FUNC-10: Validar formato de fecha (evita que new \DateTime() acepte valores inválidos silenciosamente)
+        $fecha = \DateTime::createFromFormat('Y-m-d', $data['fecha']);
+        if (!$fecha) {
+            return $this->json(['error' => 'Formato de fecha inválido. Use YYYY-MM-DD'], 400);
+        }
         $hoy = new \DateTime('today');
         if ($fecha < $hoy) {
             return $this->json(['error' => 'No se pueden crear reservas para fechas pasadas'], 400);
@@ -134,7 +138,14 @@ class ReservaController extends AbstractController
         if (isset($data['nombreCliente'])) $reserva->setNombreCliente($data['nombreCliente']);
         if (isset($data['telefono'])) $reserva->setTelefono($data['telefono']);
         if (isset($data['email'])) $reserva->setEmail($data['email']);
-        if (isset($data['fecha'])) $reserva->setFecha(new \DateTime($data['fecha']));
+        if (isset($data['fecha'])) {
+            // FUNC-10: Validar formato de fecha
+            $fecha = \DateTime::createFromFormat('Y-m-d', $data['fecha']);
+            if (!$fecha) {
+                return $this->json(['error' => 'Formato de fecha inválido. Use YYYY-MM-DD'], 400);
+            }
+            $reserva->setFecha($fecha);
+        }
         if (isset($data['hora'])) {
             $hora = \DateTime::createFromFormat('H:i', $data['hora']);
             if (!$hora) {

@@ -125,8 +125,20 @@ class ReporteController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $pedido->setEstado($data['estado'] ?? 'pendiente');
 
+        // SEC-03: Validar que el estado sea uno de los valores permitidos
+        $estadosValidos = [
+            \App\Entity\Pedido::ESTADO_PENDIENTE,
+            \App\Entity\Pedido::ESTADO_EN_PREPARACION,
+            \App\Entity\Pedido::ESTADO_LISTO,
+            \App\Entity\Pedido::ESTADO_ENTREGADO,
+        ];
+        $nuevoEstado = $data['estado'] ?? null;
+        if (!in_array($nuevoEstado, $estadosValidos)) {
+            return $this->json(['error' => 'Estado inválido'], 400);
+        }
+
+        $pedido->setEstado($nuevoEstado);
         $this->entityManager->flush();
         return $this->json(['success' => true]);
     }

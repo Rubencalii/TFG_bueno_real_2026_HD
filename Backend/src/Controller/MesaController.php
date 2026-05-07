@@ -159,10 +159,23 @@ class MesaController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $pin = substr((string)($data['pin'] ?? ''), 0, 10);
 
+        // SEC-05: Limitar intentos fallidos (máx 5 por sesión)
+        $session = $request->getSession();
+        $attemptsKey = 'pin_attempts_' . $token;
+        $attempts = (int)$session->get($attemptsKey, 0);
+
+        if ($attempts >= 5) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Demasiados intentos fallidos. Solicita el PIN al camarero.'
+            ], \Symfony\Component\HttpFoundation\Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         // MITIGACIÓN: Retardo artificial muy breve para mitigar Timing Attacks básicos y Fuerza Bruta
         usleep(500000); // 0.5 segundos de retardo intencionado
 
         if ($mesa->getSecurityPin() === $pin) {
+            $session->remove($attemptsKey); // Resetear contador en éxito
             // Auto-clear the PIN request notification when successfully verified
             if ($mesa->isSolicitaPin()) {
                 $mesa->setSolicitaPin(false);
@@ -171,17 +184,26 @@ class MesaController extends AbstractController
             return $this->json(['success' => true]);
         }
 
+        $session->set($attemptsKey, $attempts + 1);
         return $this->json(['success' => false, 'error' => 'PIN incorrecto'], 401);
     }
 
     #[Route('/api/mesa/{token}/solicitar-pin', name: 'api_mesa_solicitar_pin', methods: ['POST'])]
-    public function solicitarPin(string $token): JsonResponse
+    public function solicitarPin(string $token, Request $request): JsonResponse
     {
         $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token, 'activa' => true]);
-        
+
         if (!$mesa) {
             return $this->json(['error' => 'Mesa no encontrada'], 404);
         }
+
+        // FUNC-04: Rate limit — máximo una solicitud de PIN cada 60 segundos por sesión
+        $session = $request->getSession();
+        $lastRequest = $session->get('last_pin_solicitud_' . $mesa->getId());
+        if ($lastRequest && (time() - $lastRequest) < 60) {
+            return $this->json(['success' => true, 'message' => 'PIN solicitado, el camarero vendrá enseguida']);
+        }
+        $session->set('last_pin_solicitud_' . $mesa->getId(), time());
 
         $mesa->setSolicitaPin(true);
         $this->entityManager->flush();
