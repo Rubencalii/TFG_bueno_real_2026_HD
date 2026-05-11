@@ -72,10 +72,6 @@ class Ticket
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTime();
-        if (empty($this->numero)) {
-            $year = date('Y');
-            $this->numero = $year . '-' . str_pad((string)random_int(1, 99999), 5, '0', STR_PAD_LEFT);
-        }
     }
 
     public function getId(): ?int

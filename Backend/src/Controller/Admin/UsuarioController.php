@@ -119,6 +119,19 @@ class UsuarioController extends AbstractController
             return $this->json(['error' => 'Usuario no encontrado'], 404);
         }
 
+        // Impedir auto-eliminación para evitar quedarse sin administradores
+        if ($this->getUser() && $this->getUser()->getUserIdentifier() === $user->getUserIdentifier()) {
+            return $this->json(['error' => 'No puedes eliminar tu propio usuario'], 400);
+        }
+
+        // Si es admin, comprobar que queda al menos otro admin activo
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            $admins = array_filter($this->userRepository->findAll(), fn($u) => in_array('ROLE_ADMIN', $u->getRoles()));
+            if (count($admins) <= 1) {
+                return $this->json(['error' => 'No se puede eliminar el único administrador del sistema'], 400);
+            }
+        }
+
         $this->entityManager->remove($user);
         $this->entityManager->flush();
         return $this->json(['success' => true]);

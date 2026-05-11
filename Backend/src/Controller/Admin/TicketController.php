@@ -34,25 +34,26 @@ class TicketController extends AbstractController
             return $this->json(['error' => 'Mesa no encontrada'], 400);
         }
 
-        // Calcular total de la mesa (incluye todos los pedidos, también entregados)
+        // Validar método de pago
+        $metodosValidos = [Ticket::METODO_EFECTIVO, Ticket::METODO_TARJETA, Ticket::METODO_TPV];
+        $metodoPago = $data['metodoPago'] ?? Ticket::METODO_EFECTIVO;
+        if (!in_array($metodoPago, $metodosValidos)) {
+            return $this->json(['error' => 'Método de pago no válido'], 400);
+        }
+
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
         if ((float)$totalMesa <= 0) {
             return $this->json(['error' => 'La mesa no tiene pedidos para facturar'], 400);
         }
 
-        // Generar número correlativo
-        $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
-        $numero = Ticket::generarNumero($ultimoId);
-
-        // Crear ticket
+        // Número asignado tras flush para evitar race condition
         $ticket = new Ticket();
-        $ticket->setNumero($numero);
+        $ticket->setNumero(uniqid('TMP-'));
         $ticket->setMesa($mesa);
-        $ticket->setMetodoPago($data['metodoPago'] ?? Ticket::METODO_EFECTIVO);
+        $ticket->setMetodoPago($metodoPago);
         $ticket->setEstado(Ticket::ESTADO_PENDIENTE);
         $ticket->calcularDesgloseIVA($totalMesa);
 
-        // Guardar detalle de pedidos (TODOS los facturables)
         $pedidos = $this->pedidoRepository->findFacturablesByMesa($mesa);
         $detalles = [];
         foreach ($pedidos as $pedido) {
@@ -68,20 +69,21 @@ class TicketController extends AbstractController
         $ticket->setDetalleJson(json_encode($detalles));
 
         $this->entityManager->persist($ticket);
-        
-        // Limpiar pedidos de la mesa al crear el ticket desde admin
+        $this->entityManager->flush(); // Primer flush: obtiene ID único del ticket
+
+        $year = date('Y');
+        $ticket->setNumero($year . '-' . str_pad((string)$ticket->getId(), 4, '0', STR_PAD_LEFT));
+
         $this->pedidoRepository->limpiarPedidosMesa($mesa);
-        
-        // Resetear flags de la mesa
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
-        
-        // Rotar el PIN de seguridad para invalidar sesiones anteriores
+        $mesa->setLastLlamarAt(null);
+        $mesa->setLastPedirCuentaAt(null);
         $mesa->regeneratePin();
-        
-        $this->entityManager->flush();
+
+        $this->entityManager->flush(); // Segundo flush: actualiza número y flags
 
         return $this->json([
             'success' => true,
@@ -108,6 +110,10 @@ class TicketController extends AbstractController
         $data = json_decode($request->getContent(), true);
         
         if (isset($data['metodoPago'])) {
+            $metodosValidos = [Ticket::METODO_EFECTIVO, Ticket::METODO_TARJETA, Ticket::METODO_TPV];
+            if (!in_array($data['metodoPago'], $metodosValidos)) {
+                return $this->json(['error' => 'Método de pago no válido'], 400);
+            }
             $ticket->setMetodoPago($data['metodoPago']);
         }
 
@@ -131,8 +137,16 @@ class TicketController extends AbstractController
             return $this->json(['error' => 'Ticket no encontrado'], 404);
         }
 
+        if ($ticket->getEstado() === Ticket::ESTADO_ANULADO) {
+            return $this->json(['error' => 'No se pueden registrar pagos en un ticket anulado'], 400);
+        }
+
+        if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
+            return $this->json(['error' => 'El ticket ya está completamente pagado'], 400);
+        }
+
         $data = json_decode($request->getContent(), true);
-        
+
         $pago = new Pago();
         $pago->setTicket($ticket);
         $pago->setMonto((string)($data['monto'] ?? '0.00'));
@@ -178,11 +192,8 @@ class TicketController extends AbstractController
 
         // Si estaba pagado, crear ticket rectificativo
         if ($ticket->getEstado() === Ticket::ESTADO_PAGADO) {
-            $ultimoId = $this->ticketRepository->getUltimoIdDelAño();
-            $numero = Ticket::generarNumero($ultimoId);
-
             $rectificativo = new Ticket();
-            $rectificativo->setNumero($numero);
+            $rectificativo->setNumero(uniqid('TMP-'));
             $rectificativo->setMesa($ticket->getMesa());
             $rectificativo->setMetodoPago($ticket->getMetodoPago());
             $rectificativo->setEstado(Ticket::ESTADO_ANULADO);
@@ -193,10 +204,16 @@ class TicketController extends AbstractController
             $rectificativo->setDetalleJson($ticket->getDetalleJson());
 
             $this->entityManager->persist($rectificativo);
-        }
+            $ticket->setEstado(Ticket::ESTADO_ANULADO);
+            $this->entityManager->flush(); // Primer flush: obtiene ID único del rectificativo
 
-        $ticket->setEstado(Ticket::ESTADO_ANULADO);
-        $this->entityManager->flush();
+            $year = date('Y');
+            $rectificativo->setNumero($year . '-' . str_pad((string)$rectificativo->getId(), 4, '0', STR_PAD_LEFT));
+            $this->entityManager->flush(); // Segundo flush: actualiza número
+        } else {
+            $ticket->setEstado(Ticket::ESTADO_ANULADO);
+            $this->entityManager->flush();
+        }
 
         return $this->json([
             'success' => true,
@@ -293,8 +310,11 @@ class TicketController extends AbstractController
     #[Route('/exportar/tickets', name: 'admin_api_exportar_tickets', methods: ['GET'])]
     public function exportar(Request $request): Response
     {
-        $desde = new \DateTime($request->query->get('desde', 'first day of this month'));
-        $hasta = new \DateTime($request->query->get('hasta', 'today'));
+        $desdeStr = $request->query->get('desde', 'first day of this month');
+        $hastaStr = $request->query->get('hasta', 'today');
+
+        $desde = \DateTime::createFromFormat('Y-m-d', $desdeStr) ?: new \DateTime('first day of this month');
+        $hasta = \DateTime::createFromFormat('Y-m-d', $hastaStr) ?: new \DateTime('today');
 
         $tickets = $this->ticketRepository->findEntreFechas($desde, $hasta);
 

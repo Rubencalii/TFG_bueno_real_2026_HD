@@ -151,8 +151,7 @@ class PedidoController extends AbstractController
 
         } catch (\Exception $e) {
             return $this->json([
-                'error' => 'Error al procesar el pedido',
-                'details' => $e->getMessage()
+                'error' => 'Error al procesar el pedido'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -319,19 +318,19 @@ class PedidoController extends AbstractController
      * Llamar al camarero
      */
     #[Route('/mesa/{token}/llamar', name: 'api_mesa_llamar', methods: ['POST'])]
-    public function llamarCamarero(string $token, Request $request): JsonResponse
+    public function llamarCamarero(string $token): JsonResponse
     {
         $mesa = $this->mesaRepository->findOneBy(['tokenQr' => $token]);
         if (!$mesa) return $this->json(['error' => 'Mesa no encontrada'], 404);
 
-        // FUNC-04: Rate limit — evitar spam de notificaciones (30s entre llamadas)
-        $session = $request->getSession();
-        $lastCall = $session->get('last_llamar_' . $mesa->getId());
-        if ($lastCall && (time() - $lastCall) < 30) {
-            return $this->json(['success' => true]); // Silencioso para no confundir al cliente
+        // Rate limit basado en BD (funciona aunque el cliente no envíe cookies de sesión)
+        $ahora = new \DateTime();
+        $lastLlamar = $mesa->getLastLlamarAt();
+        if ($lastLlamar && ($ahora->getTimestamp() - $lastLlamar->getTimestamp()) < 30) {
+            return $this->json(['success' => true]);
         }
-        $session->set('last_llamar_' . $mesa->getId(), time());
 
+        $mesa->setLastLlamarAt($ahora);
         $mesa->setLlamaCamarero(true);
         $this->entityManager->flush();
 
@@ -350,20 +349,24 @@ class PedidoController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $metodoPago = $data['metodoPago'] ?? null;
 
-        // FUNC-08: Validar método de pago
         $metodosValidos = ['efectivo', 'tarjeta', 'online'];
         if ($metodoPago !== null && !in_array($metodoPago, $metodosValidos)) {
             return $this->json(['error' => 'Método de pago no válido'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Rate limit en BD (resistente a clientes sin sesión): 30s entre solicitudes
+        $ahora = new \DateTime();
+        $lastPedir = $mesa->getLastPedirCuentaAt();
+        if ($lastPedir && ($ahora->getTimestamp() - $lastPedir->getTimestamp()) < 30) {
+            return $this->json(['success' => true]);
+        }
+        $mesa->setLastPedirCuentaAt($ahora);
+
         $mesa->setPideCuenta(true);
         if ($metodoPago) {
             $mesa->setMetodoPagoPreferido($metodoPago);
-
-            // Si es pago online, marcar como pendiente para admin
-            if ($metodoPago === 'online') {
-                $mesa->setPagoOnlinePendiente(true);
-            }
+            // Mantener pagoOnlinePendiente coherente con el método elegido
+            $mesa->setPagoOnlinePendiente($metodoPago === 'online');
         }
         $this->entityManager->flush();
 
@@ -469,8 +472,12 @@ class PedidoController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $metodoPago = $data['metodoPago'] ?? $mesa->getMetodoPagoPreferido() ?? 'efectivo';
-        
-        // Calcular total de la mesa
+
+        $metodosValidos = ['efectivo', 'tarjeta', 'tpv', 'online'];
+        if (!in_array($metodoPago, $metodosValidos)) {
+            $metodoPago = 'efectivo';
+        }
+
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
         
         if ((float)$totalMesa > 0) {
@@ -510,12 +517,14 @@ class PedidoController extends AbstractController
             $this->pedidoRepository->limpiarPedidosMesa($mesa);
         }
 
-        // Resetear avisos y flags
+        // Resetear avisos, flags y timestamps de rate limit
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
         $mesa->setSolicitaPin(false);
+        $mesa->setLastLlamarAt(null);
+        $mesa->setLastPedirCuentaAt(null);
         $mesa->regeneratePin();
 
         $this->entityManager->flush(); // Segundo flush: actualiza número de ticket y flags de mesa

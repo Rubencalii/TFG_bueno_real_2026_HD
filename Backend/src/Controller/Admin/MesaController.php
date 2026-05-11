@@ -59,15 +59,25 @@ class MesaController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        $numero = (int)($data['numero'] ?? 1);
+        if ($numero <= 0) {
+            return $this->json(['error' => 'El número de mesa debe ser mayor que 0'], 400);
+        }
+
+        $existente = $this->mesaRepository->findOneBy(['numero' => $numero]);
+        if ($existente) {
+            return $this->json(['error' => "Ya existe una mesa con el número {$numero}"], 409);
+        }
+
         $mesa = new Mesa();
-        $mesa->setNumero($data['numero'] ?? 1);
+        $mesa->setNumero($numero);
         $mesa->setActiva($data['activa'] ?? true);
 
         $this->entityManager->persist($mesa);
         $this->entityManager->flush();
 
         return $this->json([
-            'success' => true, 
+            'success' => true,
             'id' => $mesa->getId(),
             'tokenQr' => $mesa->getTokenQr(),
         ]);
@@ -215,6 +225,8 @@ class MesaController extends AbstractController
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
+        $mesa->setLastLlamarAt(null);
+        $mesa->setLastPedirCuentaAt(null);
         $mesa->regeneratePin();
 
         $this->entityManager->flush(); // Segundo flush: actualiza número y flags
@@ -239,7 +251,11 @@ class MesaController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $metodoPago = $data['metodoPago'] ?? 'efectivo';
 
-        // Calcular total de la mesa
+        $metodosValidos = [\App\Entity\Ticket::METODO_EFECTIVO, \App\Entity\Ticket::METODO_TARJETA, \App\Entity\Ticket::METODO_TPV];
+        if (!in_array($metodoPago, $metodosValidos)) {
+            return $this->json(['error' => 'Método de pago no válido'], 400);
+        }
+
         $totalMesa = $this->pedidoRepository->calcularTotalMesa($mesa);
         if ((float)$totalMesa <= 0) {
             return $this->json(['error' => 'La mesa no tiene pedidos para facturar'], 400);
@@ -276,14 +292,13 @@ class MesaController extends AbstractController
         $year = date('Y');
         $ticket->setNumero($year . '-' . str_pad((string)$ticket->getId(), 4, '0', STR_PAD_LEFT));
 
-        // Limpiar pedidos de la mesa y resetear flags
         $this->pedidoRepository->limpiarPedidosMesa($mesa);
         $mesa->setLlamaCamarero(false);
         $mesa->setPideCuenta(false);
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
-
-        // Rotar el PIN de seguridad para invalidar sesiones anteriores
+        $mesa->setLastLlamarAt(null);
+        $mesa->setLastPedirCuentaAt(null);
         $mesa->regeneratePin();
 
         $this->entityManager->flush(); // Segundo flush: actualiza número y flags
@@ -310,6 +325,8 @@ class MesaController extends AbstractController
         $mesa->setMetodoPagoPreferido(null);
         $mesa->setPagoOnlinePendiente(false);
         $mesa->setSolicitaPin(false);
+        $mesa->setLastLlamarAt(null);
+        $mesa->setLastPedirCuentaAt(null);
         $mesa->regeneratePin();
         
         $this->entityManager->flush();

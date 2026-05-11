@@ -43,6 +43,12 @@ class Mesa
     #[ORM\Column(type: 'boolean')]
     private bool $solicitaPin = false;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastLlamarAt = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $lastPedirCuentaAt = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true)]
     private ?User $camareroAsignado = null;
@@ -174,6 +180,28 @@ class Mesa
     public function setSolicitaPin(bool $solicitaPin): self
     {
         $this->solicitaPin = $solicitaPin;
+        return $this;
+    }
+
+    public function getLastLlamarAt(): ?\DateTimeInterface
+    {
+        return $this->lastLlamarAt;
+    }
+
+    public function setLastLlamarAt(?\DateTimeInterface $lastLlamarAt): self
+    {
+        $this->lastLlamarAt = $lastLlamarAt;
+        return $this;
+    }
+
+    public function getLastPedirCuentaAt(): ?\DateTimeInterface
+    {
+        return $this->lastPedirCuentaAt;
+    }
+
+    public function setLastPedirCuentaAt(?\DateTimeInterface $lastPedirCuentaAt): self
+    {
+        $this->lastPedirCuentaAt = $lastPedirCuentaAt;
         return $this;
     }
 

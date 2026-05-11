@@ -74,15 +74,33 @@ class ReservaController extends AbstractController
             return $this->json(['error' => 'No se pueden crear reservas para fechas pasadas'], 400);
         }
 
+        $numPersonas = (int)($data['numPersonas'] ?? 0);
+        if ($numPersonas < 1) {
+            return $this->json(['error' => 'El número de personas debe ser al menos 1'], 400);
+        }
+
+        $estadosValidos = [
+            Reserva::ESTADO_PENDIENTE,
+            Reserva::ESTADO_CONFIRMADA,
+            Reserva::ESTADO_CANCELADA,
+            Reserva::ESTADO_COMPLETADA,
+            Reserva::ESTADO_NO_SHOW,
+        ];
+        $estado = $data['estado'] ?? Reserva::ESTADO_PENDIENTE;
+        if (!in_array($estado, $estadosValidos)) {
+            return $this->json(['error' => 'Estado de reserva no válido'], 400);
+        }
+
         $reserva = new Reserva();
-        $reserva->setNombreCliente($data['nombreCliente']);
-        $reserva->setTelefono($data['telefono']);
+        $reserva->setNombreCliente(htmlspecialchars(strip_tags($data['nombreCliente']), ENT_QUOTES, 'UTF-8'));
+        $reserva->setTelefono(htmlspecialchars(strip_tags($data['telefono']), ENT_QUOTES, 'UTF-8'));
         $reserva->setEmail($data['email'] ?? null);
         $reserva->setFecha($fecha);
         $reserva->setHora($hora);
-        $reserva->setNumPersonas((int)$data['numPersonas']);
-        $reserva->setNotas($data['notas'] ?? null);
-        $reserva->setEstado($data['estado'] ?? Reserva::ESTADO_PENDIENTE);
+        $reserva->setNumPersonas($numPersonas);
+        $notas = $data['notas'] ?? null;
+        $reserva->setNotas($notas ? htmlspecialchars(strip_tags($notas), ENT_QUOTES, 'UTF-8') : null);
+        $reserva->setEstado($estado);
 
         if (!empty($data['mesaId'])) {
             $mesa = $this->mesaRepository->find($data['mesaId']);
@@ -153,8 +171,16 @@ class ReservaController extends AbstractController
             }
             $reserva->setHora($hora);
         }
-        if (isset($data['numPersonas'])) $reserva->setNumPersonas((int)$data['numPersonas']);
-        if (isset($data['notas'])) $reserva->setNotas($data['notas']);
+        if (isset($data['numPersonas'])) {
+            $numPersonas = (int)$data['numPersonas'];
+            if ($numPersonas < 1) {
+                return $this->json(['error' => 'El número de personas debe ser al menos 1'], 400);
+            }
+            $reserva->setNumPersonas($numPersonas);
+        }
+        if (isset($data['notas'])) {
+            $reserva->setNotas(htmlspecialchars(strip_tags($data['notas']), ENT_QUOTES, 'UTF-8'));
+        }
         if (isset($data['estado'])) $reserva->setEstado($data['estado']);
 
         if (array_key_exists('mesaId', $data)) {
