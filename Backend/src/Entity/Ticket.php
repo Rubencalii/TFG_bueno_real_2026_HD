@@ -244,13 +244,4 @@ class Ticket
         return $this;
     }
 
-    /**
-     * Genera número correlativo
-     */
-    public static function generarNumero(int $ultimoId): string
-    {
-        $year = date('Y');
-        $correlativo = str_pad((string)($ultimoId + 1), 4, '0', STR_PAD_LEFT);
-        return "{$year}-{$correlativo}";
-    }
 }

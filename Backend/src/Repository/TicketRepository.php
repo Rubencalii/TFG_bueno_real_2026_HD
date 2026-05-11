@@ -85,26 +85,6 @@ class TicketRepository extends ServiceEntityRepository
     }
 
     /**
-     * Obtener último ID para generar número correlativo
-     */
-    public function getUltimoIdDelAño(): int
-    {
-        $anio = new \DateTime('first day of January this year');
-        $anioSiguiente = new \DateTime('first day of January next year');
-
-        $result = $this->createQueryBuilder('t')
-            ->select('MAX(t.id)')
-            ->andWhere('t.createdAt >= :anio')
-            ->andWhere('t.createdAt < :anioSiguiente')
-            ->setParameter('anio', $anio)
-            ->setParameter('anioSiguiente', $anioSiguiente)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return (int)($result ?? 0);
-    }
-
-    /**
      * Tickets entre fechas para exportación
      * @return Ticket[]
      */
