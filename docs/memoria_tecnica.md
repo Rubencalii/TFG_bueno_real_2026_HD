@@ -537,4 +537,50 @@ docker compose exec app php bin/console cache:clear
 
 ---
 
+## 6. Interfaz del Sistema
+
+### 6.1 Página de Inicio
+
+![Página de inicio](capturas/01_inicio.png)
+
+*Pantalla de bienvenida accesible públicamente, con acceso al sistema y descripción de funcionalidades.*
+
+### 6.2 Formulario de Login
+
+![Login](capturas/02_login.png)
+
+*Formulario de autenticación con selector de perfil (Gerente / Staff), CSRF token y hashing de contraseñas con Argon2.*
+
+### 6.3 Panel de Administración
+
+![Panel Admin](capturas/03_admin_panel.png)
+
+*Dashboard principal del administrador con métricas en tiempo real: ventas del día, pedidos pendientes, mesas activas y alertas. Sidebar con acceso a todos los módulos de gestión.*
+
+### 6.4 Panel de Cocina
+
+![Panel Cocina](capturas/04_cocina_panel.png)
+
+*Panel Kanban para el personal de cocina. Los pedidos se organizan en tres columnas según su estado (Pendiente → En Preparación → Listo). El sistema semáforo cambia de color (verde/amarillo/rojo) según el tiempo de espera.*
+
+### 6.5 Panel de Barra
+
+![Panel Barra](capturas/05_barra_panel.png)
+
+*Panel equivalente al de cocina, dedicado a la gestión de bebidas y productos de barra. Incluye sistema de avisos para llamadas de camarero y solicitudes de cuenta.*
+
+### 6.6 Panel de Camarero
+
+![Panel Camarero](capturas/06_camarero_panel.png)
+
+*Vista de las 15 mesas del restaurante con su estado en tiempo real. El camarero puede iniciar servicio en una mesa, ver alertas activas y gestionar el cobro.*
+
+### 6.7 Carta Digital del Cliente (Vista Móvil)
+
+![Menú cliente móvil](capturas/07_menu_cliente_movil.png)
+
+*Interfaz accesible por QR desde cualquier móvil sin instalación. Muestra la carta con filtros de alérgenos, buscador, selector de idioma y carrito flotante. El banner inferior solicita el PIN de mesa para activar los pedidos.*
+
+---
+
 *Memoria Técnica generada para la defensa del TFG — Mayo 2026*
