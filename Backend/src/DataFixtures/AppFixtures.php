@@ -392,16 +392,18 @@ class AppFixtures extends Fixture
         }
 
         // ========== MESAS ==========
+        $mesasCreadas = [];
         for ($i = 1; $i <= 15; $i++) {
             $mesa = new Mesa();
             $mesa->setNumero($i);
             $mesa->setActiva(true);
             $manager->persist($mesa);
+            $mesasCreadas[$i] = $mesa;
         }
 
         // ========== PEDIDOS DE PRUEBA ==========
-        $mesa1 = $manager->getRepository(Mesa::class)->findOneBy(['numero' => 1]);
-        $mesa2 = $manager->getRepository(Mesa::class)->findOneBy(['numero' => 2]);
+        $mesa1 = $mesasCreadas[1] ?? null;
+        $mesa2 = $mesasCreadas[2] ?? null;
 
         if ($mesa1 && $mesa2) {
             // Pedido 1: Para Cocina

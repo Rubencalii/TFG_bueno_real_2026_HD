@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-
 use App\Repository\MesaRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MesaRepository::class)]
 class Mesa
@@ -17,12 +17,19 @@ class Mesa
     private ?int $id = null;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank(message: 'El número de mesa no puede estar vacío')]
+    #[Assert\Positive(message: 'El número de mesa debe ser positivo')]
+    #[Assert\LessThanOrEqual(value: 999, message: 'El número de mesa no puede superar {{ compared_value }}')]
     private int $numero;
 
     #[ORM\Column(type: 'string', length: 12, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 8, max: 12)]
     private string $tokenQr;
 
     #[ORM\Column(type: 'string', length: 10)]
+    #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '/^\d{8}$/', message: 'El PIN debe ser un número de 8 dígitos')]
     private string $securityPin;
 
     #[ORM\Column(type: 'boolean')]

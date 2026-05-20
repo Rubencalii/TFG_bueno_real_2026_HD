@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -17,6 +18,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Assert\NotBlank(message: 'El email no puede estar vacío')]
+    #[Assert\Email(message: 'El email {{ value }} no es válido')]
+    #[Assert\Length(max: 180, maxMessage: 'El email no puede superar {{ limit }} caracteres')]
     private ?string $email = null;
 
     /**
@@ -29,9 +33,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'La contraseña no puede estar vacía')]
     private ?string $password = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: 'El rol no puede estar vacío')]
+    #[Assert\Choice(
+        choices: ['admin', 'gerente', 'camarero', 'cocina', 'barra'],
+        message: 'El rol {{ value }} no es válido'
+    )]
     private ?string $rol = 'camarero';
 
     public function getId(): ?int

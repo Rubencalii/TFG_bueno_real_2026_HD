@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ titulo }} - Comanda Digital{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-background-light dark:bg-background-dark p-6">
+
+    <div class="max-w-2xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8">
+            <a href="{{ path('admin_panel') }}"
+               class="size-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform shadow-sm">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ titulo }}</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Gestión de reservas del restaurante</p>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        {% for message in app.flashes('success') %}
+        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl flex items-center gap-3 text-green-700 dark:text-green-400">
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            <span class="text-sm font-medium">{{ message }}</span>
+        </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-700 dark:text-red-400">
+            <span class="material-symbols-outlined text-[20px]">error</span>
+            <span class="text-sm font-medium">{{ message }}</span>
+        </div>
+        {% endfor %}
+
+        <!-- Form Card -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-8">
+
+            {{ form_start(form, {'attr': {'class': 'space-y-6', 'novalidate': 'novalidate'}}) }}
+
+            <!-- Datos del cliente -->
+            <fieldset>
+                <legend class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[18px]">person</span>
+                    Datos del cliente
+                </legend>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        {{ form_label(form.nombreCliente, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.nombreCliente) }}
+                        {{ form_errors(form.nombreCliente) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.telefono, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.telefono) }}
+                        {{ form_errors(form.telefono) }}
+                    </div>
+                    <div class="sm:col-span-2">
+                        {{ form_label(form.email, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.email) }}
+                        {{ form_errors(form.email) }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <hr class="border-slate-200 dark:border-slate-700">
+
+            <!-- Datos de la reserva -->
+            <fieldset>
+                <legend class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[18px]">calendar_today</span>
+                    Datos de la reserva
+                </legend>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                        {{ form_label(form.fecha, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.fecha) }}
+                        {{ form_errors(form.fecha) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.hora, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.hora) }}
+                        {{ form_errors(form.hora) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.numPersonas, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.numPersonas) }}
+                        {{ form_errors(form.numPersonas) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.mesa, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.mesa) }}
+                        {{ form_errors(form.mesa) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.estado, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.estado) }}
+                        {{ form_errors(form.estado) }}
+                    </div>
+                    <div class="sm:col-span-3">
+                        {{ form_label(form.notas, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'}}) }}
+                        {{ form_widget(form.notas) }}
+                        {{ form_errors(form.notas) }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <hr class="border-slate-200 dark:border-slate-700">
+
+            <!-- Submit -->
+            <div>
+                {{ form_widget(form.guardar) }}
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

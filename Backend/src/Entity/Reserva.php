@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ReservaRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ReservaRepository::class)]
 #[ORM\Table(name: 'reserva')]
@@ -23,27 +24,45 @@ class Reserva
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'El nombre del cliente no puede estar vacío')]
+    #[Assert\Length(min: 2, max: 100, minMessage: 'El nombre debe tener al menos {{ limit }} caracteres', maxMessage: 'El nombre no puede superar {{ limit }} caracteres')]
     private ?string $nombreCliente = null;
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank(message: 'El teléfono no puede estar vacío')]
+    #[Assert\Regex(pattern: '/^\+?[\d\s\-]{7,20}$/', message: 'El formato del teléfono no es válido')]
     private ?string $telefono = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Email(message: 'El email {{ value }} no es válido')]
+    #[Assert\Length(max: 100, maxMessage: 'El email no puede superar {{ limit }} caracteres')]
     private ?string $email = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: 'La fecha no puede estar vacía')]
+    #[Assert\GreaterThanOrEqual('today', message: 'La fecha de la reserva no puede ser anterior a hoy')]
     private ?\DateTimeInterface $fecha = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
+    #[Assert\NotBlank(message: 'La hora no puede estar vacía')]
     private ?\DateTimeInterface $hora = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'El número de personas no puede estar vacío')]
+    #[Assert\Positive(message: 'El número de personas debe ser al menos 1')]
+    #[Assert\LessThanOrEqual(value: 50, message: 'El número de personas no puede superar {{ compared_value }}')]
     private ?int $numPersonas = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Las notas no pueden superar {{ limit }} caracteres')]
     private ?string $notas = null;
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank(message: 'El estado no puede estar vacío')]
+    #[Assert\Choice(
+        choices: ['pendiente', 'confirmada', 'cancelada', 'completada', 'no_show'],
+        message: 'El estado {{ value }} no es válido'
+    )]
     private ?string $estado = self::ESTADO_PENDIENTE;
 
     #[ORM\ManyToOne(targetEntity: Mesa::class)]

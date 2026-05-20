@@ -68,9 +68,13 @@ fi
 # 3. Esperar a la base de datos
 wait_for_db
 
-# 4. Sincronizar esquema de base de datos
-echo "Sincronizando esquema de base de datos..."
-php bin/console doctrine:schema:update --force --no-interaction
+# 4. Ejecutar migraciones de base de datos
+echo "Ejecutando migraciones de base de datos..."
+php bin/console doctrine:migrations:sync-metadata-storage --no-interaction
+if ! php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration; then
+    echo "Detectada BD existente sin historial de migraciones. Marcando como ejecutadas..."
+    php bin/console doctrine:migrations:version --add --all --no-interaction
+fi
 
 # 5. Cargar fixtures si la BD esta vacia (usar dev para que cargue DoctrineFixturesBundle)
 if check_if_empty; then

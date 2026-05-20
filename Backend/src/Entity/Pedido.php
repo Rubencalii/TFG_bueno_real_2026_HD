@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\PedidoRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PedidoRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -26,6 +27,11 @@ class Pedido
     private ?Mesa $mesa = null;
 
     #[ORM\Column(type: 'string', length: 20)]
+    #[Assert\NotBlank(message: 'El estado del pedido no puede estar vacío')]
+    #[Assert\Choice(
+        choices: ['pendiente', 'en_preparacion', 'listo', 'entregado'],
+        message: 'El estado {{ value }} no es válido'
+    )]
     private string $estado = self::ESTADO_PENDIENTE;
 
     #[ORM\Column(type: 'datetime')]

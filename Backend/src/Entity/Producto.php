@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\ProductoRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductoRepository::class)]
 class Producto
@@ -16,15 +17,22 @@ class Producto
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 150)]
+    #[Assert\NotBlank(message: 'El nombre del producto no puede estar vacío')]
+    #[Assert\Length(min: 2, max: 150, minMessage: 'El nombre debe tener al menos {{ limit }} caracteres', maxMessage: 'El nombre no puede superar {{ limit }} caracteres')]
     private string $nombre;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\Length(max: 1000, maxMessage: 'La descripción no puede superar {{ limit }} caracteres')]
     private ?string $descripcion = null;
 
     #[ORM\Column(type: 'decimal', precision: 6, scale: 2)]
+    #[Assert\NotBlank(message: 'El precio no puede estar vacío')]
+    #[Assert\Positive(message: 'El precio debe ser un valor positivo')]
+    #[Assert\LessThan(value: 10000, message: 'El precio no puede superar {{ compared_value }}€')]
     private string $precio;
 
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'La URL de la imagen no puede superar {{ limit }} caracteres')]
     private ?string $imagen = null;
 
     #[ORM\Column(type: 'boolean')]

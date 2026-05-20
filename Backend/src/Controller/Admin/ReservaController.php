@@ -3,12 +3,14 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Reserva;
+use App\Form\ReservaType;
 use App\Repository\MesaRepository;
 use App\Repository\ReservaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/admin/api')]
@@ -19,6 +21,58 @@ class ReservaController extends AbstractController
         private MesaRepository $mesaRepository,
         private EntityManagerInterface $entityManager
     ) {}
+
+    #[Route('/reservas/nueva', name: 'admin_reserva_nueva', methods: ['GET', 'POST'])]
+    public function nueva(Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_GERENTE');
+
+        $reserva = new Reserva();
+        $form = $this->createForm(ReservaType::class, $reserva);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->persist($reserva);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Reserva creada correctamente para ' . $reserva->getNombreCliente());
+
+            return $this->redirectToRoute('admin_reserva_nueva');
+        }
+
+        return $this->render('admin/reserva_form.html.twig', [
+            'form' => $form,
+            'titulo' => 'Nueva Reserva',
+        ]);
+    }
+
+    #[Route('/reservas/{id}/editar', name: 'admin_reserva_editar', methods: ['GET', 'POST'])]
+    public function editarForm(int $id, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_GERENTE');
+
+        $reserva = $this->reservaRepository->find($id);
+        if (!$reserva) {
+            throw $this->createNotFoundException('Reserva no encontrada');
+        }
+
+        $form = $this->createForm(ReservaType::class, $reserva);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Reserva actualizada correctamente');
+
+            return $this->redirectToRoute('admin_reserva_editar', ['id' => $id]);
+        }
+
+        return $this->render('admin/reserva_form.html.twig', [
+            'form' => $form,
+            'titulo' => 'Editar Reserva #' . $id,
+            'reserva' => $reserva,
+        ]);
+    }
 
     #[Route('/reservas', name: 'admin_api_listar_reservas', methods: ['GET'])]
     public function listar(Request $request): JsonResponse

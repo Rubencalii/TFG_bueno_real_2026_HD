@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\CategoriaRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CategoriaRepository::class)]
 class Categoria
@@ -16,16 +17,21 @@ class Categoria
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank(message: 'El nombre de la categoría no puede estar vacío')]
+    #[Assert\Length(min: 2, max: 100, minMessage: 'El nombre debe tener al menos {{ limit }} caracteres', maxMessage: 'El nombre no puede superar {{ limit }} caracteres')]
     private string $nombre;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\GreaterThanOrEqual(value: 0, message: 'El orden no puede ser negativo')]
     private int $orden = 0;
 
     #[ORM\Column(type: 'boolean')]
     private bool $activa = true;
 
     #[ORM\Column(type: 'string', length: 20)]
-    private string $tipo = 'cocina'; // 'cocina' o 'barra'
+    #[Assert\NotBlank(message: 'El tipo de categoría no puede estar vacío')]
+    #[Assert\Choice(choices: ['cocina', 'barra'], message: 'El tipo debe ser "cocina" o "barra"')]
+    private string $tipo = 'cocina';
 
     #[ORM\OneToMany(mappedBy: 'categoria', targetEntity: Producto::class)]
     private Collection $productos;
